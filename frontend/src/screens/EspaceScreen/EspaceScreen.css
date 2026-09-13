@@ -1,0 +1,119 @@
+/* Espace candidat — mobile first. */
+
+.espace {
+  padding-block: var(--e5);
+  max-width: 52rem;
+}
+
+.espace h1 {
+  font-size: var(--t-2xl);
+  margin-bottom: var(--e5);
+}
+
+/* Bloc d'appel à l'action : il n'apparaît que s'il y a effectivement quelque
+   chose à faire, et disparaît une fois le profil suffisamment rempli. Un
+   bandeau permanent devient un décor qu'on ne lit plus. */
+.espace-action {
+  padding: var(--e5);
+  margin-bottom: var(--e5);
+  background: var(--marque-doux);
+  border-left: 3px solid var(--marque);
+  border-radius: 0 var(--rayon-lg) var(--rayon-lg) 0;
+}
+
+.espace-action h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--e2);
+}
+
+.espace-action p {
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e4);
+}
+
+.espace-cartes {
+  display: grid;
+  gap: var(--e4);
+  margin-bottom: var(--e5);
+}
+
+.espace-carte {
+  padding: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.espace-carte h2 {
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--texte-doux);
+  margin-bottom: var(--e3);
+}
+
+.espace-chiffre {
+  margin: 0;
+  font-size: var(--t-2xl);
+  font-weight: 750;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.espace-precision {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.espace-precision--seule {
+  margin-top: var(--e2);
+}
+
+.espace-statuts {
+  padding: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.espace-statuts h2 {
+  font-size: var(--t-md);
+  margin-bottom: var(--e3);
+}
+
+.espace-statuts ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.espace-statuts li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--e3);
+  padding-block: var(--e2);
+  border-bottom: 1px solid var(--bordure);
+  font-size: var(--t-sm);
+}
+
+.espace-statuts li:last-child {
+  border-bottom: 0;
+}
+
+.espace-statut-valeur {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 700px) {
+  .espace {
+    padding-block: var(--e7);
+  }
+
+  .espace-cartes {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

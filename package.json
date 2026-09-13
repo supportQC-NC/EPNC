@@ -1,0 +1,37 @@
+{
+  "name": "hackavp",
+  "version": "0.1.0",
+  "description": "HackAVP — mise en relation candidats / avis de vacance de poste OPT-NC",
+  "type": "module",
+  "main": "backend/server.js",
+  "license": "ISC",
+  "scripts": {
+    "start": "node backend/server.js",
+    "server": "nodemon backend/server.js",
+    "client": "npm start --prefix frontend",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "data:import": "node backend/seeder.js",
+    "data:destroy": "node backend/seeder.js -d",
+    "data:avps": "node backend/ingest.js hf_avps",
+    "data:metiers": "node backend/ingest.js referentiel_metiers",
+    "data:archive": "node backend/ingest.js hf_archive",
+    "data:datagouv": "node backend/ingest.js datagouv_avps",
+    "data:tout": "node backend/ingest.js --tout"
+  },
+  "dependencies": {
+    "archiver": "^8.0.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.21.0",
+    "nodemailer": "^7.0.12",
+    "pdfkit": "^0.20.2"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "nodemon": "^3.1.9"
+  }
+}

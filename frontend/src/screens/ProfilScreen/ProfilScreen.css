@@ -1,0 +1,155 @@
+/* Profil candidat — mobile first. */
+
+.profil {
+  padding-block: var(--e5);
+  max-width: 46rem;
+}
+
+.profil-entete {
+  margin-bottom: var(--e6);
+}
+
+.profil-entete h1 {
+  font-size: var(--t-2xl);
+}
+
+.profil-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-md);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e5);
+}
+
+/* ── Jauge de complétude ──────────────────────────────────────────────── */
+
+.jauge-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  flex-wrap: wrap;
+}
+
+.jauge {
+  flex: 1 1 12rem;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--bordure);
+  overflow: hidden;
+}
+
+.jauge-remplie {
+  height: 100%;
+  background: var(--marque);
+  transition: width 0.3s ease;
+}
+
+.jauge-valeur {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.profil-alerte {
+  margin: var(--e3) 0 0;
+  padding: var(--e3) var(--e4);
+  border-left: 3px solid var(--marque);
+  background: var(--marque-doux);
+  border-radius: 0 var(--rayon) var(--rayon) 0;
+  font-size: var(--t-sm);
+}
+
+/* ── Sections ─────────────────────────────────────────────────────────── */
+
+.profil-section {
+  padding: var(--e5);
+  margin-bottom: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.profil-section-entete {
+  margin-bottom: var(--e4);
+}
+
+.profil-section-entete h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--e1);
+}
+
+.profil-section-aide {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.profil-section-pied {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  margin-top: var(--e5);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+}
+
+.profil-enregistre {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--succes);
+}
+
+.profil-duo {
+  display: grid;
+  gap: 0 var(--e4);
+}
+
+@media (min-width: 460px) {
+  .profil-duo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/* ── Blocs répétables ─────────────────────────────────────────────────── */
+
+.liste-vide {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.bloc-repetable {
+  padding: var(--e4);
+  margin-bottom: var(--e4);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.bloc-repetable-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--e3);
+  margin-bottom: var(--e3);
+}
+
+.bloc-repetable-numero {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--texte-doux);
+}
+
+@media (min-width: 700px) {
+  .profil {
+    padding-block: var(--e7);
+  }
+
+  .profil-section {
+    padding: var(--e6);
+  }
+}

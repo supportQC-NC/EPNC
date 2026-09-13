@@ -1,0 +1,437 @@
+/* Landing — mobile first. Toutes les media queries de largeur sont en
+   `min-width`. */
+
+/* =========================================================================
+   HERO PLEINE HAUTEUR
+   -------------------------------------------------------------------------
+   Photo de fond + calque de contraste. Le hero occupe la hauteur de l'écran
+   moins l'en-tête, de sorte que le bas de la section affleure le pli : on
+   comprend qu'il y a autre chose en dessous sans que le contenu soit coupé.
+   ========================================================================= */
+
+.hero {
+  position: relative;
+  isolation: isolate; /* confine le z-index du calque à cette section */
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  /* `min-height` et non `height` : si le texte est plus haut que l'écran
+     (petit téléphone, police système agrandie, traduction plus longue), la
+     section grandit au lieu de tronquer. Rien n'est jamais coupé.
+     `svh` = « small viewport height » : la hauteur quand les barres du
+     navigateur mobile sont déployées. Avec `vh`, le bas du hero passe sous
+     la barre d'adresse sur iOS. */
+  min-height: calc(100svh - var(--h-entete));
+
+  /* Repli si le navigateur ne connaît pas svh (Safari < 15.4). */
+  min-height: calc(100vh - var(--h-entete));
+  min-height: calc(100svh - var(--h-entete));
+
+  /* PHOTO DE FOND — l'URL est posée en style en ligne par LandingScreen.jsx
+     (constante HERO_PHOTO). Elle n'est volontairement PAS écrite ici : webpack
+     résout les `url()` des feuilles de style à la compilation, et un fichier
+     absent y casse le build au lieu de se replier.
+     Ici on ne garde que la mise en place et la couleur de repli, visible tant
+     qu'aucune photo n'est déposée. */
+  background-color: #0b1a26;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Pas de `background-attachment: fixed` : le rendu saccade sur mobile. */
+}
+
+/* CALQUE DE CONTRASTE
+   ------------------------------------------------------------------------
+   Le texte doit rester lisible quelle que soit la photo — y compris une photo
+   très claire. Pour garantir 4,5:1 entre du blanc et le fond composité dans
+   le pire des cas (photo blanche), l'opacité cumulée du voile doit atteindre
+   ~0,82. D'où deux dégradés superposés : un voile général, plus un renfort
+   côté texte. Baisser ces valeurs casse l'accessibilité — critère noté. */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+
+  /* Sur téléphone, le texte occupe toute la largeur : le voile doit être
+     fort partout. La photo n'y est de toute façon qu'un fond texturé — elle
+     est largement rognée par le cadrage portrait. */
+  background-image:
+    linear-gradient(
+      180deg,
+      rgba(6, 16, 25, 0.78) 0%,
+      rgba(6, 16, 25, 0.84) 55%,
+      rgba(6, 16, 25, 0.9) 100%
+    ),
+    linear-gradient(0deg, rgba(6, 16, 25, 0.22), rgba(6, 16, 25, 0.22));
+}
+
+/* À partir du format paysage, le texte n'occupe plus que la partie gauche :
+   le voile devient directionnel. Fort sous la colonne de lecture, il
+   s'estompe vers la droite où la photo reprend sa place — c'est ce qui donne
+   son relief au bandeau sans rien coûter à la lisibilité. */
+@media (min-width: 900px) {
+  .hero::before {
+    background-image:
+      linear-gradient(
+        90deg,
+        rgba(6, 16, 25, 0.9) 0%,
+        rgba(6, 16, 25, 0.86) 40%,
+        rgba(6, 16, 25, 0.45) 70%,
+        rgba(6, 16, 25, 0.28) 100%
+      ),
+      linear-gradient(0deg, rgba(6, 16, 25, 0.15), rgba(6, 16, 25, 0.15));
+  }
+}
+
+.hero-inner {
+  position: relative;
+  padding-block: var(--e7);
+  max-width: 44rem;
+  /* Le texte du hero est toujours clair : il repose sur une photo assombrie,
+     pas sur les surfaces du thème. Il ne suit donc pas les jetons clair/sombre. */
+  color: #ffffff;
+}
+
+.hero-surtitre {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+.hero-titre {
+  font-size: var(--t-3xl);
+  letter-spacing: -0.025em;
+  margin-bottom: var(--e4);
+  color: #ffffff;
+  /* Léger ancrage du texte sur les zones claires de la photo. Discret : ce
+     n'est pas un effet, c'est un filet de sécurité de lisibilité. */
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.hero-texte {
+  font-size: var(--t-lg);
+  color: rgba(255, 255, 255, 0.92);
+  max-width: 42ch;
+  margin-bottom: var(--e5);
+  /* Filet de sécurité si une zone claire de la photo affleure sous le
+     paragraphe : ce texte est trop petit pour bénéficier du seuil allégé
+     réservé aux grands caractères. */
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+}
+
+.hero-compteur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--e1);
+  margin-bottom: var(--e5);
+  padding-top: var(--e4);
+  border-top: 1px solid rgba(255, 255, 255, 0.28);
+  font-size: var(--t-md);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.hero-chiffre {
+  font-size: var(--t-xl);
+  font-weight: 750;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Information secondaire : sur écran étroit elle occupe sa propre ligne, sans
+   séparateur ; celui-ci n'apparaît que lorsqu'elle suit le texte principal. */
+.hero-compteur-sec {
+  flex-basis: 100%;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: var(--t-sm);
+}
+
+@media (min-width: 560px) {
+  .hero-compteur-sec {
+    flex-basis: auto;
+  }
+
+  .hero-compteur-sec::before {
+    content: "· ";
+  }
+}
+
+.hero-actions {
+  margin-bottom: var(--e4);
+}
+
+/* Boutons posés sur une photo : les variantes du thème n'y tiennent pas.
+   Le principal passe en blanc plein (contraste maximal et constant), le
+   secondaire en contour clair translucide. */
+.hero .btn-principal {
+  background: #ffffff;
+  color: #0b2033;
+  border-color: #ffffff;
+}
+
+.hero .btn-principal:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.hero .btn-secondaire {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.hero .btn-secondaire:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.hero :focus-visible {
+  outline-color: #ffffff;
+}
+
+.hero-mention {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: rgba(255, 255, 255, 0.72);
+}
+
+/* INVITE À DÉFILER
+   Vrai lien d'ancrage, pas un simple décor : il sert aussi au clavier pour
+   sauter directement à la suite. */
+.hero-defiler {
+  position: absolute;
+  left: 50%;
+  bottom: var(--e4);
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.hero-defiler:hover {
+  color: #ffffff;
+}
+
+.hero-defiler svg {
+  animation: descendre 2.4s ease-in-out infinite;
+}
+
+@keyframes descendre {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-defiler svg {
+    animation: none;
+  }
+}
+
+/* Écrans peu hauts (téléphone en paysage, petit portable) : on resserre les
+   marges plutôt que de laisser le contenu déborder du pli. Requête sur la
+   HAUTEUR — elle ne contredit pas l'approche mobile-first en largeur. */
+@media (max-height: 700px) {
+  .hero-inner {
+    padding-block: var(--e5);
+  }
+
+  .hero-texte,
+  .hero-compteur {
+    margin-bottom: var(--e4);
+  }
+
+  .hero-defiler {
+    display: none;
+  }
+}
+
+@media (min-width: 700px) {
+  .hero-inner {
+    padding-block: var(--e8);
+  }
+
+  .hero-titre {
+    max-width: 17ch;
+  }
+}
+
+/* =========================================================================
+   SECTIONS
+   ========================================================================= */
+
+.section {
+  padding-block: var(--e7);
+}
+
+.section-alt {
+  background: var(--surface);
+  border-block: 1px solid var(--bordure);
+}
+
+.section-titre {
+  font-size: var(--t-2xl);
+  margin-bottom: var(--e2);
+  max-width: 24ch;
+}
+
+.section-intro {
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e6);
+  font-size: var(--t-md);
+}
+
+@media (min-width: 700px) {
+  .section {
+    padding-block: var(--e8);
+  }
+}
+
+/* ── Étapes ───────────────────────────────────────────────────────────── */
+
+.etapes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+/* Sur téléphone : numéro à gauche, texte à droite — lecture verticale et
+   compacte. En grille à partir de la tablette. */
+.etape {
+  display: flex;
+  gap: var(--e4);
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.etape-numero {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--marque);
+  color: #ffffff;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-color-scheme: dark) {
+  .etape-numero {
+    color: #08131c;
+  }
+}
+
+.etape-titre {
+  font-size: var(--t-md);
+  margin-bottom: var(--e1);
+}
+
+.etape-texte {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+@media (min-width: 620px) {
+  .etapes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1000px) {
+  .etapes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  /* En colonnes étroites, le numéro passe au-dessus du texte : côte à côte,
+     il ne resterait que ~12 caractères par ligne. */
+  .etape {
+    flex-direction: column;
+    gap: var(--e3);
+    padding: var(--e5);
+  }
+}
+
+/* ── Socle de données ─────────────────────────────────────────────────── */
+
+.socle {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.socle-carte {
+  padding: var(--e5);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-left: 3px solid var(--marque);
+  border-radius: var(--rayon-lg);
+}
+
+.socle-carte h3 {
+  font-size: var(--t-md);
+  margin-bottom: var(--e2);
+}
+
+.socle-carte p {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+@media (min-width: 860px) {
+  .socle {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ── Rappel final ─────────────────────────────────────────────────────── */
+
+.rappel-inner {
+  max-width: 40rem;
+}
+
+@media (min-width: 700px) {
+  .rappel-inner {
+    text-align: center;
+    margin-inline: auto;
+  }
+
+  .rappel-inner .section-titre {
+    max-width: none;
+  }
+
+  .rappel-inner .section-intro {
+    margin-inline: auto;
+  }
+
+  .rappel-actions {
+    justify-content: center;
+  }
+}

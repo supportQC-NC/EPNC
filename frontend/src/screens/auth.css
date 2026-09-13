@@ -1,0 +1,82 @@
+/* Écrans d'authentification — mobile first.
+   Connexion, inscription, mot de passe oublié, réinitialisation. */
+
+.auth-page {
+  padding-block: var(--e6);
+  padding-inline: var(--gouttiere);
+}
+
+/* Sur téléphone, la « carte » n'en est pas une : pas de bordure ni de fond
+   distinct, le formulaire occupe la page. Encadrer un formulaire dans un
+   écran de 360px ne fait que retirer de la place au contenu. */
+.auth-carte {
+  width: 100%;
+  max-width: 27rem;
+  margin-inline: auto;
+}
+
+.auth-entete {
+  margin-bottom: var(--e5);
+}
+
+.auth-entete h1 {
+  font-size: var(--t-2xl);
+  margin-bottom: var(--e2);
+}
+
+.auth-entete p {
+  margin: 0;
+  color: var(--texte-doux);
+  font-size: var(--t-md);
+}
+
+/* Deux champs côte à côte (nom / prénom) à partir du moment où la largeur le
+   permet réellement. En dessous, ils s'empilent. */
+.auth-duo {
+  display: grid;
+  gap: 0 var(--e4);
+}
+
+@media (min-width: 420px) {
+  .auth-duo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.auth-lien-oubli {
+  display: inline-block;
+  margin-top: calc(var(--e1) * -1);
+  margin-bottom: var(--e4);
+  font-size: var(--t-sm);
+}
+
+.auth-actions {
+  margin-top: var(--e2);
+}
+
+.auth-pied {
+  margin-top: var(--e5);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.auth-pied p {
+  margin: 0;
+}
+
+/* À partir de la tablette, le formulaire redevient une carte posée sur la
+   page : il y a alors assez d'espace pour que le cadre aide à le situer. */
+@media (min-width: 640px) {
+  .auth-page {
+    padding-block: var(--e8);
+  }
+
+  .auth-carte {
+    padding: var(--e6);
+    background: var(--surface);
+    border: 1px solid var(--bordure);
+    border-radius: var(--rayon-lg);
+  }
+}

@@ -1,0 +1,343 @@
+/* Référentiel des métiers — mobile first. */
+
+.metiers,
+.metier-detail {
+  padding-block: var(--e5);
+  max-width: 54rem;
+}
+
+.metiers-entete {
+  margin-bottom: var(--e5);
+}
+
+.metiers-entete h1 {
+  font-size: var(--t-2xl);
+}
+
+.metiers-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-md);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e4);
+}
+
+.metiers-totaux {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: 0;
+  padding: 0;
+}
+
+.metiers-totaux li {
+  padding: var(--e2) var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.metiers-totaux strong {
+  color: var(--texte);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Filtres ──────────────────────────────────────────────────────────── */
+
+.metiers-filtres {
+  display: grid;
+  gap: 0 var(--e4);
+  margin-bottom: var(--e3);
+}
+
+.metiers-case {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  min-height: 44px;
+  margin-bottom: var(--e4);
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+
+.metiers-case input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--marque);
+  cursor: pointer;
+}
+
+.metiers-compte,
+.metiers-vide,
+.metier-vide {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.metiers-compte {
+  margin: 0 0 var(--e3);
+}
+
+/* ── Liste des métiers ────────────────────────────────────────────────── */
+
+.metiers-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.metier-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--e3) var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  text-decoration: none;
+  color: var(--texte);
+}
+
+.metier-carte:hover {
+  border-color: var(--marque);
+  background: var(--surface-2);
+}
+
+.metier-nom {
+  font-weight: 650;
+  font-size: var(--t-sm);
+}
+
+.metier-meta {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.metier-offre {
+  align-self: flex-start;
+  margin-top: var(--e1);
+  padding: 1px var(--e2);
+  border-radius: 999px;
+  background: var(--marque-doux);
+  color: var(--marque);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+@media (min-width: 620px) {
+  .metiers-filtres {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+
+  .metiers-liste {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 700px) {
+  .metiers,
+  .metier-detail {
+    padding-block: var(--e7);
+  }
+}
+
+/* ── Fiche métier ─────────────────────────────────────────────────────── */
+
+.metier-entete {
+  padding-bottom: var(--e4);
+  margin-bottom: var(--e5);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.metier-famille {
+  margin: 0 0 var(--e1);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--marque);
+}
+
+.metier-entete h1 {
+  font-size: var(--t-2xl);
+  margin-bottom: var(--e1);
+}
+
+.metier-code {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.metier-section-titre {
+  font-size: var(--t-lg);
+  margin-top: var(--e6);
+  margin-bottom: var(--e1);
+}
+
+.metier-section-aide {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  margin-bottom: var(--e4);
+  max-width: var(--largeur-texte);
+}
+
+/* ── Écart ────────────────────────────────────────────────────────────── */
+
+.ecart {
+  padding: var(--e5);
+  margin-bottom: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--marque);
+  border-radius: 0 var(--rayon-lg) var(--rayon-lg) 0;
+}
+
+.ecart h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--e4);
+}
+
+.ecart h3 {
+  font-size: var(--t-md);
+  margin-top: var(--e5);
+  margin-bottom: var(--e1);
+}
+
+.ecart--invite p {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e4);
+}
+
+.ecart-jauge-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  margin-bottom: var(--e3);
+}
+
+.ecart-resume,
+.ecart-aide {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  margin-bottom: var(--e3);
+  max-width: var(--largeur-texte);
+}
+
+.ecart-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.ecart-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--e2) var(--e3);
+  background: var(--fond);
+  border-left: 3px solid var(--bordure-forte);
+  border-radius: 0 var(--rayon) var(--rayon) 0;
+}
+
+/* La priorité est écrite en toutes lettres sous chaque ligne : le liseré ne
+   fait que la doubler. */
+.ecart-item--forte {
+  border-left-color: var(--erreur);
+}
+
+.ecart-item--renforcer {
+  border-left-color: var(--marque);
+}
+
+.ecart-item--acquis {
+  border-left-color: var(--succes);
+}
+
+.ecart-nom {
+  font-size: var(--t-sm);
+}
+
+.ecart-detail {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.ecart-acquises {
+  margin-top: var(--e5);
+}
+
+.ecart-acquises summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: var(--t-sm);
+  padding-block: var(--e2);
+  color: var(--succes);
+}
+
+.ecart-acquises .ecart-liste {
+  margin-top: var(--e3);
+}
+
+/* ── Compétences du métier ────────────────────────────────────────────── */
+
+.competences-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.competence {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--e2) var(--e3);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.competence-nom {
+  font-size: var(--t-sm);
+}
+
+.competence-meta {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Offres du métier ─────────────────────────────────────────────────── */
+
+.metier-offres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e3);
+}
+
+.metier-offres li {
+  padding-bottom: var(--e2);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.metier-offres li:last-child {
+  border-bottom: 0;
+}
+
+.metier-offre-meta {
+  display: block;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}

@@ -1,0 +1,293 @@
+/* Dossier de candidature — mobile first. */
+
+.dossier-detail {
+  padding-block: var(--e5);
+  max-width: 48rem;
+}
+
+.detail-fil {
+  margin-bottom: var(--e4);
+  font-size: var(--t-sm);
+}
+
+.detail-entete {
+  padding-bottom: var(--e4);
+  margin-bottom: var(--e5);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.detail-entete h1 {
+  font-size: var(--t-2xl);
+}
+
+.detail-meta {
+  margin: 0 0 var(--e2);
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+}
+
+.detail-liens {
+  margin: 0;
+  font-size: var(--t-sm);
+}
+
+.detail-statut {
+  margin-bottom: var(--e6);
+}
+
+.detail-statut h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--e4);
+}
+
+.detail-envoi {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.detail-historique {
+  margin-top: var(--e4);
+  padding-top: var(--e3);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-sm);
+}
+
+.detail-historique summary {
+  cursor: pointer;
+  font-weight: 600;
+  /* Cible tactile : un <summary> nu fait ~20px de haut. */
+  padding-block: var(--e2);
+}
+
+.detail-historique ol {
+  margin: var(--e3) 0 0;
+  padding-left: var(--e5);
+}
+
+.detail-historique li {
+  margin-bottom: var(--e2);
+}
+
+.historique-note {
+  color: var(--texte-doux);
+}
+
+.detail-titre-section {
+  font-size: var(--t-xl);
+  margin-bottom: var(--e3);
+}
+
+.detail-avertissement {
+  padding: var(--e3) var(--e4);
+  margin-bottom: var(--e5);
+  background: var(--marque-doux);
+  border-left: 3px solid var(--marque);
+  border-radius: 0 var(--rayon) var(--rayon) 0;
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+/* ── Une pièce ────────────────────────────────────────────────────────── */
+
+.piece {
+  padding: var(--e5);
+  margin-bottom: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.piece-entete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+  margin-bottom: var(--e4);
+}
+
+.piece-entete h3 {
+  font-size: var(--t-md);
+  margin-bottom: var(--e1);
+}
+
+.piece-aide {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.piece-entete .pastille {
+  align-self: flex-start;
+}
+
+.piece-vide {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+/* Le contenu est du texte brut avec des retours à la ligne signifiants :
+   `pre` les conserve, `white-space: pre-wrap` évite le défilement horizontal
+   qu'un `pre` produit par défaut. */
+.piece-contenu {
+  margin: 0 0 var(--e3);
+  padding: var(--e4);
+  max-height: 22rem;
+  overflow-y: auto;
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  font-family: inherit;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.piece-origine {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.piece-critique {
+  margin-bottom: var(--e4);
+  padding: var(--e3) var(--e4);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+}
+
+.piece-critique summary {
+  cursor: pointer;
+  font-weight: 600;
+  /* Cible tactile : un <summary> nu fait ~20px de haut. */
+  padding-block: var(--e1);
+}
+
+.critique-verdict {
+  margin: var(--e3) 0 0;
+  font-style: italic;
+  color: var(--texte-doux);
+}
+
+.critique-titre {
+  margin: var(--e3) 0 var(--e1);
+  font-weight: 600;
+}
+
+.critique-titre--alerte {
+  color: var(--erreur);
+}
+
+.piece-critique ul {
+  margin: 0;
+  padding-left: var(--e5);
+  color: var(--texte-doux);
+}
+
+.piece-critique li {
+  margin-bottom: var(--e1);
+}
+
+.piece-actions {
+  margin-top: var(--e3);
+}
+
+/* ── Zone de suppression ──────────────────────────────────────────────── */
+
+.detail-danger {
+  margin-top: var(--e6);
+  border-color: var(--bordure-forte);
+}
+
+.detail-danger h2 {
+  font-size: var(--t-md);
+  margin-bottom: var(--e3);
+}
+
+.detail-danger p {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+@media (min-width: 560px) {
+  .piece-entete {
+    flex-direction: row;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--e4);
+  }
+}
+
+@media (min-width: 700px) {
+  .dossier-detail {
+    padding-block: var(--e7);
+  }
+}
+
+/* ── Transmission (fonction ④) ───────────────────────────────────────── */
+
+.detail-transmission {
+  margin-top: var(--e6);
+}
+
+.transmission-intro {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.transmission-actions {
+  margin-block: var(--e4);
+  flex-wrap: wrap;
+}
+
+.transmission-aide {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.transmission-separateur {
+  border: 0;
+  border-top: 1px solid var(--bordure);
+  margin-block: var(--e5);
+}
+
+.transmission-destination {
+  font-size: var(--t-sm);
+  margin-bottom: var(--e4);
+}
+
+/* Le garde-fou est expliqué à l'écran, pas seulement dans le code : quelqu'un
+   qui fait la démonstration doit pouvoir dire pourquoi la candidature ne part
+   pas chez le vrai employeur, sans ouvrir un fichier source. */
+.transmission-garde {
+  display: block;
+  margin-top: var(--e2);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.transmission-journal {
+  margin-top: var(--e4);
+  font-size: var(--t-sm);
+}
+
+.transmission-journal summary {
+  cursor: pointer;
+  color: var(--texte-doux);
+}
+
+.transmission-journal ol {
+  margin: var(--e3) 0 0;
+  padding-left: var(--e5);
+  color: var(--texte-doux);
+}
+
+.transmission-journal li + li {
+  margin-top: var(--e2);
+}

@@ -1,0 +1,56 @@
+.mention-ia {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e3);
+}
+
+.mention-ia-pastille {
+  flex-shrink: 0;
+  padding: 1px var(--e2);
+  border-radius: 4px;
+  background: var(--marque);
+  color: #ffffff;
+  font-size: var(--t-xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+  .mention-ia-pastille {
+    color: #08131c;
+  }
+}
+
+/* Bandeau : suffisamment présent pour être lu, pas au point d'écraser le
+   contenu qu'il accompagne. */
+.mention-ia--bandeau {
+  padding: var(--e4);
+  margin-bottom: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure-forte);
+  border-left: 3px solid var(--marque);
+  border-radius: 0 var(--rayon) var(--rayon) 0;
+}
+
+.mention-ia--bandeau p {
+  margin: 0;
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+/* Même raison que dans l'assistant : le texte enrichi ne survit pas au flex.
+   La variante en ligne reste un paragraphe ordinaire. */
+.mention-ia--ligne {
+  display: block;
+  margin: 0 0 var(--e3);
+  font-size: var(--t-xs);
+  line-height: 1.7;
+  color: var(--texte-doux);
+}
+
+.mention-ia--ligne .mention-ia-pastille {
+  display: inline-block;
+  margin-right: var(--e2);
+  vertical-align: 1px;
+}

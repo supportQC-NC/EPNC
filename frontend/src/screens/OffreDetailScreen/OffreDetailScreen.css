@@ -1,0 +1,250 @@
+/* Fiche d'une offre — mobile first. */
+
+.fiche {
+  padding-block: var(--e5);
+  max-width: 48rem;
+}
+
+.fiche-fil {
+  margin-bottom: var(--e4);
+  font-size: var(--t-sm);
+}
+
+/* Bandeau de clôture, en tête de fiche. Assez rouge pour reprendre le code du
+   voile de la liste, assez sobre pour ne pas hurler sur toute la page —
+   l'information est définitive, pas alarmante. */
+.bandeau-cloture {
+  display: flex;
+  align-items: center;
+  gap: var(--e3);
+  flex-wrap: wrap;
+  padding: var(--e3) var(--e4);
+  margin-bottom: var(--e5);
+  background: var(--erreur-fond);
+  border: 1px solid var(--erreur);
+  border-left-width: 4px;
+  border-radius: var(--rayon);
+}
+
+.bandeau-cloture-mot {
+  flex-shrink: 0;
+  font-size: var(--t-sm);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--erreur);
+}
+
+.bandeau-cloture p {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte);
+}
+
+.fiche-entete {
+  padding-bottom: var(--e5);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.fiche-entete h1 {
+  font-size: var(--t-2xl);
+  margin-bottom: var(--e2);
+}
+
+.fiche-meta {
+  margin: 0 0 var(--e4);
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+}
+
+.fiche-etats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin-bottom: var(--e5);
+}
+
+.fiche-puce {
+  padding: 2px var(--e2);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--texte-doux);
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+
+.fiche-puce--famille {
+  background: var(--marque-doux);
+  color: var(--marque);
+}
+
+/* Listes de définition : une paire par ligne sur téléphone, en colonnes dès
+   qu'il y a la place. */
+.fiche-dates,
+.fiche-conditions {
+  display: grid;
+  gap: var(--e4);
+  margin: 0;
+}
+
+.fiche-dates dt,
+.fiche-conditions dt {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--texte-doux);
+  margin-bottom: 2px;
+}
+
+.fiche-dates dd,
+.fiche-conditions dd {
+  margin: 0;
+  font-size: var(--t-sm);
+}
+
+.fiche-echeance {
+  color: var(--texte-doux);
+}
+
+.fiche-bloc {
+  padding-block: var(--e5);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.fiche-bloc h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--e3);
+}
+
+.fiche-bloc p {
+  margin: 0;
+  font-size: var(--t-base);
+  max-width: var(--largeur-texte);
+}
+
+.fiche-bloc ul {
+  margin: 0;
+  padding-left: var(--e5);
+  max-width: var(--largeur-texte);
+}
+
+.fiche-bloc li {
+  margin-bottom: var(--e2);
+  font-size: var(--t-sm);
+}
+
+.fiche-bloc li:last-child {
+  margin-bottom: 0;
+}
+
+.fiche-encart {
+  margin-top: var(--e4);
+  padding: var(--e3) var(--e4);
+  background: var(--marque-doux);
+  border-left: 3px solid var(--marque);
+  border-radius: 0 var(--rayon) var(--rayon) 0;
+  font-size: var(--t-sm);
+}
+
+.fiche-suite {
+  padding: var(--e5);
+  margin-top: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-top: 3px solid var(--marque);
+  border-radius: var(--rayon-lg);
+}
+
+/* Variante clôturée : même bloc, mais sans la couleur d'appel — il n'y a rien
+   à faire ici, et un encadré qui attire l'œil promettrait une action. */
+.fiche-suite--close {
+  border-top-color: var(--bordure-forte);
+  border-top-style: dashed;
+}
+
+.fiche-suite h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--e2);
+}
+
+.fiche-suite p {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  margin-bottom: var(--e4);
+  max-width: var(--largeur-texte);
+}
+
+.fiche-suite .btn {
+  width: 100%;
+}
+
+@media (min-width: 560px) {
+  .fiche-suite .btn {
+    width: auto;
+  }
+}
+
+.fiche-source {
+  margin-top: var(--e5);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+/* ── Le mur ──────────────────────────────────────────────────────────── */
+
+.mur {
+  margin-top: var(--e5);
+  padding: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-top: 3px solid var(--marque);
+  border-radius: var(--rayon-lg);
+}
+
+.mur h2 {
+  font-size: var(--t-xl);
+  margin-bottom: var(--e2);
+}
+
+.mur > p {
+  color: var(--texte-doux);
+  font-size: var(--t-base);
+  margin-bottom: var(--e4);
+  max-width: var(--largeur-texte);
+}
+
+.mur-liste {
+  margin: 0 0 var(--e5);
+  padding-left: var(--e5);
+}
+
+.mur-liste li {
+  margin-bottom: var(--e2);
+  font-size: var(--t-sm);
+}
+
+@media (min-width: 560px) {
+  .fiche-dates,
+  .fiche-conditions {
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  }
+
+  .fiche-meta,
+  .fiche-bloc li,
+  .fiche-dates dd,
+  .fiche-conditions dd,
+  .mur-liste li {
+    font-size: var(--t-base);
+  }
+}
+
+@media (min-width: 700px) {
+  .fiche {
+    padding-block: var(--e7);
+  }
+
+  .mur {
+    padding: var(--e6);
+  }
+}

@@ -1,0 +1,104 @@
+.entete {
+  background: var(--surface);
+  border-bottom: 1px solid var(--bordure);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  /* Retrait sûr en paysage sur les écrans à encoche. */
+  padding-top: env(safe-area-inset-top);
+}
+
+.entete-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e4);
+  padding-block: var(--e3);
+}
+
+.entete-marque {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  text-decoration: none;
+  color: var(--texte);
+  /* Le logo ne doit jamais être poussé à la ligne par la navigation. */
+  flex-shrink: 0;
+}
+
+.entete-sigle {
+  display: inline-grid;
+  place-items: center;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--marque);
+  color: #ffffff;
+  font-size: var(--t-sm);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .entete-sigle {
+    color: #08131c;
+  }
+}
+
+/* Sous 400px, le sigle EPNC suffit : afficher le nom complet écraserait la
+   navigation. Le lien reste explicite pour les lecteurs d'écran. */
+.entete-nom {
+  display: none;
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+@media (min-width: 400px) {
+  .entete-nom {
+    display: inline;
+  }
+}
+
+.entete-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--e1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex-wrap: wrap;
+}
+
+.entete-lien {
+  display: inline-block;
+  padding: var(--e2) var(--e3);
+  border-radius: var(--rayon);
+  color: var(--texte);
+  text-decoration: none;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  /* Cible tactile : le lien seul ferait ~20px de haut. */
+  line-height: 26px;
+}
+
+.entete-lien:hover {
+  background: var(--surface-2);
+}
+
+/* `aria-current="page"` est posé par NavLink : l'état actif est ainsi porté
+   par la sémantique, et le style ne fait que le refléter. */
+.entete-lien[aria-current="page"] {
+  background: var(--marque-doux);
+  color: var(--marque);
+}
+
+@media (min-width: 700px) {
+  .entete-inner {
+    padding-block: var(--e4);
+  }
+
+  .entete-lien {
+    font-size: var(--t-base);
+    padding-inline: var(--e4);
+  }
+}

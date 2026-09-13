@@ -1,0 +1,52 @@
+.mdp-zone {
+  display: flex;
+  align-items: stretch;
+  gap: var(--e2);
+  min-width: 0;
+}
+
+.mdp-zone input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Bouton discret : c'est une commodité, pas une action du formulaire. Il ne
+   doit pas concurrencer « Créer mon compte ». */
+.mdp-bouton {
+  flex: 0 0 auto;
+  padding-inline: var(--e3);
+  border: 1px solid var(--bordure-forte);
+  border-radius: var(--rayon);
+  background: var(--surface-2);
+  color: var(--texte-doux);
+  font: inherit;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  cursor: pointer;
+  /* Même hauteur que le champ, sans dépendre d'une valeur en dur. */
+  min-height: 46px;
+}
+
+.mdp-bouton:hover {
+  background: var(--bordure);
+  color: var(--texte);
+}
+
+.mdp-etat--ok {
+  color: var(--succes);
+  font-weight: 600;
+}
+
+.mdp-etat--erreur {
+  color: var(--erreur);
+  font-weight: 600;
+}
+
+/* Sous 380px, « Afficher » mange la moitié du champ : on réduit au strict
+   nécessaire plutôt que de laisser la saisie se rétrécir. */
+@media (max-width: 379px) {
+  .mdp-bouton {
+    padding-inline: var(--e2);
+    font-size: var(--t-xs);
+  }
+}

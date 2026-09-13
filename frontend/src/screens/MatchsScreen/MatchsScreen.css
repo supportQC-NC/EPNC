@@ -1,0 +1,322 @@
+/* Rapprochements — mobile first. */
+
+.matchs {
+  padding-block: var(--e5);
+  max-width: 54rem;
+}
+
+.matchs-entete {
+  margin-bottom: var(--e5);
+}
+
+.matchs-entete h1 {
+  font-size: var(--t-2xl);
+}
+
+.matchs-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-md);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e4);
+}
+
+.matchs-filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  min-height: 44px;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+
+.matchs-filtre input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--marque);
+  cursor: pointer;
+}
+
+.matchs-vide,
+.matchs-pied {
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+}
+
+.matchs-pied {
+  margin-top: var(--e6);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+}
+
+/* ── Une correspondance ───────────────────────────────────────────────── */
+
+.matchs-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.match {
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--bordure-forte);
+  border-radius: var(--rayon-lg);
+}
+
+/* Le liseré double le verdict écrit, il ne le remplace pas. */
+.match--solide {
+  border-left-color: var(--succes);
+}
+
+.match--jouable {
+  border-left-color: var(--marque);
+}
+
+.match-haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e4);
+  margin-bottom: var(--e3);
+}
+
+.match-titre {
+  font-size: var(--t-md);
+  margin: 0 0 var(--e1);
+}
+
+.match-titre a {
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.match-titre a:hover {
+  text-decoration: underline;
+}
+
+.match-meta {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.match-score {
+  flex-shrink: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 1px;
+}
+
+.match-score-valeur {
+  font-size: var(--t-2xl);
+  font-weight: 750;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.match-score-sur {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.match-verdict {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.match-verdict--solide {
+  color: var(--succes);
+}
+
+.match-verdict--eloigne {
+  color: var(--texte-doux);
+}
+
+.match-alerte {
+  padding: var(--e3);
+  margin-bottom: var(--e4);
+  background: var(--erreur-fond);
+  border-left: 3px solid var(--erreur);
+  border-radius: 0 var(--rayon) var(--rayon) 0;
+  font-size: var(--t-xs);
+  color: var(--texte);
+}
+
+/* ── Composantes du score ─────────────────────────────────────────────── */
+
+.composantes {
+  list-style: none;
+  margin: 0 0 var(--e4);
+  padding: 0;
+  display: grid;
+  gap: var(--e3);
+}
+
+.composante {
+  padding: var(--e3);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.composante--neutre {
+  opacity: 0.75;
+  border-style: dashed;
+}
+
+.composante-haut {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--e3);
+  margin-bottom: var(--e2);
+}
+
+.composante-haut h4 {
+  font-size: var(--t-sm);
+  margin: 0;
+}
+
+.composante-points {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.jauge--fine {
+  height: 6px;
+  margin-bottom: var(--e2);
+}
+
+.composante-note {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+/* ── Justifications ──────────────────────────────────────────────────── */
+
+.justification {
+  margin-top: var(--e2);
+  font-size: var(--t-xs);
+}
+
+.justification summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding-block: var(--e1);
+  color: var(--marque);
+}
+
+.justification--manque summary {
+  color: var(--texte-doux);
+}
+
+.justification-liste {
+  list-style: none;
+  margin: var(--e2) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.justification-liste li {
+  padding-left: var(--e3);
+  border-left: 2px solid var(--bordure);
+}
+
+.justification-attendu {
+  display: block;
+  color: var(--texte);
+}
+
+.justification-lien {
+  display: block;
+  color: var(--texte-doux);
+}
+
+.justification-insuffisant {
+  color: var(--erreur);
+}
+
+/* ── Écartés ──────────────────────────────────────────────────────────── */
+
+.ecartes {
+  margin-top: var(--e6);
+  padding-top: var(--e5);
+  border-top: 1px solid var(--bordure);
+}
+
+.ecartes h2 {
+  font-size: var(--t-lg);
+  margin-bottom: var(--e2);
+}
+
+.ecartes-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e4);
+}
+
+.ecartes-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e3);
+}
+
+.ecarte {
+  padding: var(--e3) var(--e4);
+  background: var(--surface);
+  border: 1px dashed var(--bordure-forte);
+  border-radius: var(--rayon);
+}
+
+.ecarte h3 {
+  font-size: var(--t-sm);
+  margin-bottom: var(--e2);
+}
+
+.ecarte h3 a {
+  color: var(--texte);
+}
+
+.ecarte-motifs {
+  margin: 0 0 var(--e2);
+  padding-left: var(--e4);
+  font-size: var(--t-xs);
+  color: var(--erreur);
+}
+
+.ecarte-date {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+@media (min-width: 620px) {
+  .match {
+    padding: var(--e5);
+  }
+
+  .match-titre {
+    font-size: var(--t-lg);
+  }
+
+  .composantes {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 700px) {
+  .matchs {
+    padding-block: var(--e7);
+  }
+}

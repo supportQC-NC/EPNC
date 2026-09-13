@@ -1,0 +1,196 @@
+/* Suivi des candidatures — mobile first. */
+
+.suivi {
+  padding-block: var(--e5);
+  max-width: 52rem;
+}
+
+.suivi-entete {
+  margin-bottom: var(--e5);
+}
+
+.suivi-entete h1 {
+  font-size: var(--t-2xl);
+}
+
+.suivi-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-md);
+  margin: 0;
+}
+
+.suivi-vide {
+  padding: var(--e6) var(--e5);
+  background: var(--surface);
+  border: 1px dashed var(--bordure-forte);
+  border-radius: var(--rayon-lg);
+  text-align: center;
+}
+
+.suivi-vide h2 {
+  font-size: var(--t-lg);
+}
+
+.suivi-vide p {
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+  max-width: 40ch;
+  margin-inline: auto;
+  margin-bottom: var(--e5);
+}
+
+/* ── Compteurs ────────────────────────────────────────────────────────── */
+
+.suivi-compteurs {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+  margin: 0 0 var(--e5);
+  padding: 0;
+}
+
+.suivi-compteurs li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--e2);
+  padding: var(--e2) var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+}
+
+.suivi-compteur-valeur {
+  font-size: var(--t-md);
+  font-weight: 750;
+  font-variant-numeric: tabular-nums;
+}
+
+.suivi-compteur-libelle {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+/* ── Dossiers ─────────────────────────────────────────────────────────── */
+
+.suivi-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.dossier {
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 3px solid var(--bordure-forte);
+  border-radius: var(--rayon-lg);
+}
+
+/* Le liseré reprend la couleur du statut, mais il ne fait que DOUBLER la
+   pastille, qui porte le texte. Rien ne dépend de la couleur seule. */
+.dossier--envoyee,
+.dossier--prete {
+  border-left-color: var(--marque);
+}
+
+.dossier--entretien,
+.dossier--acceptee {
+  border-left-color: var(--succes);
+}
+
+.dossier--refusee {
+  border-left-color: var(--erreur);
+}
+
+.dossier-haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e3);
+  margin-bottom: var(--e2);
+}
+
+.dossier-titre {
+  font-size: var(--t-md);
+  margin: 0;
+}
+
+.dossier-titre a {
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.dossier-titre a:hover {
+  text-decoration: underline;
+}
+
+.pastille {
+  flex-shrink: 0;
+  padding: 2px var(--e2);
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--bordure-forte);
+  color: var(--texte-doux);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pastille--prete,
+.pastille--envoyee {
+  background: var(--marque-doux);
+  border-color: var(--marque);
+  color: var(--marque);
+}
+
+.pastille--entretien,
+.pastille--acceptee {
+  background: var(--succes-fond);
+  border-color: var(--succes);
+  color: var(--succes);
+}
+
+.pastille--refusee {
+  background: var(--erreur-fond);
+  border-color: var(--erreur);
+  color: var(--erreur);
+}
+
+.dossier-meta {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.dossier-avancement {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.dossier .btn {
+  width: 100%;
+}
+
+@media (min-width: 560px) {
+  .dossier {
+    padding: var(--e5);
+  }
+
+  .dossier-titre {
+    font-size: var(--t-lg);
+  }
+
+  .dossier .btn {
+    width: auto;
+  }
+}
+
+@media (min-width: 700px) {
+  .suivi {
+    padding-block: var(--e7);
+  }
+}

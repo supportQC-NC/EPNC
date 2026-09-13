@@ -1,0 +1,77 @@
+/* Fenêtre d'avertissement — mobile first. */
+
+.avertissement-fond {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--e4);
+  /* Voile appuyé : le contenu derrière doit être visiblement hors d'atteinte,
+     pas simplement grisé. */
+  background: rgba(6, 12, 18, 0.82);
+  /* Retraits sûrs sur écran à encoche. */
+  padding-top: max(var(--e4), env(safe-area-inset-top));
+  padding-bottom: max(var(--e4), env(safe-area-inset-bottom));
+}
+
+.avertissement {
+  width: 100%;
+  max-width: 32rem;
+  /* Sur un petit écran en paysage, le texte dépasserait : la fenêtre défile
+     elle-même plutôt que de tronquer le message. */
+  max-height: calc(100dvh - var(--e6));
+  overflow-y: auto;
+  padding: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure-forte);
+  border-top: 4px solid var(--marque);
+  border-radius: var(--rayon-lg);
+}
+
+.avertissement-pastille {
+  display: inline-block;
+  margin-bottom: var(--e3);
+  padding: 2px var(--e2);
+  border-radius: 4px;
+  background: var(--marque);
+  color: #ffffff;
+  font-size: var(--t-xs);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+@media (prefers-color-scheme: dark) {
+  .avertissement-pastille {
+    color: #08131c;
+  }
+}
+
+.avertissement h2 {
+  font-size: var(--t-xl);
+  margin-bottom: var(--e4);
+}
+
+.avertissement-texte p {
+  font-size: var(--t-sm);
+  line-height: 1.65;
+  margin-bottom: var(--e4);
+}
+
+.avertissement-pied {
+  margin: var(--e3) 0 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  text-align: center;
+}
+
+@media (min-width: 560px) {
+  .avertissement {
+    padding: var(--e6);
+  }
+
+  .avertissement-texte p {
+    font-size: var(--t-base);
+  }
+}

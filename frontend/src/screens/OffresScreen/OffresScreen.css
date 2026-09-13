@@ -1,0 +1,351 @@
+/* Liste des offres — mobile first. */
+
+.offres {
+  padding-block: var(--e6);
+  max-width: 56rem;
+}
+
+.offres-entete {
+  margin-bottom: var(--e5);
+}
+
+.offres-entete h1 {
+  font-size: var(--t-2xl);
+}
+
+.offres-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-md);
+  max-width: var(--largeur-texte);
+  margin: 0;
+}
+
+/* ── Rythme des publications ──────────────────────────────────────────── */
+
+.rythme {
+  padding: var(--e4);
+  margin-bottom: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.rythme h2 {
+  font-size: var(--t-sm);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--texte-doux);
+  margin-bottom: var(--e2);
+}
+
+.rythme-resume {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e4);
+}
+
+.rythme-barres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: var(--e1);
+  align-items: end;
+  height: 6rem;
+}
+
+.rythme-mois {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 2px;
+}
+
+.rythme-valeur {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte-doux);
+}
+
+.rythme-barre {
+  display: block;
+  width: 100%;
+  max-width: 1.75rem;
+  min-height: 2px;
+  border-radius: 2px 2px 0 0;
+  background: var(--marque);
+}
+
+.rythme-libelle {
+  font-size: 0.6875rem;
+  color: var(--texte-doux);
+  /* Les abréviations de mois se chevauchent sous 12 colonnes étroites : on
+     les fait pivoter plutôt que de les tronquer. */
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  margin-top: 2px;
+}
+
+@media (min-width: 560px) {
+  .rythme-libelle {
+    writing-mode: horizontal-tb;
+    transform: none;
+  }
+}
+
+/* Barre de contrôle : empilée sur téléphone, sur une ligne dès qu'il y a la
+   place. Le filtre reste au-dessus de la liste, jamais caché derrière un
+   menu — c'est le seul réglage de la page. */
+.offres-barre {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  padding-bottom: var(--e3);
+  margin-bottom: var(--e5);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.offres-compte {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.offres-filtre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  font-size: var(--t-sm);
+  cursor: pointer;
+  /* Toute la ligne (case + libellé) est cliquable et fait au moins 44px de
+     haut : viser une case de 19px au pouce est un échec garanti. */
+  min-height: 44px;
+}
+
+.offres-filtre input {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--marque);
+  cursor: pointer;
+}
+
+.offres-vide {
+  color: var(--texte-doux);
+}
+
+.offres-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.offre-carte {
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 3px solid var(--marque);
+  border-radius: var(--rayon-lg);
+}
+
+/* L'état « clôturée » est porté par le badge (un texte) autant que par la
+   teinte du liseré. Jamais par la couleur seule. */
+.offre-carte--close {
+  border-left-color: var(--bordure-forte);
+  border-style: dashed;
+  border-left-style: solid;
+  position: relative;
+  overflow: hidden;
+  /* `isolate` : le filigrane est posé derrière le contenu de la carte, pas
+     derrière toute la page. */
+  isolation: isolate;
+}
+
+/* Voile de clôture.
+   Il RECOUVRE l'annonce : l'enjeu est qu'on ne puisse pas la prendre pour un
+   poste à pourvoir en parcourant la liste. Le rouge dit « fermé », le mot
+   « Clôturée » le dit en toutes lettres, et la transparence laisse deviner le
+   contenu — la fiche garde son intérêt documentaire, c'est la raison pour
+   laquelle on continue de l'afficher.
+   Toute la surface est cliquable et mène à la fiche. */
+.offre-voile {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--e1);
+  text-decoration: none;
+  background: rgba(150, 28, 24, 0.58);
+  transition: background-color 0.15s ease;
+}
+
+.offre-voile:hover {
+  /* Au survol, le voile s'éclaircit : on comprend qu'il y a quelque chose
+     dessous, et que le clic y mène. */
+  background: rgba(150, 28, 24, 0.42);
+}
+
+.offre-voile-titre {
+  font-size: clamp(1.75rem, 8vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  /* Presque noir sur le voile rouge clair du thème clair. */
+  color: #14100f;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.offre-voile-note {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: #14100f;
+  opacity: 0.85;
+  text-align: center;
+  padding-inline: var(--e4);
+}
+
+@media (prefers-color-scheme: dark) {
+  .offre-voile {
+    background: rgba(120, 22, 18, 0.62);
+  }
+
+  .offre-voile:hover {
+    background: rgba(120, 22, 18, 0.46);
+  }
+
+  /* Sur fond sombre, le noir disparaîtrait : on passe au gris clair, qui
+     reste dans la gamme demandée et reste lisible. */
+  .offre-voile-titre,
+  .offre-voile-note {
+    color: #e4e4e4;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .offre-voile {
+    transition: none;
+  }
+}
+
+.offre-haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e3);
+  margin-bottom: var(--e2);
+}
+
+.offre-titre {
+  font-size: var(--t-md);
+  margin: 0;
+}
+
+.offre-titre a {
+  color: var(--texte);
+  text-decoration: none;
+}
+
+.offre-titre a:hover {
+  text-decoration: underline;
+}
+
+.offre-badge {
+  flex-shrink: 0;
+  padding: 2px var(--e2);
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--bordure-forte);
+  color: var(--texte-doux);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.offre-meta {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.offre-extrait {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-sm);
+}
+
+.offre-familles {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e1);
+  margin: 0 0 var(--e3);
+  padding: 0;
+}
+
+.offre-familles li {
+  padding: 2px var(--e2);
+  border-radius: 999px;
+  background: var(--marque-doux);
+  color: var(--marque);
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+
+.offre-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e1) var(--e4);
+  margin: 0 0 var(--e4);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.offre-echeance {
+  font-weight: 600;
+}
+
+/* Le bouton occupe toute la largeur sur téléphone : c'est l'action de la
+   carte, elle doit être atteignable au pouce sans viser. */
+.offre-carte .btn {
+  width: 100%;
+}
+
+@media (min-width: 560px) {
+  .offres-barre {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+
+  .offre-carte {
+    padding: var(--e5);
+  }
+
+  .offre-titre {
+    font-size: var(--t-lg);
+  }
+
+  .offre-extrait {
+    font-size: var(--t-base);
+  }
+
+  .offre-carte .btn {
+    width: auto;
+  }
+}
+
+@media (min-width: 700px) {
+  .offres {
+    padding-block: var(--e7);
+  }
+}
