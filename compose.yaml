@@ -1,0 +1,129 @@
+# Emploi Public NC — la démonstration complète, en une commande.
+#
+#   docker compose up --build
+#   → http://localhost:5000
+#
+# ══════════════════════════════════════════════════════════════════════════
+#  L'EXIGENCE : QUE QUELQU'UN QUI NE NOUS CONNAÎT PAS PUISSE FAIRE TOURNER ÇA
+# ══════════════════════════════════════════════════════════════════════════
+# C'est le critère « réutilisabilité et essaimage » du hackathon, et c'est
+# aussi la condition pour qu'un jury regarde le projet plutôt que la vidéo.
+#
+# 🔴 AUCUNE CLÉ N'EST REQUISE. Sans `OPENAI_API_KEY`, l'application démarre et
+# se démontre : les pièces sortent en BROUILLONS ASSEMBLÉS, clairement étiquetés
+# comme tels à l'écran. Sans SMTP, les envois sont SIMULÉS et tracés en console.
+# Le mode dégradé n'est pas un reliquat : c'est ce qui rend la démo possible
+# hors ligne, sans budget, et sans nous.
+#
+# Ce que `docker compose up` produit, sans autre intervention :
+#   • une base MongoDB,
+#   • le référentiel métiers et les offres réelles ingérés depuis l'open data,
+#   • huit profils de démonstration FICTIFS,
+#   • l'application servie sur le port 5000.
+#
+# ══════════════════════════════════════════════════════════════════════════
+#  ⚠️ `docker compose config` AFFICHE VOS SECRETS EN CLAIR
+# ══════════════════════════════════════════════════════════════════════════
+# Les `${VAR:-}` ci-dessous sont interpolés depuis le `.env` du dossier. La
+# commande `docker compose config`, qui sert à vérifier ce fichier, IMPRIME
+# donc la clé OpenAI, le mot de passe SMTP et le JWT_SECRET sur la sortie
+# standard — dans un terminal partagé, dans un journal d'intégration continue,
+# dans une capture d'écran.
+#
+# Vérifiez ce fichier avec un environnement vide :
+#     env -i docker compose config          (Linux, macOS)
+#     docker compose --env-file /dev/null config
+#
+# C'est arrivé pendant le développement. Les secrets concernés ont été
+# révoqués.
+
+services:
+  # ── La base ─────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    volumes:
+      - donnees-mongo:/data/db
+    # Volontairement NON exposée sur l'hôte : seuls les autres services du
+    # réseau compose y accèdent. Publier 27017 sur la machine de quelqu'un pour
+    # une démonstration serait ouvrir une base sans mot de passe sur son réseau.
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+
+  # ── L'ingestion, une fois au démarrage ──────────────────────────────
+  #
+  # Service à part, qui s'exécute puis s'arrête. Deux raisons de ne pas le
+  # coudre dans l'image applicative :
+  #   1. le corpus se renouvelle ; on veut pouvoir le rafraîchir sans
+  #      reconstruire quoi que ce soit (`docker compose run --rm donnees`) ;
+  #   2. une ingestion qui échoue — réseau coupé, source indisponible — ne doit
+  #      pas empêcher le serveur de démarrer sur les données déjà en base.
+  donnees:
+    build: .
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://mongo:27017/epnc
+      # Les comptes de démonstration. Mot de passe trivial et ASSUMÉ : cette
+      # pile est une démonstration locale, jamais un déploiement. Le jour où
+      # elle en devient un, ces valeurs doivent venir d'un secret.
+      SEED_ADMIN_EMAIL: admin@epnc.nc
+      SEED_ADMIN_PASSWORD: demo
+      SEED_ADMIN_PRENOM: EPNC
+      SEED_ADMIN_NOM: Administrateur
+    # `|| true` sur l'ingestion : si data.gouv.nc ou Hugging Face est
+    # injoignable au moment du démarrage, on continue quand même — mieux vaut
+    # une démo avec un corpus partiel qu'une pile qui refuse de monter.
+    command: >
+      sh -c "node backend/ingest.js --tout || true;
+             node backend/seeder.js || true;
+             node backend/seedComptesTest.js || true"
+    restart: "no"
+
+  # ── L'application ───────────────────────────────────────────────────
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+      donnees:
+        condition: service_completed_successfully
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/epnc
+      FRONTEND_URL: http://localhost:5000
+
+      # 🔴 Le garde-fou le plus important du projet, reconduit ici.
+      # Une candidature de démonstration ne doit JAMAIS partir chez une vraie
+      # DRH. Sans destinataire de test configuré, l'envoi est impossible — et
+      # c'est volontaire. `envoiService` refuse de toute façon les domaines
+      # opt.nc, gouv.nc et drhfpnc.nc, quoi qu'on écrive ici.
+      CANDIDATURE_EMAIL_TEST: ${CANDIDATURE_EMAIL_TEST:-}
+      ENVOI_PRODUCTION_AUTORISE: "false"
+
+      # Facultatifs. Absents, l'application fonctionne en mode dégradé et le
+      # dit à l'écran.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+
+      # ⚠️ Un secret de session par défaut, uniquement parce que cette pile est
+      # une démonstration locale. En déploiement réel, cette variable DOIT
+      # venir d'ailleurs : un JWT_SECRET connu de tous permet de forger une
+      # session administrateur.
+      JWT_SECRET: ${JWT_SECRET:-demonstration-locale-a-remplacer}
+
+volumes:
+  donnees-mongo:

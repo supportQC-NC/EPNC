@@ -272,6 +272,55 @@ const sourcesDuProfil = (profil) => [
   })),
 ];
 
+// Deux libellés de compétence désignent-ils la même chose ?
+//
+// « Rédaction administrative » et « Rédaction de courriers administratifs »
+// doivent se rejoindre ; « Rédaction administrative » et « Gestion de projet »
+// non. On exige la moitié des mots porteurs du plus court des deux.
+export const memeCompetence = (a, b) => {
+  const ma = motsUtiles(a);
+  const mb = motsUtiles(b);
+  if (ma.size === 0 || mb.size === 0) return false;
+
+  const communs = motsCommuns(ma, mb);
+  const court = Math.min(ma.size, mb.size);
+
+  // ⚠️ DEUX mots communs au minimum dès que les deux libellés en comptent
+  // plusieurs.
+  //
+  // La première version se contentait de la moitié du plus court, donc d'UN
+  // seul mot pour un libellé de deux. Résultat observé à l'écran :
+  // « Rédaction administrative » et « Gestion administrative de dossiers »
+  // étaient fusionnées en un seul critère — elles partagent « administrative »
+  // et rien d'autre. Deux compétences distinctes comptées comme une, et un
+  // recruteur qui ne retrouvait pas le critère qu'il venait de saisir.
+  //
+  // Un seul mot ne suffit que si l'un des deux libellés EST ce mot
+  // (« Comptabilité » face à « Comptabilité publique »).
+  if (court === 1) return communs >= 1;
+
+  if (communs < 2 || communs < Math.ceil(court / 2)) return false;
+
+  // ⚠️ Le libellé le PLUS LONG doit aussi être couvert, au tiers au moins.
+  //
+  // Sans cette borne, la règle ne contraint que le côté court : deux mots
+  // communs suffisaient à rapprocher n'importe quel libellé de deux mots d'un
+  // libellé de quatorze. Observé à l'essai de l'entretien guidé —
+  // « Organisation d'activités » était rapproché de « Connaissance de
+  // l'organisation et des processus de l'Office applicables à l'activité
+  // relation client ». Les deux mots communs y sont, et les deux sens sont
+  // étrangers : « organisation » y désigne l'institution, pas le fait
+  // d'organiser.
+  //
+  // Au tiers, « Rédaction administrative » rejoint toujours « Rédaction de
+  // courriers administratifs » (2 sur 3), et « Gestion logistique » rejoint
+  // « Maîtrise des SIG et des outils de gestion logistique » (2 sur 3, les
+  // mots vides étant écartés).
+  const long = Math.max(ma.size, mb.size);
+
+  return communs >= Math.ceil(long / 3);
+};
+
 // ── Filtres bloquants ────────────────────────────────────────────────────
 //
 // Ils EXCLUENT, ils ne pénalisent pas. C'est la seule façon de tenir l'absence

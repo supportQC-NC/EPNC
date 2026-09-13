@@ -1,0 +1,32 @@
+# Ce qui ne doit pas entrer dans le contexte de build.
+#
+# Sans ce fichier, `docker build` envoie au démon TOUT le dossier — y compris
+# les deux `node_modules` (plusieurs centaines de mégaoctets), le dossier .git
+# et les GIF de démonstration. Le build devient lent, et surtout le `.env`
+# atterrirait dans une couche d'image.
+
+# 🔴 Les secrets, avant tout le reste.
+.env
+.env.*
+!exemple.env
+user_test.txt
+
+node_modules
+frontend/node_modules
+frontend/build
+
+.git
+.gitignore
+.claude
+
+# Démos, captures et sorties de mesure : lourdes et sans usage à l'exécution.
+demo
+*.gif
+*.tmp.*
+
+npm-debug.log*
+Dockerfile
+compose.yaml
+README.md
+CLAUDE.md
+FEUILLE-DE-ROUTE.md

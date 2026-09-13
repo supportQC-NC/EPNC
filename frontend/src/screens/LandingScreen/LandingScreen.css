@@ -89,6 +89,10 @@
 .hero-inner {
   position: relative;
   padding-block: var(--e7);
+  /* Largeur de lecture du hero. Elle vit ici, PAS sur `.conteneur` : porter
+     les deux classes sur le même élément faisait gagner ce `max-width` tout
+     en gardant le `margin-inline: auto` du conteneur, ce qui centrait le
+     texte au lieu de l'aligner sur la gouttière. */
   max-width: 44rem;
   /* Le texte du hero est toujours clair : il repose sur une photo assombrie,
      pas sur les surfaces du thème. Il ne suit donc pas les jetons clair/sombre. */
@@ -480,5 +484,235 @@
 
   .rappel-actions {
     justify-content: center;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════
+   LE CONSTAT — trois chiffres vivants
+   ══════════════════════════════════════════════════════════════════════
+   Placés juste sous le hero, avant toute promesse. On établit le problème
+   avant de proposer la solution : c'est ce qui distingue une page produit
+   d'une plaquette. */
+
+.constat {
+  background: var(--surface-2);
+  border-block: 1px solid var(--bordure);
+}
+
+.constat-liste {
+  list-style: none;
+  display: grid;
+  gap: var(--e5);
+  margin: var(--e6) 0 0;
+  padding: 0;
+}
+
+.constat-liste li {
+  padding-left: var(--e4);
+  border-left: 3px solid var(--bordure-forte);
+}
+
+/* Le chiffre qui porte le constat central se distingue par la couleur ET par
+   sa place : la couleur seule ne doit jamais porter l'information. */
+.constat--alerte {
+  border-left-color: var(--attention) !important;
+}
+
+.constat-chiffre {
+  display: block;
+  font-size: clamp(2.25rem, 4vw + 1rem, 3.5rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  /* Chasse fixe : les trois nombres s'alignent et ne sautillent pas quand la
+     donnée se recharge. */
+  font-variant-numeric: tabular-nums;
+}
+
+.constat--alerte .constat-chiffre {
+  color: var(--attention);
+}
+
+.constat-libelle {
+  display: block;
+  margin-top: var(--e2);
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+.constat-detail {
+  display: block;
+  margin-top: var(--e2);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  color: var(--texte-doux);
+  max-width: 42ch;
+}
+
+.constat-conclusion {
+  margin: var(--e7) 0 0;
+  padding-top: var(--e5);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-md);
+  line-height: 1.7;
+  max-width: var(--largeur-texte);
+}
+
+@media (min-width: 800px) {
+  .constat-liste {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   LES PREUVES — texte + capture
+   ══════════════════════════════════════════════════════════════════════ */
+
+.preuve-inner {
+  display: grid;
+  gap: var(--e6);
+  align-items: center;
+}
+
+.preuve-etiquette {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-xs);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--marque);
+}
+
+.preuve-texte .section-titre {
+  margin-bottom: var(--e3);
+}
+
+.preuve-points {
+  list-style: none;
+  margin: var(--e4) 0 0;
+  padding: 0;
+}
+
+.preuve-points li {
+  position: relative;
+  padding-left: var(--e5);
+  margin-bottom: var(--e3);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+}
+
+/* La coche est décorative : elle ne porte aucune information que le texte ne
+   porte déjà, d'ou aria-hidden implicite via ::before. */
+.preuve-points li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.45em;
+  width: 10px;
+  height: 6px;
+  border-left: 2px solid var(--marque);
+  border-bottom: 2px solid var(--marque);
+  transform: rotate(-45deg);
+}
+
+/* ── Le cadre de fenetre ──────────────────────────────────────────────
+   Les captures sont prises en thème sombre et la page peut s'afficher en
+   thème clair. Le cadre assume son propre fond : l'image ne flotte pas, elle
+   est visiblement « un écran ». */
+.fenetre {
+  border-radius: var(--rayon-lg);
+  overflow: hidden;
+  background: #0f1620;
+  border: 1px solid var(--bordure);
+  /* Une ombre portée franche, pas diffuse : le socle visuel du projet refuse
+     les ombres flottantes, mais une capture a besoin de se détacher du fond. */
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.22);
+}
+
+.fenetre-barre {
+  display: flex;
+  gap: 6px;
+  padding: 10px 12px;
+  background: #1a2432;
+  border-bottom: 1px solid rgb(255 255 255 / 0.06);
+}
+
+.fenetre-barre span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.fenetre img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Les captures sont recadrées sur leur zone utile (~550-670 px de large) et
+   affichées à peu près à leur taille réelle. Une capture pleine largeur
+   réduite de moitié devient illisible : on montre alors une vignette qui
+   prouve qu'on a « un écran », pas ce qu'il contient — c'est-à-dire rien. */
+.preuve .fenetre {
+  max-width: 680px;
+  margin-inline: auto;
+}
+
+@media (min-width: 900px) {
+  .preuve-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--e8);
+  }
+
+  /* Une section sur deux inverse l'ordre VISUEL, jamais l'ordre du document :
+     au clavier et au lecteur d'écran, le texte précède toujours sa capture. */
+  .preuve--inverse .preuve-texte {
+    order: 2;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   CE QUE L'OUTIL NE FAIT PAS
+   ══════════════════════════════════════════════════════════════════════ */
+
+.refus-liste {
+  list-style: none;
+  display: grid;
+  gap: var(--e4);
+  margin: var(--e6) 0 0;
+  padding: 0;
+}
+
+.refus-carte {
+  padding: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+/* Le trait rouge dit « interdiction » sans qu'on ait besoin de le lire. Le
+   titre de chaque carte commence par « Aucun » ou « Rien » : l'information
+   reste entière sans la couleur. */
+.refus-carte {
+  border-left: 3px solid var(--erreur);
+}
+
+.refus-carte h3 {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-md);
+}
+
+.refus-carte p {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  color: var(--texte-doux);
+}
+
+@media (min-width: 760px) {
+  .refus-liste {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

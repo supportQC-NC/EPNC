@@ -21,7 +21,8 @@
     "eval": "node backend/eval.js",
     "moderation:echeances": "node backend/echeances.js",
     "veille": "node backend/veille.js",
-    "mcp": "node backend/mcp.js"
+    "mcp": "node backend/mcp.js",
+    "eval:pieces": "node backend/evalPieces.js"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",

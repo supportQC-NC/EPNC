@@ -217,7 +217,10 @@ const dateDePiece = (candidature, piece) =>
 // On écarte les lignes qui sont manifestement un en-tête (le nom du candidat
 // en capitales, un intitulé de rubrique) : reprises telles quelles, elles
 // feraient doublon avec le bloc d'identité que la mise en page rend déjà.
-const premiereAccroche = (texte) => {
+// Exportee : c'est le SEUL fragment du CV employeur qui vienne d'un modele,
+// donc le seul endroit du document ou une invention puisse entrer. Le banc de
+// mesure la controle (`npm run eval:pieces --cv`).
+export const premiereAccroche = (texte) => {
   const lignes = String(texte || "")
     .split(/\r?\n/)
     .map((l) => l.trim())

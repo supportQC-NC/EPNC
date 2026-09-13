@@ -40,6 +40,39 @@ export const profilApiSlice = apiSlice.injectEndpoints({
       // recalculés sur le nouveau profil.
       invalidatesTags: ["Profil", "User", "Match", "Alertes"],
     }),
+
+    // ── Entretien guidé ────────────────────────────────────────────
+    //
+    // Ces trois mutations ne PRODUISENT que des propositions : elles n'écrivent
+    // rien et n'invalident donc aucun cache. L'enregistrement passe par
+    // `updateProfil`, après validation par la personne.
+    getEntretien: builder.query({
+      query: () => ({ url: `${PROFIL_URL}/entretien` }),
+    }),
+
+    entretienExperience: builder.mutation({
+      query: (recit) => ({
+        url: `${PROFIL_URL}/entretien/experience`,
+        method: "POST",
+        body: { recit },
+      }),
+    }),
+
+    entretienFormations: builder.mutation({
+      query: (recit) => ({
+        url: `${PROFIL_URL}/entretien/formations`,
+        method: "POST",
+        body: { recit },
+      }),
+    }),
+
+    entretienRecherche: builder.mutation({
+      query: (recit) => ({
+        url: `${PROFIL_URL}/entretien/recherche`,
+        method: "POST",
+        body: { recit },
+      }),
+    }),
   }),
 });
 
@@ -48,4 +81,8 @@ export const {
   useUpdateProfilMutation,
   useApercuImportMutation,
   useImporterProfilMutation,
+  useGetEntretienQuery,
+  useEntretienExperienceMutation,
+  useEntretienFormationsMutation,
+  useEntretienRechercheMutation,
 } = profilApiSlice;

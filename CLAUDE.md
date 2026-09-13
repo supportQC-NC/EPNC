@@ -61,7 +61,9 @@ npm run data:datagouv      # avis DRHFPNC (data.gouv.nc)
 npm run data:import        # compte admin depuis SEED_ADMIN_*
 npm run data:comptes-test  # 10 comptes de démonstration + user_test.txt
 npm run eval               # matrice de confusion du rapprochement
+npm run eval:pieces        # conformité des lettres produites (appelle le modèle)
 npm run mcp                # serveur MCP (stdio) — 4 outils, pour un assistant
+docker compose up --build  # la démonstration complète, sans aucune clé
 npm run veille             # tour de veille (-- --quotidien pour les récapitulatifs)
 npm run moderation:echeances  # échéances de régularisation (simulation par défaut)
 ```
@@ -459,6 +461,42 @@ recruteur ». L'inscription libre serait une faille, pas une commodité.
 Une seule demande **en attente** par adresse (index partiel unique). Après un
 refus, on peut redéposer — une situation change.
 
+### L'assistant en bulle permanente — `BulleAssistant`
+
+Rangé dans la navigation, l'assistant ne servait qu'à ceux qui pensaient à
+l'ouvrir — c'est-à-dire à ceux qui n'en avaient pas besoin. Le moment où une
+question se pose, c'est devant une fiche qu'on ne comprend pas ou un score
+qu'on trouve injuste, pas quand on décide d'aller voir l'assistant.
+
+La bulle est montée dans `App`, **hors de `.app`** (position fixe, aucun
+contexte d'empilement hérité), et se masque d'elle-même : pas de compte, pas de
+modèle configuré, ou déjà sur `/assistant`.
+
+- 🔴 **Elle ne s'ouvre jamais toute seule.** Un panneau qui surgit au bout de
+  dix secondes est la raison pour laquelle ces dispositifs se ferment sans être
+  lus.
+- 🔴 **Rien pour un visiteur anonyme** : l'assistant ne vaut que parce qu'il
+  connaît le profil, les offres ouvertes et les candidatures. Sans compte, il
+  serait un agent conversationnel générique de plus.
+- L'avertissement d'usage n'est **pas** accepté depuis la bulle : un panneau de
+  360 px n'est pas l'endroit où l'on fait lire un avertissement. Elle renvoie
+  vers l'écran complet.
+- Échap ferme, et le focus **revient sur le déclencheur** — sans ce retour, un
+  utilisateur au clavier est projeté en haut du document.
+- L'entrée « Assistant » a quitté la navigation principale ; l'écran complet
+  (historique, conversations) vit dans le menu du compte sous « Mes
+  conversations ».
+
+⚠️ **Collision de classes CSS évitée de justesse** : `AssistantScreen` utilise
+déjà `.bulle`, `.bulle--utilisateur`, `.bulle-texte` pour ses messages. Le
+widget utilise donc le préfixe `.agent-*`. Sans ce renommage, le
+`position: fixed` du widget se serait appliqué à **chaque message** de l'écran
+complet.
+
+⚠️ Le rôle d'un message est `"utilisateur"` / `"assistant"` (enum du modèle
+`Conversation`), **pas** `"user"`. Comparer à « user » rangeait tous les
+messages du même côté du fil.
+
 ### Le logo d'organisation
 
 `RecruteurProfil.logo`, base64, même mécanique que la photo candidat
@@ -696,8 +734,48 @@ c'est la fonction ① à moitié traitée.
 |---|---|---|
 | Saisie manuelle, section par section | ✅ | `ProfilScreen` |
 | **Import JSON Resume** | ✅ | `ImportJsonResume` · `depuisJsonResume()` |
-| Entretien guidé, pour qui n'a pas de CV | ❌ **à faire** | — |
+| **Entretien guidé**, pour qui n'a pas de CV | ✅ | `EntretienScreen` · `entretienService` |
 | Upload CV PDF → extraction | ❌ (volontairement dernier) | — |
+
+### L'entretien guidé — `entretienService.js` · `/entretien`
+
+C'est la porte sur laquelle le règlement insiste, et la plus difficile : les
+deux autres supposent qu'on a déjà mis son parcours en forme, c'est-à-dire
+qu'on sait ce qu'est une « réalisation » et comment nommer un poste.
+
+🔴 **Trois règles, et elles tiennent tout :**
+
+1. **Aucun fait n'est ajouté.** Le modèle reformule, il n'enrichit jamais : ni
+   durée devinée, ni employeur complété, ni compétence « qu'on a forcément
+   quand on a fait ça ». Ce qui manque remonte dans `manquant[]` et s'affiche
+   comme une question, pas comme une erreur. Vérifié à l'essai : employeur et
+   dates restent VIDES quand le récit ne les donne pas.
+2. **Rien n'est enregistré sans validation.** Les routes `/entretien/*`
+   **n'écrivent pas** ; l'enregistrement passe par `PUT /api/profil` au
+   récapitulatif. Un entretien qui remplit le profil au fil de l'eau produit un
+   CV que son auteur découvre — et ne peut pas défendre en entretien d'embauche.
+3. **Ça marche sans modèle de langue.** Sans `OPENAI_API_KEY`, les réponses
+   sont reprises telles quelles, et l'écran le dit **avant** que la personne
+   raconte. Une panne d'API ne doit pas fermer la seule porte ouverte aux gens
+   sans CV.
+
+Mesuré sur trois récits réels de gens sans CV (commerce familial, aide à un
+proche, encadrement sportif bénévole) : intitulés justes (« Aide familiale »,
+« Employé de magasin »), descriptions à la première personne, et surtout des
+**compétences extraites d'activités qui ne figurent jamais sur un CV**. « Je
+n'ai aucun diplôme » renvoie correctement une liste vide.
+
+⚠️ `memeCompetence` a été **déplacée dans `matchingService`** et exportée : elle
+servait à `suggestionService`, puis à l'entretien. Une seconde copie aurait
+divergé au premier ajustement de seuil.
+
+⚠️ Défaut trouvé à l'essai, et corrigé dans la règle partagée : « Gestion des
+livraisons » était rapproché de « Gestion de l'information » — le mot
+« gestion » portait tout le rapprochement. `memeCompetence` exige désormais,
+en plus des deux mots communs, que le libellé **le plus long** soit couvert au
+tiers. Sans cette borne, deux mots communs suffisaient à rapprocher un libellé
+de deux mots d'un libellé de quatorze. `npm run eval` inchangé (45 %, 0 % de
+faux positifs) : cette fonction n'est pas dans le chemin de scoring.
 
 ### L'import ne s'écrit jamais sans montrer
 
@@ -725,7 +803,161 @@ Mesuré de bout en bout dans le navigateur : profil vide → **95 % de complétu
 après import d'un JSON Resume étranger ; réimport sur profil rempli →
 l'avertissement d'écrasement s'affiche avec le décompte exact.
 
-## 16. L'évaluation — `npm run eval`
+## 16. La page d'accueil — montrer, pas promettre
+
+`LandingScreen` · captures dans `public/images/captures/`.
+
+C'est la page qui doit faire comprendre la plus-value en trente secondes, à
+quelqu'un qui n'a jamais entendu parler de l'outil. Trois partis pris :
+
+### 1. Le constat avant la promesse
+
+Trois chiffres, **recalculés à chaque visite** depuis l'API : 18 employeurs,
+**74 % des offres ouvertes ne décrivent pas le poste**, 38 corps et grades.
+
+`GET /api/avps` expose `sansDetail`, calculé avec le **même critère** que
+`diagnostiquerContenu` (§ 14) : sans cela, la page d'accueil annoncerait un
+pourcentage pendant que la fiche d'offre en appliquerait un autre. Et le
+chiffre reste vivant — écrit en dur, il serait faux avant le rendu, le corpus
+se renouvelant en quelques semaines.
+
+### 2. Trois preuves en images, pas des arguments
+
+Les captures sont de **vraies captures de l'application sur le corpus réel**.
+C'est la même exigence que la vidéo du concours : une chose montrée sans être
+produite par l'outil ne compte pas.
+
+⚠️ Elles sont **recadrées sur leur zone utile** (~550-680 px) et affichées à
+peu près à leur taille réelle. Une capture pleine largeur réduite de moitié ne
+prouve rien : on y voit qu'il existe « un écran », pas ce qu'il contient.
+
+⚠️ Leur `alt` **décrit ce qu'elles montrent** : c'est du contenu informatif,
+pas une décoration. Un `alt=""` priverait un lecteur d'écran de l'argument
+lui-même.
+
+⚠️ Le cadre de fenêtre n'est pas un ornement : les captures sont en thème
+sombre et la page peut s'afficher en thème clair. Le cadre assume son propre
+fond, l'image ne flotte pas.
+
+⚠️ Une section sur deux inverse l'ordre **visuel** (`order`), jamais l'ordre du
+document : au clavier et au lecteur d'écran, le texte précède toujours sa
+capture.
+
+### 3. « Ce que cet outil ne fera jamais »
+
+Aucune offre inventée · aucun score sur une offre vide · aucune expérience
+ajoutée à votre place · rien n'est envoyé sans vous.
+
+Tous les outils de cette catégorie promettent la même chose ; aucun ne dit ce
+qu'il refuse de faire. C'est pourtant ce qu'un candidat a besoin de savoir
+avant de confier son parcours, et ce qui résume le mieux les invariants du
+projet (§ 17).
+
+Chaque titre commence par « Aucun » ou « Rien » : l'information reste entière
+sans la couleur du liseré.
+
+### Le logo
+
+`LOGO` dans `constants.js` → `public/images/logo.png`. **Absent, l'en-tête garde
+le sigle « EPNC »** : `Header` bascule sur `onError`. Un `<img>` sans fichier
+afficherait une icône cassée sur chaque page — pire que pas de logo. Déposer le
+fichier suffit à l'activer, aucun code à toucher. Voir
+`public/images/README.md`, qui rappelle aussi qu'un logo ne doit reprendre
+aucun emblème officiel : l'application n'a **aucun lien** avec l'OPT-NC ni les
+collectivités dont elle republie les offres.
+
+## 17. L'accessibilité — mesurée, pas affirmée
+
+4 points au barème, et c'est le **sujet même du hackathon** : l'accès à
+l'information. Les commentaires du dépôt revendiquaient l'accessibilité depuis
+le début ; elle n'avait jamais été mesurée.
+
+### Comment rejouer l'audit
+
+Aucune dépendance ajoutée : `axe-core` est injecté depuis un CDN dans la page
+ouverte, et l'audit tourne sur le DOM réel — c'est-à-dire sur ce qu'un
+utilisateur a sous les yeux, pas sur un rendu de test.
+
+```js
+// Dans la console du navigateur, sur n'importe quel écran :
+await new Promise((ok) => { const s = document.createElement("script");
+  s.src = "https://cdnjs.cloudflare.com/ajax/libs/axe-core/4.10.2/axe.min.js";
+  s.onload = ok; document.head.appendChild(s); });
+document.querySelectorAll("details").forEach((d) => (d.open = true)); // déplier
+(await axe.run(document, { resultTypes: ["violations"] })).violations;
+```
+
+⚠️ **Déplier les `<details>` et ouvrir les panneaux avant d'auditer.** Les
+violations les plus graves trouvées ici n'existaient que panneau ouvert : un
+audit sur l'état replié aurait rendu un rapport vert et faux.
+
+### Relevé du 13/09/2026 — 8 écrans, **0 violation**
+
+`/` · `/offres` · `/offres/:slug` · `/matchs` · `/profil` · `/entretien` ·
+`/espace` · `/candidatures` · `/alertes` — 45 à 46 règles passées par écran.
+
+### Les cinq défauts trouvés, et ce qu'ils apprennent
+
+**1. `opacity` pour dire « désactivé » casse le contraste en silence.**
+`.composante--neutre` portait `opacity: 0.75`. Le texte `--texte-doux`
+(#a2adb9), parfaitement conforme seul, se compositait en **#727b85 → 4,2:1**
+au lieu des 4,5 exigés. **278 éléments en faute, sur l'écran qui porte la valeur
+du produit.** Rien dans la feuille de style ne le signalait : la couleur du
+texte y est irréprochable, c'est l'opacité du parent qui la dégrade.
+→ L'état se dit désormais par un trait en pointillés, un fond retiré et le mot
+« neutralisée ». Contraste mesuré après correction : **7,38:1**.
+
+**2. Un `<header>` dans un `role="dialog"` devient une seconde bannière.**
+Le panneau de la bulle assistant créait un second landmark `banner` à côté de
+l'en-tête du site (`landmark-no-duplicate-banner`). Dans un élément portant un
+rôle explicite, le `<header>` n'est plus « scopé » par son sectionnement.
+→ Un `<div>` ; le titre est déjà porté par l'`aria-label` du dialogue.
+
+**3. Une zone qui défile doit pouvoir recevoir le focus.**
+`.agent-fil` (impact *serious*) : au clavier, on pouvait écrire dans la bulle
+mais pas **relire** la conversation dès qu'elle dépassait la hauteur du
+panneau. → `tabIndex={0}` + `role="log"` + contour de focus rentrant (l'
+`overflow: hidden` du panneau rognerait un contour extérieur).
+
+**4. Sauter un niveau de titre.** `h2` (intitulé du poste) → `h4`
+(composantes), sur 189 éléments. La navigation par titres est la façon dont un
+lecteur d'écran parcourt une page longue. → `h3`.
+
+**5. `m.role === "user"`** rangeait tous les messages du même côté du fil —
+défaut fonctionnel trouvé au passage (l'enum du modèle est `"utilisateur"`).
+
+⚠️ **Quatre défauts sur cinq venaient de code écrit le jour même**, en ayant
+l'accessibilité à l'esprit. C'est l'argument pour l'audit outillé : la
+vigilance ne remplace pas la mesure.
+
+### Le clavier — vérifié séparément
+
+Un audit automatique couvre environ un tiers des critères ; l'ordre de
+tabulation n'en fait pas partie. Relevé sur la page d'accueil :
+
+- **15 éléments focalisables, 15 avec un contour de focus visible** ;
+- **aucun `tabindex` positif** — un seul suffirait à désorganiser tout l'ordre
+  du document ;
+- le **lien d'évitement arrive en premier**, la bulle assistant en dernier ;
+- une seule « remontée » visuelle dans l'ordre : le déclencheur de la bulle,
+  qui est en `position: fixed`. Ce n'est pas un défaut — un widget flottant
+  doit venir **après** tout le contenu, sinon il s'interpose dans la
+  tabulation de chaque page.
+
+Panneau de la bulle ouvert : le focus entre sur le champ de saisie, l'ordre
+interne est fermeture → fil → amorces → saisie, et `aria-expanded` suit l'état.
+
+⚠️ Le panneau est **délibérément non modal** (pas d'`aria-modal`, pas de
+piège à focus). Enfermer le focus serait contraire à sa raison d'être : on
+l'ouvre pour poser une question **sur la page qu'on est en train de lire**, et
+il faut pouvoir y retourner.
+
+### Ce qui reste
+
+Une relecture au lecteur d'écran des écrans de rapprochement — la seule chose
+qu'aucun outil ne remplace.
+
+## 18. L'évaluation — `npm run eval`
 
 `backend/eval.js`. Une vérité terrain étiquetée **à la main** (8 personas ×
 familles de postes), confrontée aux verdicts du moteur. Matrice de confusion,
@@ -776,7 +1008,255 @@ pourquoi il était faux.
 « votre parcours ») : le même rapprochement est lu par le candidat ET par le
 recruteur.
 
-## 17. Invariants de sécurité et de données
+## 19. La qualité des pièces — `npm run eval:pieces`
+
+`backend/evalPieces.js`. Le jury dépouille **CV et lettre à l'aveugle**, comme
+un recruteur : **25 des 100 points** s'y jouent, et aucune matrice de confusion
+ne les éclaire.
+
+```bash
+npm run eval:pieces                    # 3 personas × 2 offres, lettres
+npm run eval:pieces -- --personas 8    # échantillon plus large
+npm run eval:pieces -- --cv --texte    # CV compris, et afficher les lettres
+```
+
+### Ce qui est mesuré SANS modèle de langue
+
+Les contraintes produit sont écrites dans les prompts. **Les écrire n'est pas
+les faire respecter.** Le script les vérifie sur la sortie, de façon
+déterministe : longueur, vocabulaire interdit, ouvertures interdites, présence
+de l'objet, première phrase sur le poste.
+
+⚠️ `VOCABULAIRE_INTERDIT`, `OUVERTURES_INTERDITES` et `LETTRE_MOTS` sont
+**exportés par `redactionService` et servent à construire le prompt**. Une
+seconde copie dans le script d'évaluation aurait divergé au premier ajout — et
+la mesure aurait alors validé une contrainte qui n'est plus demandée.
+
+La note de la passe de critique est relevée en plus, mais c'est **un modèle qui
+juge un modèle** : une tendance, jamais une preuve. Les chiffres opposables sont
+les déterministes.
+
+### Ce que la première mesure a trouvé — 13/09/2026
+
+**1. Aucune lettre n'atteignait la longueur demandée.** 155–199 mots, médiane
+**175**, pour une cible de 250–300. Toutes trop courtes d'environ 40 %.
+
+Deux causes, trouvées l'une après l'autre :
+
+- le prompt disait « 250 à 300 mots **maximum** » — un plafond sans plancher,
+  que le modèle optimise par la brièveté ;
+- surtout, **un comptage de mots n'est pas une consigne exécutable** : un
+  modèle ne compte pas ses mots. → Remplacé par un **plan en quatre
+  paragraphes** (le poste · la preuve principale · les deux autres preuves · la
+  disponibilité), avec le nombre de phrases attendu pour chacun. Un plan, lui,
+  se suit.
+
+🔎 **Le chiffre qui a failli trancher — et la leçon qu'il a coûtée.**
+Fallait-il pousser plus loin, ou les lettres étaient-elles courtes faute de
+matière ? On a mesuré la corrélation entre le nombre de correspondances
+trouvées et la longueur produite. Un relevé a donné **r = 0,81** — « allonger
+reviendrait à remplir ». Conclusion tentante : abaisser la cible.
+
+🔴 **C'était du bruit.** Sur huit lettres, le même coefficient a donné
+0,26 · 0,56 · **0,81** · 0,52 · −0,92 · −0,18. On avait retenu la valeur qui
+arrangeait. La cible a été abaissée, puis **remise à 250-300**.
+
+✅ **Tranché sur 35 lettres** (`--personas 7 --offres 5`) : **r = 0,41**. Un
+lien réel mais faible — la matière disponible explique environ **17 %** de la
+variance de longueur. Autrement dit :
+
+- la brièveté n'est **pas** expliquée par un manque d'arguments (la thèse
+  « les lettres sont aussi longues que la vérité le permet » est fausse) ;
+- mais elle n'est **pas** arbitraire non plus.
+
+Il reste un **plafond de comportement du modèle** autour de 230 mots : médiane
+231, étendue 166-260, et seulement **14 % atteignent 250-300**. La cible ne
+bouge pas ; l'écart est un défaut ouvert, désormais **caractérisé** au lieu
+d'être supposé.
+
+⚠️ **La règle, au-delà de ce fichier** : on ne déplace pas une cible sur la foi
+d'une statistique qu'on n'a pas éprouvée sur assez de points.
+
+**2. 🔴 Le modèle ALTÉRAIT un chiffre du profil.** Le profil de Mélanie Tarrou
+porte « délai de traitement divisé par deux » ; une lettre annonçait
+« réduction du temps de traitement **de 30 %** ». C'est un mensonge chiffré
+dans un document que le candidat signe, et qu'un recruteur vérifie en
+entretien — la faute la plus grave que ce projet puisse commettre.
+→ Règle ajoutée : **les chiffres se recopient, ils ne se convertissent jamais**.
+
+**3. 🔴 Le critique accusait d'invention des phrases tirées du profil.**
+« Formation de trois remplaçantes successives » y figure **mot pour mot** ;
+« stage à la mairie de Dumbéa » et « inventaire du parc » aussi. Or **toute**
+invention signalée déclenche une réécriture : une fausse accusation faisait
+donc supprimer un argument vrai, et la lettre ressortait plus courte et plus
+pauvre. Ce défaut expliquait, en partie, le n° 1.
+
+→ Deux parades, dont une déterministe :
+   - le prompt du critique distingue un **fait fabriqué** d'une **reformulation
+     fidèle** et d'une **phrase de liaison** ;
+   - `inventionCredible()` vérifie **sans modèle** que les mots porteurs de
+     l'extrait accusé ne se retrouvent pas dans le profil (seuil aux deux
+     tiers, via `motsUtiles` et `memeRacine` — les primitives du moteur, pas
+     une troisième implémentation).
+
+   ⚠️ Le seuil penche du côté de la PRUDENCE : en cas de doute, l'accusation
+   est conservée. Rater une vraie invention est plus grave que supprimer un bon
+   argument.
+
+**4. Le critique reprochait une faute que la lettre ne commettait pas.**
+« La lettre ne commence pas par une phrase sur le poste » — alors que le
+contrôle déterministe disait 100 % conformes. Et un reproche qui subsiste
+déclenche une réécriture : la lettre était refaite pour corriger un défaut
+imaginaire.
+→ `ouvreSurLePoste()` **fait autorité sur l'avis du modèle** : quand le
+contrôle passe, tout reproche portant sur l'ouverture est écarté. Ces contrôles
+vivent dans `redactionService` et sont importés par le banc de mesure — une
+copie aurait fini par rendre deux verdicts opposés sur la même lettre.
+
+⚠️ Au passage, deux bugs d'écriture attrapés par les tests : les `` de la
+regex d'ouverture avaient été écrits comme de vrais caractères de **retour
+arrière** (0x08), et sans limites de mot « Maîtriser » était pris pour « ma »,
+« Former » pour « fort ». Le détecteur est désormais couvert par huit cas.
+
+### Le CV — mesuré là où c'est utile
+
+⚠️ **Le CV envoyé à l'employeur n'est pas un texte de modèle.** `cvPdf()`
+compose expériences, formations et compétences depuis le document `Profil`.
+L'invention y est **structurellement impossible** : on ne peut pas écrire sur ce
+CV un employeur qui n'est pas en base.
+
+Deux choses seulement méritent donc d'être contrôlées, et elles le sont :
+
+**1. L'invariant du réordonnancement.** Le CV remonte les expériences les plus
+pertinentes pour le poste. Un ordre partiel ou fautif — indices en double,
+liste tronquée, indice hors bornes — ferait **disparaître une expérience** du CV
+d'une personne, sans avertissement : elle enverrait un document amputé de son
+premier emploi en croyant l'avoir relu.
+
+`reordonner()` refuse en bloc tout ordre qui n'est pas une permutation complète
+et valide, et rend la liste intacte. **Un CV mal ordonné reste un CV vrai ; un
+CV amputé est un faux.** La fonction a été sortie de `cvPdf` et exportée pour
+être éprouvée — une garantie non testée n'en est pas une. **7 ordres testés,
+dont 4 fautifs : aucune perte.**
+
+**2. L'accroche**, seul fragment du CV employeur issu du modèle
+(`premiereAccroche`). Sa traçabilité est vérifiée contre le profil **et contre
+l'offre** : une accroche de CV nomme le poste visé — c'est tout son intérêt. La
+confronter au seul profil faisait passer « le poste d'assistant administratif à
+la Direction du travail » pour une invention, alors que ces mots viennent de
+l'annonce.
+
+### Deux défauts du banc de mesure lui-même
+
+**🔴 Un indicateur qui félicitait le défaut qu'il devait détecter.** La
+corrélation longueur/matière était lue en valeur absolue (`Math.abs(r)`) : une
+corrélation **négative** — plus de correspondances, des lettres plus courtes,
+soit exactement l'anomalie recherchée — était annoncée comme « la longueur suit
+la matière ». Le signe compte autant que la force.
+
+**Un coefficient sur trois points est du bruit.** Il atteint ±0,9 par accident.
+Le rapport exige désormais **six lettres au minimum** avant d'afficher une
+corrélation.
+
+⚠️ Ces deux-là sont les plus insidieux de toute la session : un banc de mesure
+faux ne se signale pas, il rassure.
+
+### Relevé courant — **35 lettres**, 8 CV
+
+| Contrôle | Départ | Maintenant |
+|---|---|---|
+| Longueur dans les bornes | 0 % | **94 %** |
+| Longueur dans la cible 250–300 | 0 % | 14 % ← plafond du modèle |
+| Objet présent | 100 % | **100 %** |
+| Aucun mot interdit | 100 % | 91 % (« rigoureux » ×3) |
+| Aucune ouverture interdite | 100 % | **100 %** |
+| 1re phrase sur le POSTE | 100 % | **100 %** |
+| Longueur médiane | 175 | **231** |
+| Inventions signalées | 3 | **2, toutes deux fausses** (voir ci-dessous) |
+| CV — aucune expérience perdue | — | **100 %** (7 ordres, dont 4 fautifs) |
+| CV — accroche traçable | — | **100 %** |
+
+Reproche récurrent utile, enfin : « formules creuses et superlatifs » (5×).
+Contrairement aux précédents, celui-là est vrai et actionnable.
+
+⚠️ **Ne pas ajuster `LETTRE_MOTS` pour faire monter un pourcentage.** La
+tentation s'est présentée dans cette session même, avec un argument
+statistique qui paraissait solide ; il n'a pas résisté à une mesure plus large.
+
+### Le garde-fou anti-fausse-accusation, deuxième passe
+
+Sur 35 lettres, deux accusations d'invention subsistaient — et **les deux
+étaient fausses** : « plus de 900 raccordements » et « refonte du circuit de
+contrôle des délibérations » figurent **mot pour mot** dans les profils. Elles
+échappaient au filtre par la règle « moins de trois mots porteurs, on ne
+conclut pas ».
+
+→ `inventionCredible()` cherche désormais d'abord une **suite de cinq mots
+consécutifs** reprise du profil. Le modèle enveloppe souvent la citation d'une
+amorce (« Contribuant ainsi à la refonte du circuit… »), ce qui faisait échouer
+une recherche littérale stricte.
+
+⚠️ **Limite assumée** : une PARAPHRASE sémantique n'est pas rattrapée.
+« réduction des délais de moitié » face à « délai de traitement divisé par
+deux » reste signalée. Le filtre penche du côté de la prudence — rater une
+vraie invention est plus grave que provoquer une réécriture inutile. Couvert
+par 7 cas de test, dont 6 passent et 1 est ce faux positif connu.
+
+## 20. La livraison — `docker compose up`
+
+`Dockerfile` · `compose.yaml` · `.dockerignore` · `README.md`.
+
+L'exigence de la feuille de route : **« un inconnu installe et fait tourner la
+démo sans nous »**. C'est le critère *réutilisabilité et essaimage*, et surtout
+la condition pour qu'un jury regarde le projet plutôt que la vidéo.
+
+### Les partis pris
+
+- **Une seule image, pas un conteneur par couche.** En production, `server.js`
+  sert déjà le build CRA en statique : même origine, donc pas de CORS, pas de
+  reverse proxy, et le cookie de session passe sans réglage. Un nginx devant un
+  front séparé résoudrait un problème que nous n'avons pas.
+- **Build en deux étapes** : les `node_modules` du front (react-scripts
+  compris) ne partent pas dans l'image finale, seul `build/` en sort.
+- `CI=false` à la compilation : react-scripts traite les avertissements comme
+  des erreurs en intégration continue, et un avertissement de lint ne doit pas
+  empêcher quelqu'un de faire tourner la démo.
+- **L'ingestion est un service à part** qui s'exécute puis s'arrête. Le corpus
+  se renouvelle : on le rafraîchit par `docker compose run --rm donnees` sans
+  rien reconstruire. Et un `|| true` sur chaque étape — une source indisponible
+  ne doit pas empêcher la pile de monter sur les données déjà en base.
+- **Mongo n'est pas exposée sur l'hôte.** Publier 27017 sur la machine de
+  quelqu'un pour une démonstration, ce serait ouvrir une base sans mot de passe
+  sur son réseau.
+- 🔴 **Aucune clé n'est requise.** `OPENAI_API_KEY`, SMTP : tous en
+  `${VAR:-}`. Sans eux, l'application démarre et se démontre en mode dégradé.
+  C'est ce qui rend la démo possible hors ligne et sans budget.
+
+### ⚠️ `docker compose config` imprime les secrets
+
+Les `${VAR:-}` sont interpolés depuis le `.env` du dossier. La commande qui
+sert à **vérifier** le fichier a donc imprimé, en clair et sur la sortie
+standard, la clé OpenAI, le mot de passe SMTP et le `JWT_SECRET`.
+
+C'est arrivé pendant le développement ; les secrets ont été révoqués. Vérifier
+le fichier sans environnement :
+
+```bash
+docker compose --env-file /dev/null config
+```
+
+Le `.env` n'a jamais été suivi par git (vérifié : absent de l'index et de
+l'historique) — l'exposition s'est limitée à un terminal.
+
+### État
+
+Le fichier est **validé** (`docker compose config` passe, toutes les options
+résolvent correctement sans aucune clé) mais **jamais exécuté** : le démon
+Docker n'était pas lancé sur la machine de développement. `docker compose up
+--build` reste à éprouver au moins une fois avant le rendu — c'est la seule
+chose qui prouve le critère.
+
+## 21. Invariants de sécurité et de données
 
 - 🔴 **Aucune adresse de recrutement réelle ne doit être joignable par le code.**
   Les fiches en contiennent : `DRH-candidature@opt.nc` dans `raw.applicationContact`
@@ -807,7 +1287,7 @@ recruteur.
 - Les offres **clôturées sont conservées** : historique, corpus de test, et calcul
   du rythme de publication (`rythmePublication`).
 
-## 18. Conventions
+## 22. Conventions
 
 - **Tout est en français** : noms de fichiers, variables, fonctions, commentaires,
   messages d'erreur. `rapprocher`, `composanteReferentiel`, `motifsExclusion`.
@@ -852,7 +1332,7 @@ recruteur.
 - `exemple.env` doit documenter **toute** variable lue par le code, même vide, et
   être mis à jour dans le même commit.
 
-## 19. État d'avancement
+## 23. État d'avancement
 
 **Fait** — socle d'authentification et d'administration ; ingestion idempotente
 des trois sources (**230 offres, 188 ouvertes, 18 employeurs**) ; profil
@@ -867,22 +1347,21 @@ API machine sous clé, webhook signé, serveur MCP, import JSON Resume).
 
 **Manquant — par ordre d'impact sur le barème :**
 
-1. **L'entretien guidé** (§ 15) — la porte d'entrée pour qui n'a **pas** de CV.
-   C'est celle sur laquelle le règlement insiste, et la dernière qui manque à la
-   fonction ①. L'assistant conversationnel existe déjà mais conseille ; il ne
-   collecte pas un parcours.
-2. **Mesurer la qualité des pièces** — un `npm run eval:pieces` sur le modèle de
-   `npm run eval` : générer lettre et CV pour les 8 personas, collecter les notes
-   de la passe de critique, repérer ce qui est *systématiquement* faible. Vise
-   les **25 points de Valeur RH**, jugés à l'aveugle — le plus gros bloc restant.
-3. **Accessibilité** — passe axe + `eslint-plugin-jsx-a11y`, zéro violation
-   critique. 4 points, et c'est le sujet même du hackathon.
-4. **Passe de design** — page d'accueil (la fiche d'offre est traitée, § 14).
-5. **Embeddings** (`all_embeddings.parquet`) — optionnel, et à ne faire qu'en
+1. **La longueur des lettres** (§ 19) — médiane 231, plafond du modèle autour
+   de 230 mots, 14 % atteignent la cible. **Caractérisé** sur 35 lettres
+   (r = 0,41) : ni manque de matière, ni brièveté arbitraire. Piste non
+   explorée : un modèle plus capable que `gpt-4o-mini`.
+2. **Accessibilité : la part que l'outil ne voit pas** (§ 17) — l'audit axe
+   est passé, 0 violation sur 8 écrans. Restent le parcours **au clavier seul**
+   et une relecture au lecteur d'écran.
+3. **Passe de design** — il reste l'espace candidat et le tableau de bord
+   recruteur ; accueil, fiche d'offre et liste des offres sont traités.
+4. **Embeddings** (`all_embeddings.parquet`) — optionnel, et à ne faire qu'en
    rappel : le vecteur ne couvre que la description, ni `skills` ni
    `responsibilities`.
-6. **Livraison** — `docker compose up`, vidéo, article dev.to. Gel du code au
-   **18 octobre**.
+5. **Livraison** — `Dockerfile`, `compose.yaml` et `README.md` sont écrits et
+   le compose est **validé** ; il reste à l'**exécuter au moins une fois**
+   (§ 20), puis la vidéo et l'article dev.to. Gel du code au **18 octobre**.
 
 **Décisions encore ouvertes** : track (SaaS recommandé — 25 points de valeur RH se
 jouent sur la qualité du français) à déclarer **avant le 30 septembre** ; public

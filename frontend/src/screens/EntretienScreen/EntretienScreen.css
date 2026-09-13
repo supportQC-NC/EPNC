@@ -1,0 +1,215 @@
+/* src/screens/EntretienScreen/EntretienScreen.css */
+
+/* Colonne de lecture étroite, volontairement. Cet écran se lit comme une
+   conversation : une question à la fois, pas un tableau de bord. */
+.entretien {
+  max-width: 48rem;
+  padding-block: var(--e6) var(--e8);
+}
+
+.entretien-entete {
+  margin-bottom: var(--e6);
+}
+
+.entretien-intro {
+  margin: var(--e3) 0 0;
+  font-size: var(--t-md);
+  line-height: 1.6;
+  color: var(--texte-doux);
+}
+
+/* ── Le fil des étapes ─────────────────────────────────────────────────── */
+
+.entretien-fil {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: var(--e5) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: etape;
+}
+
+.entretien-fil li {
+  counter-increment: etape;
+  padding: var(--e1) var(--e3);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.entretien-fil li::before {
+  content: counter(etape) ". ";
+  font-weight: 700;
+}
+
+.entretien-fil--actif {
+  border-color: var(--marque);
+  background: var(--marque-doux);
+  color: var(--marque);
+  font-weight: 700;
+}
+
+/* Une étape faite garde son libellé ET reçoit une coche : la couleur ne porte
+   jamais l'information toute seule. */
+.entretien-fil--fait {
+  border-color: var(--succes);
+  color: var(--succes);
+}
+
+.entretien-fil--fait::after {
+  content: " ✓";
+  font-weight: 700;
+}
+
+/* ── La question ───────────────────────────────────────────────────────── */
+
+.entretien-question {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-lg);
+  line-height: 1.5;
+}
+
+/* L'aide porte les exemples — bénévolat, aide familiale. C'est elle qui fait
+   comprendre que ces choses-là comptent : elle n'est donc ni petite ni grise
+   au point de se sauter. */
+.entretien-aide {
+  margin: 0 0 var(--e5);
+  padding: var(--e3) var(--e4);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+}
+
+/* ── La proposition ────────────────────────────────────────────────────── */
+
+.entretien-proposition {
+  padding: var(--e4);
+  margin-bottom: var(--e4);
+  background: var(--surface-2);
+  border-left: 4px solid var(--marque);
+  border-radius: var(--rayon);
+}
+
+.entretien-proposition h3 {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-md);
+}
+
+.entretien-proposition-aide {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  line-height: 1.5;
+}
+
+.entretien-competences {
+  margin-top: var(--e4);
+  padding: var(--e3);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+.entretien-competences legend {
+  padding: 0 var(--e2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.entretien-case {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e2);
+  margin-bottom: var(--e2);
+  font-size: var(--t-sm);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.entretien-case input {
+  width: auto;
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+
+/* Le terme du référentiel, proposé À CÔTÉ du mot de la personne et jamais à
+   la place : en retrait, en second, visiblement secondaire. */
+.entretien-referentiel {
+  display: block;
+  font-size: var(--t-xs);
+  font-style: normal;
+  color: var(--texte-doux);
+}
+
+/* ── Ce qui manque ─────────────────────────────────────────────────────── */
+
+.entretien-manquant {
+  padding: var(--e3) var(--e4);
+  margin-bottom: var(--e4);
+  background: var(--attention-fond);
+  border-radius: var(--rayon);
+}
+
+.entretien-manquant h4 {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-sm);
+  color: var(--attention);
+}
+
+.entretien-manquant ul,
+.entretien-liste {
+  margin: 0;
+  padding-left: var(--e5);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+}
+
+/* ── Récapitulatif ─────────────────────────────────────────────────────── */
+
+.entretien-recap {
+  padding: var(--e4) 0;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.entretien-recap:last-of-type {
+  border-bottom: 0;
+}
+
+.entretien-recap h3 {
+  margin: 0 0 var(--e1);
+  font-size: var(--t-md);
+}
+
+.entretien-recap-meta {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.entretien-recap-comp {
+  margin: var(--e2) 0 0;
+  font-size: var(--t-xs);
+  color: var(--marque);
+}
+
+.entretien-deja {
+  margin: var(--e4) 0 0;
+  padding-top: var(--e3);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.entretien-suite,
+.entretien-echappatoire {
+  margin-top: var(--e4);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.entretien-echappatoire {
+  text-align: center;
+}

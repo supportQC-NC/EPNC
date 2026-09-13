@@ -39,7 +39,13 @@ const NAVIGATION = {
     { to: "/alertes", libelle: "Mes alertes" },
     { to: "/matchs", libelle: "Mes correspondances" },
     { to: "/candidatures", libelle: "Mes candidatures" },
-    { to: "/assistant", libelle: "Assistant" },
+    // ⚠️ Pas d'entrée « Assistant » ici : il est désormais accessible en
+    // permanence par la bulle en bas à droite (`BulleAssistant`). Le garder
+    // aussi dans la navigation principale aurait allongé une barre déjà
+    // dense pour dupliquer un accès qui ne quitte jamais l'écran.
+    // L'écran complet — historique, gestion des conversations, avertissement
+    // d'usage — reste atteignable depuis le menu du compte et depuis le pied
+    // de la bulle.
   ],
   recruteur: [
     { to: "/recruteur", libelle: "Tableau de bord", end: true },
@@ -54,6 +60,7 @@ const COMPTE = {
   candidat: [
     { to: "/espace", libelle: "Mon espace" },
     { to: "/profil", libelle: "Mon profil" },
+    { to: "/assistant", libelle: "Mes conversations" },
     { to: "/metiers", libelle: "Les métiers" },
     { to: "/mes-signalements", libelle: "Modération" },
   ],

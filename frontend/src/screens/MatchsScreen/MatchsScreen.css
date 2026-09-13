@@ -163,9 +163,21 @@
   border-radius: var(--rayon);
 }
 
+/* Composante NEUTRALISÉE (barème non applicable à cette offre).
+   ------------------------------------------------------------------------
+   ⚠️ PAS d'`opacity` pour l'exprimer. La version précédente posait
+   `opacity: 0.75` sur toute la boîte : `--texte-doux` (#a2adb9) s'y
+   compositait en #727b85 sur le fond de carte, soit **4,2:1 au lieu des 4,5
+   exigés**. Relevé par axe sur 278 éléments — c'est-à-dire sur l'écran qui
+   porte la valeur du produit.
+   C'est le piège classique du « grisé = désactivé » : l'opacité dégrade le
+   contraste d'un texte parfaitement conforme, sans que rien ne le signale
+   dans la feuille de style.
+   L'état reste parfaitement lisible sans elle : le trait est en pointillés,
+   le fond se retire, et le mot « neutralisée » est écrit dans la boîte. */
 .composante--neutre {
-  opacity: 0.75;
   border-style: dashed;
+  background: transparent;
 }
 
 .composante-haut {
@@ -176,7 +188,7 @@
   margin-bottom: var(--e2);
 }
 
-.composante-haut h4 {
+.composante-haut h3 {
   font-size: var(--t-sm);
   margin: 0;
 }

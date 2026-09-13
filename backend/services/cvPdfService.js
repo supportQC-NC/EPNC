@@ -114,6 +114,33 @@ const titreSection = (doc, texte, x, largeur) => {
  * `accroche` (optionnel) remplace l'accroche du profil par une version
  * recentrée sur le poste. C'est la seule phrase que le modèle réécrit.
  */
+/**
+ * Réordonne une liste selon des indices, ou la rend INTACTE au moindre doute.
+ *
+ * ══════════════════════════════════════════════════════════════════════════
+ *  L'INVARIANT : AUCUNE EXPÉRIENCE NE DISPARAÎT, JAMAIS
+ * ══════════════════════════════════════════════════════════════════════════
+ * Le CV est recentré sur le poste : les expériences les plus pertinentes
+ * remontent. Mais un réordonnancement partiel ou fautif — indices en double,
+ * liste tronquée, indice hors bornes — ferait DISPARAÎTRE une expérience du CV
+ * d'une personne, sans que rien ne l'en avertisse. Elle enverrait un document
+ * amputé de son premier emploi en croyant l'avoir relu.
+ *
+ * D'où la règle : tout ordre qui n'est pas une PERMUTATION COMPLÈTE et valide
+ * est refusé en bloc, et la liste d'origine sort telle quelle. Un CV mal
+ * ordonné reste un CV vrai ; un CV amputé est un faux.
+ *
+ * Sortie de `cvPdf` et exportée pour être éprouvée : c'est le genre de garantie
+ * qui ne vaut que si elle est testée.
+ */
+export const reordonner = (liste, indices) => {
+  if (!Array.isArray(indices) || indices.length !== liste.length) return liste;
+  if (new Set(indices).size !== liste.length) return liste;
+  if (indices.some((i) => !Number.isInteger(i) || i < 0 || i >= liste.length))
+    return liste;
+  return indices.map((i) => liste[i]);
+};
+
 export const cvPdf = ({ profil, user, avp = null, ordre = null, accroche = null, date }) =>
   new Promise((resolve, reject) => {
     const creation = date ? new Date(date) : new Date();
@@ -144,15 +171,6 @@ export const cvPdf = ({ profil, user, avp = null, ordre = null, accroche = null,
     // exactement les mêmes éléments. Un ordre partiel ferait DISPARAÎTRE des
     // expériences du CV sans que personne s'en aperçoive — le pire défaut
     // possible sur ce document.
-    const reordonner = (liste, indices) => {
-      if (!Array.isArray(indices) || indices.length !== liste.length) return liste;
-      const vus = new Set(indices);
-      if (vus.size !== liste.length) return liste;
-      if (indices.some((i) => !Number.isInteger(i) || i < 0 || i >= liste.length))
-        return liste;
-      return indices.map((i) => liste[i]);
-    };
-
     const experiences = reordonner(profil.experiences || [], ordre?.experiences);
     const competences = reordonner(profil.competences || [], ordre?.competences);
 

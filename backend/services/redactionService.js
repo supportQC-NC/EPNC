@@ -21,6 +21,9 @@ import {
   iaDisponible,
   modeleUtilise,
 } from "./modeleService.js";
+// Les primitives de comparaison du moteur de rapprochement, réutilisées pour
+// vérifier qu'une « invention » signalée ne vient pas du profil lui-même.
+import { motsUtiles, memeRacine } from "./matchingService.js";
 
 const AVERTISSEMENT =
   "[BROUILLON ASSEMBLÉ AUTOMATIQUEMENT — rédaction assistée indisponible. " +
@@ -305,6 +308,12 @@ const SOCLE = `Tu rédiges pour une personne qui postule réellement à un poste
 
 RÈGLES ABSOLUES
 - N'invente RIEN. N'utilise que les informations du profil fourni. Aucun diplôme, employeur, date, chiffre ou compétence qui n'y figure pas.
+- 🔴 LES CHIFFRES SE RECOPIENT, ILS NE SE CONVERTISSENT JAMAIS. Reprends la
+  formulation du profil telle quelle. « divisé par deux » ne devient ni
+  « de 50 % » ni « de 30 % » ; « six praticiens » ne devient pas « plusieurs ».
+  Un chiffre altéré est un mensonge chiffré dans un document que le candidat
+  signe, et qu'un recruteur peut vérifier en entretien. En cas de doute sur une
+  quantité, écris la phrase sans elle.
 - Si une information manque, écris la phrase sans elle. Ne mets jamais de crochets, de « XXX » ni de mention à compléter.
 - Écris en français, à la deuxième personne du pluriel quand tu t'adresses à l'employeur.
 - Pas de formule creuse, pas de flatterie institutionnelle, pas de superlatif.
@@ -318,14 +327,101 @@ Ne déclare un écart que si RIEN dans le profil ne s'en approche. Un écart ann
 // Mots et tournures qui condamnent une candidature à la pile du bas. Ils sont
 // interdits explicitement : un modèle les produit spontanément, parce que le
 // web en est rempli.
-const INTERDITS = `Vocabulaire interdit : « dynamique », « motivé », « passionné », « rigoureux », « polyvalent », « force de proposition », « votre prestigieux établissement », « je suis convaincu que mon profil », « n'hésitez pas à me contacter », « dans l'attente de votre retour ».
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  DES DONNÉES, ET NON UN PARAGRAPHE — POUR QUE LA MESURE PARTAGE LA SOURCE
+// ══════════════════════════════════════════════════════════════════════════
+// Ces listes étaient un bloc de texte figé dans le prompt. Elles sont
+// désormais exportées : `npm run eval:pieces` VÉRIFIE sur les lettres produites
+// que les tournures interdites sont bien absentes.
+//
+// Une seconde copie de la liste dans le script d'évaluation aurait divergé du
+// prompt au premier ajout — et la mesure aurait alors validé une contrainte
+// qui n'est plus demandée, ou puni une tournure qu'on autorise. Le prompt est
+// construit À PARTIR de ces tableaux : les deux ne peuvent pas se séparer.
+export const VOCABULAIRE_INTERDIT = [
+  "dynamique",
+  "motivé",
+  "passionné",
+  "rigoureux",
+  "polyvalent",
+  "force de proposition",
+  "votre prestigieux établissement",
+  "je suis convaincu que mon profil",
+  "n'hésitez pas à me contacter",
+  "dans l'attente de votre retour",
+];
 
-Ouvertures interdites, quelle que soit la suite : « Je vous adresse ma candidature », « Je souhaite postuler », « Je me permets de », « C'est avec un vif intérêt », « Fort de mon expérience », « Actuellement en poste ». Elles parlent du candidat ; la première phrase doit parler du poste.`;
+// Ouvertures qui parlent du CANDIDAT. La première phrase doit parler du poste :
+// c'est la consigne la plus souvent manquée, et celle qui distingue une lettre
+// lue d'une lettre parcourue.
+export const OUVERTURES_INTERDITES = [
+  "Je vous adresse ma candidature",
+  "Je souhaite postuler",
+  "Je me permets de",
+  "C'est avec un vif intérêt",
+  "Fort de mon expérience",
+  "Actuellement en poste",
+];
+
+// `citer` est déjà pris plus haut (extrait tronqué d'une preuve).
+const guillemets = (liste) => liste.map((t) => `« ${t} »`).join(", ");
+
+const INTERDITS = `Vocabulaire interdit : ${guillemets(VOCABULAIRE_INTERDIT)}.
+
+Ouvertures interdites, quelle que soit la suite : ${guillemets(OUVERTURES_INTERDITES)}. Elles parlent du candidat ; la première phrase doit parler du poste.`;
+
+// Bornes de longueur de la lettre, partagées elles aussi avec l'évaluation.
+// « Une page » n'est pas mesurable ; un nombre de mots l'est.
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  250-300 : LA CIBLE N'A PAS BOUGÉ, ET VOICI POURQUOI ELLE A FAILLI
+// ══════════════════════════════════════════════════════════════════════════
+// Les lettres tournent autour de 225 mots et n'atteignent quasiment jamais
+// 250. La tentation était de descendre la cible à 220-300, avec un argument
+// qui semblait solide : une corrélation r = 0,81 entre le nombre de
+// correspondances trouvées et la longueur produite, c'est-à-dire « les lettres
+// sont aussi longues que la vérité le permet, allonger serait remplir ».
+//
+// 🔴 CET ARGUMENT ÉTAIT FAUX. Sur huit lettres, ce coefficient est du bruit :
+// mesuré six fois de suite, il a donné 0,26 · 0,56 · 0,81 · 0,52 · −0,92 ·
+// −0,18. On avait retenu la valeur qui arrangeait.
+//
+// La cible reste donc à 250-300, et l'écart reste un DÉFAUT OUVERT dont la
+// cause est inconnue — ce qui est une position honnête, contrairement à une
+// cible déplacée pour faire monter un pourcentage.
+//
+// ⚠️ Règle générale, et elle vaut au-delà de ce fichier : on ne déplace pas
+// une cible sur la foi d'une statistique qu'on n'a pas éprouvée sur assez de
+// points. Il faudrait plusieurs dizaines de lettres pour trancher.
+export const LETTRE_MOTS = { min: 180, cible: [250, 300], max: 330 };
 
 const CONSIGNES = {
   lettre: `Rédige la LETTRE DE CANDIDATURE.
 
-- 250 à 300 mots maximum. Une page, pas davantage.
+- STRUCTURE OBLIGATOIRE : quatre paragraphes, dans cet ordre. Écris-les tous,
+  aucun ne se saute et aucun ne se fond dans un autre.
+
+  ¶1 — LE POSTE (2 à 3 phrases). Nomme une exigence de l'annonce et montre en
+       quoi le parcours y répond. Pas un mot sur le candidat avant l'exigence.
+  ¶2 — LA PREUVE PRINCIPALE (4 à 5 phrases). UNE expérience du profil,
+       développée : ce qui était fait, dans quel contexte, avec quel résultat
+       quand le profil en donne un. C'est le paragraphe le plus long.
+  ¶3 — LES DEUX AUTRES PREUVES (4 à 5 phrases). Deux correspondances
+       supplémentaires du rapprochement, chacune reliée à un attendu nommé.
+  ¶4 — LA DISPONIBILITÉ (1 à 2 phrases), sobre.
+
+  ⚠️ C'est ce plan, et non un comptage, qui donne sa longueur à la lettre :
+  quatre paragraphes ainsi développés font naturellement 250 à 300 mots.
+  Mesuré : sans ce plan, les lettres tombaient à 200 mots parce que ¶2 et ¶3
+  étaient expédiés en une phrase chacun — et **sans aucun lien avec la matière
+  disponible** (corrélation r = 0,26 entre nombre de correspondances et
+  longueur). Ce n'était donc pas un manque d'arguments, mais un
+  développement escamoté.
+
+  ⚠️ Développer ne veut PAS dire allonger : aucune formule ajoutée, aucune
+  qualité auto-proclamée, aucun fait absent du profil. On développe en disant
+  le CONCRET de ce qui est déjà là.
 - Commence par une ligne « Objet : candidature au poste de … ».
 - ⚠️ LA PREMIÈRE PHRASE DU CORPS PARLE DU POSTE, PAS DU CANDIDAT.
   C'est la consigne la plus souvent manquée, alors relis-la avant d'écrire.
@@ -344,7 +440,7 @@ const CONSIGNES = {
 
   La bonne ouverture NOMME une exigence du poste, puis y répond. Elle montre
   que l'annonce a été lue — c'est la première chose qu'un recruteur vérifie.
-- Trois preuves concrètes tirées du parcours, chacune reliée à un attendu précis de l'annonce. Des faits, pas des qualités.
+- Les trois preuves (¶2 et ¶3) sont des FAITS tirés du parcours, chacun relié à un attendu précis de l'annonce. Jamais des qualités.
 - Du texte suivi. Au plus une courte énumération si elle sert vraiment.
 - Termine par une phrase de disponibilité sobre, puis le nom du candidat seul sur sa ligne.
 ${INTERDITS}`,
@@ -506,7 +602,7 @@ Tu notes la pièce qu'on te soumet, sans complaisance. Une note élevée doit se
 Réponds UNIQUEMENT en JSON, avec cette forme exacte :
 {
   "note": <entier de 0 à 10>,
-  "inventions": [<extraits du texte affirmant un fait ABSENT du profil fourni>],
+  "inventions": [<extraits affirmant un FAIT VÉRIFIABLE absent du profil : un diplôme, un employeur, une date, un chiffre, un outil, une responsabilité. RIEN D'AUTRE>],
   "problemes": [<reproches précis et actionnables, un par entrée>],
   "verdict": "<une phrase : convoqué, hésitation, ou écarté, et pourquoi>"
 }
@@ -526,6 +622,16 @@ RÈGLES DE RÉDACTION EN VIGUEUR — tu ne peux pas demander l'inverse
   ✗ « Je vous adresse ma candidature au poste de… » → DÉFAUT, à signaler.
   Si la lettre s'ouvre sur le poste, c'est qu'elle respecte la consigne. Ne le compte JAMAIS comme une erreur, et ne réclame jamais « une accroche personnelle ».
 - Le texte ne doit RIEN contenir qui ne figure pas au profil. Ne réclame donc jamais un exemple, un chiffre, un résultat ou un outil qui n'y est pas : ce serait demander une invention.
+- ⚠️ UNE INVENTION EST UN FAIT, PAS UNE APPRÉCIATION. Une phrase qui relie une expérience au poste — « cette formation m'a donné des méthodes de travail structurées », « ce suivi de dossiers prépare à l'instruction de demandes » — est une INTERPRÉTATION du parcours réel, pas un fait fabriqué. Ne la signale jamais comme invention.
+  ✗ invention : « titulaire d'un master en droit » alors que le profil n'en porte aucun.
+  ✓ pas une invention : « cette expérience m'a appris à travailler dans les délais ».
+- ⚠️ UNE REFORMULATION FIDÈLE N'EST PAS UNE INVENTION. Compare le FOND, pas les
+  mots. Si le profil dit « délai de traitement divisé par deux », alors
+  « réduction des délais de moitié » est la MÊME information : ne la signale
+  pas. Cherche ce qui est faux, pas ce qui est dit autrement.
+  ⚠️ En revanche, un chiffre ALTÉRÉ est bien une invention, et des plus graves :
+  « divisé par deux » rendu par « de 30 % » change le fait. Signale-le.
+  Une candidature sans aucune phrase de liaison n'est plus une lettre, c'est une liste.
 - Les mots « dynamique », « motivé », « passionné », « rigoureux », « polyvalent » sont proscrits. N'en suggère aucun.
 Un reproche qui violerait l'une de ces règles ne doit pas être formulé.`;
 
@@ -533,6 +639,8 @@ const REECRITURE = `Voici la critique d'un chargé de recrutement sur le texte q
 
 Corrige PRÉCISÉMENT les points soulevés. Ne réécris pas ce qui fonctionne déjà : on veut une correction, pas un nouveau texte.
 Si des inventions sont signalées, supprime-les purement et simplement — n'essaie pas de les reformuler.
+
+⚠️ La réécriture GARDE LE PLAN EN QUATRE PARAGRAPHES et ne raccourcit pas. Si la suppression d'un passage vide ¶2 ou ¶3, développe une autre correspondance du rapprochement pour le remplir. Une lettre corrigée mais amputée est plus faible qu'avant correction.
 
 Rends uniquement le texte corrigé, sans commentaire.`;
 
@@ -580,6 +688,138 @@ const REPROCHES_ILLEGITIMES = [
 const reprocheLegitime = (probleme) =>
   !REPROCHES_ILLEGITIMES.some((r) => r.test(probleme));
 
+// Reproches portant sur l'ouverture de la lettre. Ils sont VÉRIFIABLES : si la
+// première phrase ne commence pas par le candidat, le reproche est faux.
+const REPROCHE_OUVERTURE =
+  /(commence|d[ée]bute|ouvre|premi[èe]re phrase|accroche)/i;
+
+// ── Contrôles déterministes sur une lettre ────────────────────────────────
+//
+// Ils vivent ici, et non dans le script d'évaluation, parce qu'ils servent
+// DEUX fois : à mesurer la conformité (`npm run eval:pieces`) et à faire taire
+// un reproche du critique qui est démontrablement faux (voir plus bas).
+// Deux implémentations auraient fini par rendre deux verdicts opposés sur la
+// même lettre.
+
+/** Le corps de la lettre, sans l'objet ni la formule d'appel. */
+export const corpsDeLettre = (texte) => {
+  const lignes = String(texte || "").split(/\r?\n/);
+  const iObjet = lignes.findIndex((l) => /^\s*objet\s*:/i.test(l));
+
+  return lignes
+    .slice(iObjet === -1 ? 0 : iObjet + 1)
+    .join("\n")
+    // La formule d'appel (« Madame, Monsieur, ») n'est ni du corps ni de
+    // l'objet : la laisser ferait passer toute lettre pour conforme à la règle
+    // « la première phrase parle du poste ».
+    .replace(/^\s*(madame|monsieur)[^\n]*\n/i, "")
+    .trim();
+};
+
+export const compterMots = (t) => (String(t || "").match(/[\p{L}\p{N}'’-]+/gu) || []).length;
+
+export const premierePhrase = (corps) =>
+  (String(corps || "").split(/(?<=[.!?])\s/)[0] || corps || "").trim();
+
+// Une ouverture qui commence par le CANDIDAT. Volontairement sévère sur le
+// début de phrase : c'est ce qu'un recruteur qui dépouille voit en premier.
+const OUVERTURE_CANDIDAT =
+  // ⚠️ Les limites de mot sont indispensables : sans elles, « Maîtriser »
+  // serait pris pour « ma » et « Former » pour « fort », et des ouvertures
+  // parfaitement correctes seraient comptées en faute.
+  /^(je\b|mon\b|ma\b|mes\b|titulaire\b|fort\b|forte\b|actuellement\b|apres\b|j'|c'est avec|diplome)/i;
+
+const sansAccents = (t) =>
+  String(t || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+/** La première phrase du corps parle-t-elle du poste plutôt que du candidat ? */
+export const ouvreSurLePoste = (texte) =>
+  !OUVERTURE_CANDIDAT.test(sansAccents(premierePhrase(corpsDeLettre(texte))));
+
+// ── Le garde-fou contre les FAUSSES accusations d'invention ───────────────
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  MESURÉ : LE CRITIQUE ACCUSE D'INVENTION DES PHRASES TIRÉES DU PROFIL
+// ══════════════════════════════════════════════════════════════════════════
+// `npm run eval:pieces` a relevé, sur le corpus de démonstration :
+//   • « formation de trois remplaçantes successives » — écrit TEL QUEL dans le
+//     profil de Mélanie Tarrou ;
+//   • « réduction des délais de traitement de moitié » — le profil dit « délai
+//     de traitement divisé par deux », c'est la même information ;
+//   • « stage à la mairie de Dumbéa », « inventaire du parc » — intégralement
+//     dans l'expérience déclarée par Kevin Poadja.
+//
+// Ce n'est pas anodin : TOUTE invention signalée déclenche une réécriture
+// (`aReecrire`). Une fausse accusation fait donc supprimer un argument VRAI et
+// pertinent, et la lettre ressort plus courte et plus pauvre — on l'a vu, les
+// réécritures raccourcissaient systématiquement le texte.
+//
+// Affiner le prompt du critique a réduit le phénomène sans l'éliminer : un
+// modèle qui juge un modèle se trompe, c'est à prévoir. On ajoute donc une
+// vérification DÉTERMINISTE, dans l'esprit de `reprocheLegitime` juste
+// au-dessus : un extrait dont les mots porteurs se retrouvent dans le profil
+// n'est pas une invention, c'est une reformulation.
+//
+// ⚠️ Le seuil est volontairement HAUT (deux tiers). En cas de doute, on
+// conserve l'accusation : rater une vraie invention est plus grave que
+// supprimer un bon argument. Le silence penche du côté de la prudence.
+const PART_MOTS_REQUISE = 0.67;
+
+export const inventionCredible = (extrait, profil, user) => {
+  const contexte = contexteProfil(profil, user);
+
+  // ⚠️ D'ABORD la recherche LITTÉRALE, avant tout raisonnement sur les mots.
+  //
+  // Mesuré sur 35 lettres : deux accusations subsistaient, et les deux
+  // portaient sur des passages RECOPIÉS du profil —
+  //   « plus de 900 raccordements »
+  //   « refonte du circuit de contrôle des délibérations »
+  // Elles échappaient au filtre par la règle « moins de trois mots porteurs,
+  // on ne conclut pas » : un extrait court et exact était donc traité comme
+  // douteux. Un passage qui se retrouve tel quel dans le profil n'est pas une
+  // invention, quelle que soit sa longueur — c'est une citation.
+  const aplati = (t) =>
+    String(t || "")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+
+  // On ne cherche pas la chaîne entière mais une SUITE de mots consécutifs :
+  // le modèle enveloppe souvent la citation d'une amorce
+  // (« Contribuant ainsi à la refonte du circuit… »), ce qui suffisait à faire
+  // échouer une recherche littérale stricte. Cinq mots d'affilée repris du
+  // profil, c'est une citation, pas une invention.
+  const MOTS_DAFFILEE = 5;
+  const source = aplati(contexte);
+  const suite = aplati(extrait).split(" ").filter(Boolean);
+
+  if (suite.length <= MOTS_DAFFILEE) {
+    if (suite.length && source.includes(suite.join(" "))) return false;
+  } else {
+    for (let i = 0; i + MOTS_DAFFILEE <= suite.length; i++) {
+      if (source.includes(suite.slice(i, i + MOTS_DAFFILEE).join(" "))) return false;
+    }
+  }
+
+  const mots = [...motsUtiles(extrait)];
+  // Trop court pour être jugé autrement : après l'échec de la recherche
+  // littérale ci-dessus, on ne peut rien conclure de deux mots, et on ne prend
+  // pas le risque d'écarter une accusation fondée.
+  if (mots.length < 3) return true;
+
+  const motsSource = motsUtiles(contexte);
+
+  const retrouves = mots.filter((m) =>
+    [...motsSource].some((x) => memeRacine(m, x)),
+  ).length;
+
+  // Presque tous les mots viennent du profil → c'est du profil reformulé.
+  return retrouves / mots.length < PART_MOTS_REQUISE;
+};
+
+
 /**
  * Relit une pièce et renvoie son évaluation.
  * Un échec de la critique n'est pas fatal : on garde le texte d'origine plutôt
@@ -603,7 +843,24 @@ const critiquer = async (piece, texte, profil, avp, user) => {
     const avis = JSON.parse(brut);
 
     const bruts = Array.isArray(avis.problemes) ? avis.problemes : [];
-    const problemes = bruts.filter(reprocheLegitime);
+
+    // Deux filtres, et le second est VÉRIFIABLE.
+    //
+    // `reprocheLegitime` écarte les griefs qui contredisent les consignes.
+    // Celui sur l'ouverture va plus loin : la règle « la première phrase parle
+    // du poste » se CONTRÔLE, et le contrôle fait autorité sur l'avis du
+    // modèle.
+    //
+    // Mesuré (`npm run eval:pieces`) : le critique reprochait « la lettre ne
+    // commence pas par une phrase sur le poste » sur des lettres dont le
+    // contrôle déterministe disait qu'elles s'ouvraient correctement — et
+    // comme un reproche restant déclenche une réécriture, la lettre était
+    // refaite pour corriger un défaut qu'elle n'avait pas.
+    const ouvertureCorrecte = piece === "lettre" && ouvreSurLePoste(texte);
+
+    const problemes = bruts
+      .filter(reprocheLegitime)
+      .filter((p) => !(ouvertureCorrecte && REPROCHE_OUVERTURE.test(p)));
     const ecartes = bruts.length - problemes.length;
 
     if (ecartes > 0) {
@@ -614,7 +871,12 @@ const critiquer = async (piece, texte, profil, avp, user) => {
 
     return {
       note: Number(avis.note) || 0,
-      inventions: Array.isArray(avis.inventions) ? avis.inventions : [],
+      // 🔴 Filtrées : le critique accuse d'invention des phrases tirées du
+      // profil (voir `inventionCredible`). Une fausse accusation fait
+      // supprimer un argument vrai, et appauvrit la lettre.
+      inventions: (Array.isArray(avis.inventions) ? avis.inventions : []).filter(
+        (i) => inventionCredible(i, profil, user),
+      ),
       problemes,
       // Combien de reproches ont été écartés : la décision de réécrire s'appuie
       // sur ce qui RESTE, pas sur une note calculée à partir de griefs

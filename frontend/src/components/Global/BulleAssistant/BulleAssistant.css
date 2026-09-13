@@ -1,0 +1,330 @@
+/* src/components/Global/BulleAssistant/BulleAssistant.css */
+
+.agent {
+  position: fixed;
+  right: var(--e4);
+  bottom: var(--e4);
+  /* Au-dessus du contenu, sous rien d'autre : il n'y a pas de modale dans
+     l'application. Une valeur nommée plutôt qu'un 9999 arbitraire. */
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--e3);
+  /* Le conteneur ne doit pas intercepter les clics sur la page derrière lui :
+     seuls ses enfants sont cliquables. */
+  pointer-events: none;
+}
+
+.agent > * {
+  pointer-events: auto;
+}
+
+/* ── Le déclencheur ───────────────────────────────────────────────────── */
+
+.agent-declencheur {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e3) var(--e4);
+  border: 0;
+  border-radius: 999px;
+  background: var(--marque);
+  color: #ffffff;
+  font: inherit;
+  font-size: var(--t-sm);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.28);
+}
+
+.agent-declencheur:hover {
+  background: var(--marque-clair);
+}
+
+/* Le focus doit rester visible sur un fond coloré : le contour du thème n'y
+   suffirait pas, on ajoute un halo clair. */
+.agent-declencheur:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .agent-declencheur {
+    color: #08131c;
+  }
+}
+
+/* Ouvert, le déclencheur se réduit à une croix : le panneau porte déjà le
+   titre, répéter « Une question ? » dessous serait du bruit. */
+.agent--ouvert .agent-declencheur {
+  padding: var(--e3);
+}
+
+.agent-libelle {
+  white-space: nowrap;
+}
+
+/* ── Le panneau ───────────────────────────────────────────────────────── */
+
+.agent-panneau {
+  display: flex;
+  flex-direction: column;
+  width: min(22rem, calc(100vw - 2 * var(--e4)));
+  /* Hauteur plafonnée par la fenêtre : sur un portable en paysage, un panneau
+     de 32 rem sortirait de l'écran par le haut. `svh` pour la même raison que
+     le hero — les barres du navigateur mobile. */
+  height: min(32rem, calc(100svh - 8rem));
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+  box-shadow: 0 16px 40px rgb(0 0 0 / 0.3);
+  overflow: hidden;
+}
+
+.agent-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e3);
+  padding: var(--e3) var(--e4);
+  background: var(--marque);
+  color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .agent-entete {
+    color: #08131c;
+  }
+}
+
+.agent-titre {
+  margin: 0;
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+/* Ce que l'assistant sait, dit dès l'en-tête. C'est ce qui le distingue d'un
+   agent conversationnel générique ouvert dans un autre onglet — et donc la
+   raison de lui parler plutôt qu'à l'autre. */
+.agent-sous-titre {
+  margin: 2px 0 0;
+  font-size: var(--t-xs);
+  opacity: 0.85;
+}
+
+.agent-fermer {
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 0 var(--e1);
+  cursor: pointer;
+}
+
+/* ── Le fil ───────────────────────────────────────────────────────────── */
+
+/* La zone est focalisable (voir le JSX) : son contour de focus doit rester
+   visible, et rentrer vers l'intérieur pour ne pas être rogné par
+   l'`overflow: hidden` du panneau. */
+.agent-fil:focus-visible {
+  outline: 2px solid var(--marque);
+  outline-offset: -2px;
+}
+
+.agent-fil {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--e4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+}
+
+.agent-message {
+  max-width: 85%;
+  padding: var(--e3);
+  border-radius: var(--rayon-lg);
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  /* Les réponses contiennent des listes et des retours à la ligne : sans
+     `pre-wrap`, tout s'agglutine en un bloc illisible. */
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.agent-message--moi {
+  align-self: flex-end;
+  background: var(--marque);
+  color: #ffffff;
+  border-bottom-right-radius: var(--e1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .agent-message--moi {
+    color: #08131c;
+  }
+}
+
+.agent-message--lui {
+  align-self: flex-start;
+  background: var(--surface-2);
+  border-bottom-left-radius: var(--e1);
+}
+
+/* Trois points qui respirent pendant la rédaction. Une réponse peut prendre
+   plusieurs secondes : sans ce signal, on croit que le clic n'a rien fait et
+   on renvoie la question. */
+.agent-attente {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.agent-attente span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--texte-doux);
+  animation: agent-respire 1.2s infinite ease-in-out;
+}
+
+.agent-attente span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.agent-attente span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes agent-respire {
+  0%,
+  60%,
+  100% {
+    opacity: 0.3;
+  }
+  30% {
+    opacity: 1;
+  }
+}
+
+/* Mouvement réduit : l'animation est purement décorative, elle disparaît
+   entièrement plutôt que d'être ralentie. */
+@media (prefers-reduced-motion: reduce) {
+  .agent-attente span {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
+/* ── État vide et amorces ─────────────────────────────────────────────── */
+
+.agent-vide {
+  margin: auto 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.agent-vide p {
+  margin: 0 0 var(--e3);
+}
+
+.agent-amorces {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.agent-amorces button {
+  width: 100%;
+  text-align: left;
+  padding: var(--e2) var(--e3);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+
+.agent-amorces button:hover {
+  border-color: var(--marque);
+  color: var(--marque);
+}
+
+.agent-erreur {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--erreur);
+}
+
+/* ── Saisie ───────────────────────────────────────────────────────────── */
+
+.agent-saisie {
+  display: flex;
+  gap: var(--e2);
+  padding: var(--e3);
+  border-top: 1px solid var(--bordure);
+  background: var(--surface);
+}
+
+.agent-saisie input {
+  flex: 1;
+  min-width: 0;
+}
+
+.agent-envoyer {
+  flex-shrink: 0;
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  border: 0;
+  border-radius: var(--rayon);
+  background: var(--marque);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.agent-envoyer:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+@media (prefers-color-scheme: dark) {
+  .agent-envoyer {
+    color: #08131c;
+  }
+}
+
+.agent-pied {
+  margin: 0;
+  padding: var(--e2) var(--e3);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-xs);
+  text-align: center;
+}
+
+/* ── Téléphone ────────────────────────────────────────────────────────
+   Le panneau prend tout l'écran : à 360 px, une fenêtre flottante de 22 rem
+   posée sur un fond qu'on ne peut plus lire ne sert personne. */
+@media (max-width: 520px) {
+  .agent {
+    right: var(--e3);
+    bottom: var(--e3);
+    left: var(--e3);
+    align-items: stretch;
+  }
+
+  .agent-panneau {
+    width: 100%;
+    height: min(80svh, calc(100svh - 6rem));
+  }
+
+  .agent-declencheur {
+    align-self: flex-end;
+  }
+}

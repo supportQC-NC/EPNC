@@ -30,6 +30,7 @@ import DevenirRecruteurScreen from "./screens/DevenirRecruteurScreen/DevenirRecr
 import ResetPasswordScreen from "./screens/ResetPasswordScreen/ResetPasswordScreen";
 import EspaceScreen from "./screens/EspaceScreen/EspaceScreen";
 import ProfilScreen from "./screens/ProfilScreen/ProfilScreen";
+import EntretienScreen from "./screens/EntretienScreen/EntretienScreen";
 import CandidaturesScreen from "./screens/CandidaturesScreen/CandidaturesScreen";
 import CandidatureDetailScreen from "./screens/CandidatureDetailScreen/CandidatureDetailScreen";
 import AssistantScreen from "./screens/AssistantScreen/AssistantScreen";
@@ -95,6 +96,7 @@ const router = createBrowserRouter(
       <Route element={<PrivateRoute />}>
         <Route path="/espace" element={<EspaceScreen />} />
         <Route path="/profil" element={<ProfilScreen />} />
+        <Route path="/entretien" element={<EntretienScreen />} />
         <Route path="/candidatures" element={<CandidaturesScreen />} />
         <Route path="/candidatures/:id" element={<CandidatureDetailScreen />} />
         <Route path="/matchs" element={<MatchsScreen />} />

@@ -23,6 +23,7 @@
 // on confirme. Un bouton « Importer » qui écrase sans montrer est un piège,
 // pas un raccourci.
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   useApercuImportMutation,
   useImporterProfilMutation,
@@ -134,6 +135,16 @@ const ImportJsonResume = ({ onImporte }) => {
             JSON Resume
           </a>{" "}
           ? Déposez-le plutôt que de tout ressaisir.
+        </p>
+
+        {/* La troisième porte, et la seule qui s'adresse à quelqu'un qui n'a
+            RIEN — ni CV, ni fichier. Elle est nommée en dernier mais formulée
+            pour se reconnaître immédiatement : « pas de CV » plutôt que
+            « entretien guidé », qui ne dit rien à qui ne connaît pas l'outil. */}
+        <p className="import-jr-accroche">
+          Vous n'avez pas de CV du tout ?{" "}
+          <Link to="/entretien">Construisons votre parcours ensemble</Link> — on
+          vous pose les questions, vous racontez.
         </p>
       </div>
     );

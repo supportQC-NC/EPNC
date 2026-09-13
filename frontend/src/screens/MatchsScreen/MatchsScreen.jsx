@@ -16,7 +16,11 @@ const Composante = ({ composante }) => {
   return (
     <li className={`composante${applicable ? "" : " composante--neutre"}`}>
       <div className="composante-haut">
-        <h4>{libelle}</h4>
+        {/* `h3` et non `h4` : l'intitulé du poste au-dessus est un `h2`, et un
+            plan qui saute un niveau est illisible à la navigation par titres —
+            c'est ainsi qu'un lecteur d'écran parcourt une page longue.
+            Relevé par axe (`heading-order`). */}
+        <h3>{libelle}</h3>
         <span className="composante-points">
           {applicable ? `${points}/${maximum}` : "neutralisée"}
         </span>

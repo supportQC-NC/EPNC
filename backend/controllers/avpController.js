@@ -175,10 +175,25 @@ const listerAvps = asyncHandler(async (req, res) => {
     $or: [{ dateLimite: null }, { dateLimite: { $gte: new Date() } }],
   });
 
+  // Combien d'offres OUVERTES ne publient ni missions ni compétences.
+  //
+  // Ce chiffre n'est pas une statistique décorative : c'est le constat central
+  // du projet, et il est affiché en page d'accueil. Le calculer ici, avec le
+  // même critère que `diagnostiquerContenu`, évite qu'une page annonce 74 %
+  // pendant qu'une fiche en applique un autre. Et il reste VIVANT : le corpus
+  // se renouvelle en quelques semaines, un nombre écrit en dur dans la page
+  // serait faux avant le rendu.
+  const sansDetail = await Avp.countDocuments({
+    $or: [{ dateLimite: null }, { dateLimite: { $gte: new Date() } }],
+    missions: { $size: 0 },
+    competencesAttendues: { $size: 0 },
+  });
+
   res.json({
     total,
     ouvertes,
     cloturees: total - ouvertes,
+    sansDetail,
     // Combien d'offres par employeur, et combien sont encore ouvertes. C'est
     // ce qui permet à l'interface de proposer un filtre honnête plutôt qu'une
     // liste où l'on découvre l'employeur offre par offre.

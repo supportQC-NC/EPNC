@@ -27,37 +27,12 @@
 // sur un coin de table. Vu le volume — quelques dizaines de profils — tout
 // autre choix serait la sur-ingénierie que le barème sanctionne.
 
-import { motsUtiles, motsCommuns } from "./matchingService.js";
+import { memeCompetence } from "./matchingService.js";
 
-// Deux libellés de compétence désignent-ils la même chose ?
-//
-// « Rédaction administrative » et « Rédaction de courriers administratifs »
-// doivent se rejoindre ; « Rédaction administrative » et « Gestion de projet »
-// non. On exige la moitié des mots porteurs du plus court des deux.
-const memeCompetence = (a, b) => {
-  const ma = motsUtiles(a);
-  const mb = motsUtiles(b);
-  if (ma.size === 0 || mb.size === 0) return false;
-
-  const communs = motsCommuns(ma, mb);
-  const court = Math.min(ma.size, mb.size);
-
-  // ⚠️ DEUX mots communs au minimum dès que les deux libellés en comptent
-  // plusieurs.
-  //
-  // La première version se contentait de la moitié du plus court, donc d'UN
-  // seul mot pour un libellé de deux. Résultat observé à l'écran :
-  // « Rédaction administrative » et « Gestion administrative de dossiers »
-  // étaient fusionnées en un seul critère — elles partagent « administrative »
-  // et rien d'autre. Deux compétences distinctes comptées comme une, et un
-  // recruteur qui ne retrouvait pas le critère qu'il venait de saisir.
-  //
-  // Un seul mot ne suffit que si l'un des deux libellés EST ce mot
-  // (« Comptabilité » face à « Comptabilité publique »).
-  if (court === 1) return communs >= 1;
-
-  return communs >= 2 && communs >= Math.ceil(court / 2);
-};
+// `memeCompetence` vit dans matchingService, avec les autres primitives de
+// comparaison (`motsUtiles`, `motsCommuns`, `memeRacine`). Elle servait ici,
+// puis dans l'entretien guidé : une seconde copie aurait divergé de la
+// première au premier ajustement de seuil.
 
 // Poids d'une compétence selon le niveau déclaré : un expert compte davantage
 // qu'un débutant quand il s'agit de dire ce qu'un recruteur recherche.

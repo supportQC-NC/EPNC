@@ -39,6 +39,7 @@
 //    panne d'API ne ferme pas la seule porte ouverte aux gens sans CV.
 
 import { appelerModele, iaDisponible } from "./modeleService.js";
+import { memeCompetence } from "./matchingService.js";
 import { Competence } from "../models/MetierModel.js";
 
 // ── Les étapes ────────────────────────────────────────────────────────────
@@ -270,27 +271,27 @@ export const structurerRecherche = async (recit) => {
 
 // ── Rapprochement des compétences avec le référentiel ─────────────────────
 
-const normaliser = (t) =>
-  String(t || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9\s]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
 /**
  * Rapproche des compétences dites en langage courant du vocabulaire du
  * référentiel métiers.
  *
  * POURQUOI : c'est tout l'enjeu pour quelqu'un sans CV. « Je tenais la caisse »
- * devient « Relation client » et « Encaissement » — des termes que le moteur de
- * rapprochement sait confronter aux attendus d'une offre, et qu'un recruteur
- * reconnaît. Sans cette traduction, l'expérience existe mais reste invisible.
+ * devient « Relation client » — un terme que le moteur de rapprochement sait
+ * confronter aux attendus d'une offre, et qu'un recruteur reconnaît. Sans
+ * cette traduction, l'expérience existe mais reste invisible.
  *
  * ⚠️ On ne REMPLACE jamais le mot de la personne : on PROPOSE le terme du
  * référentiel à côté, et c'est elle qui tranche. Substituer d'office
  * reviendrait à lui faire déclarer une compétence qu'elle n'a pas dite.
+ *
+ * ⚠️ La comparaison passe par `memeCompetence` (matchingService), la MÊME
+ * règle que les suggestions du recruteur. Une première version comparait les
+ * mots de plus de trois lettres avec un seuil de similarité, et produisait à
+ * l'essai : « Gestion des livraisons » → « Gestion de l'information »,
+ * « Gestion des soins » → « Gestion de l'information ». Le mot « gestion »
+ * portait tout le rapprochement à lui seul — exactement le défaut que la règle
+ * des deux mots communs a été écrite pour corriger. Une suggestion absurde
+ * décrédibilise toutes les autres, et la personne cesse de les lire.
  */
 export const rapprocherCompetences = async (competences) => {
   const dites = liste(competences);
@@ -298,36 +299,8 @@ export const rapprocherCompetences = async (competences) => {
 
   const referentiel = await Competence.find({}, "nom").lean();
 
-  const index = referentiel.map((c) => ({
-    nom: c.nom,
-    mots: new Set(normaliser(c.nom).split(" ").filter((m) => m.length > 3)),
+  return dites.map((dite) => ({
+    dite,
+    referentiel: referentiel.find((c) => memeCompetence(dite, c.nom))?.nom || null,
   }));
-
-  return dites.map((dite) => {
-    const mots = new Set(normaliser(dite).split(" ").filter((m) => m.length > 3));
-
-    let meilleur = null;
-    let meilleurScore = 0;
-
-    for (const entree of index) {
-      const communs = [...mots].filter((m) => entree.mots.has(m)).length;
-      if (communs === 0) continue;
-
-      // Score symétrique : une compétence du référentiel faite de six mots ne
-      // doit pas l'emporter sur une correspondance exacte de deux mots.
-      const score = (2 * communs) / (mots.size + entree.mots.size);
-      if (score > meilleurScore) {
-        meilleurScore = score;
-        meilleur = entree.nom;
-      }
-    }
-
-    return {
-      dite,
-      // Seuil haut et assumé : mieux vaut ne rien proposer que suggérer un
-      // terme à côté. Une suggestion absurde décrédibilise toutes les autres,
-      // et la personne cesse de lire les propositions.
-      referentiel: meilleurScore >= 0.5 ? meilleur : null,
-    };
-  });
 };

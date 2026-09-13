@@ -4,6 +4,7 @@ import Header from "./components/Global/Header/Header";
 import Footer from "./components/Global/Footer/Footer";
 import SessionSync from "./components/Global/SessionSync";
 import RemonterEnHaut from "./components/Utils/RemonterEnHaut";
+import BulleAssistant from "./components/Global/BulleAssistant/BulleAssistant";
 import "./index.css";
 
 // Coquille commune à toutes les pages.
@@ -29,6 +30,11 @@ const App = () => {
         </main>
         <Footer />
       </div>
+
+      {/* Hors de `.app` : la bulle est en position fixe et ne doit hériter
+          d'aucun contexte d'empilement de la coquille. Elle se masque
+          d'elle-même pour un visiteur non connecté et sur /assistant. */}
+      <BulleAssistant />
     </>
   );
 };

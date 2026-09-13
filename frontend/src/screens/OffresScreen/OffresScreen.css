@@ -1,8 +1,13 @@
 /* Liste des offres — mobile first. */
 
+/* ÉCRAN DE DONNÉES, pas de texte suivi : 230 offres en cartes gagnent une
+   colonne sur un grand écran, là qu'un paragraphe étalé deviendrait illisible.
+   Le `max-width: 56rem` posé ici annulait silencieusement le
+   `.conteneur--large` écrit dans le JSX — la classe était présente et sans
+   aucun effet. Seuls le titre et l'introduction gardent la largeur de lecture,
+   via leur propre `max-width`. */
 .offres {
   padding-block: var(--e6);
-  max-width: 56rem;
 }
 
 .offres-entete {
@@ -144,6 +149,34 @@
   padding: 0;
   display: grid;
   gap: var(--e4);
+}
+
+/* Deux colonnes à partir de 1000 px, trois au-delà de 1500. `auto-fill` avec
+   une largeur minimale plutôt que des paliers fixes : la carte décide de sa
+   largeur minimale lisible, la grille s'adapte. */
+@media (min-width: 1000px) {
+  .offres-liste {
+    grid-template-columns: repeat(auto-fill, minmax(26rem, 1fr));
+  }
+}
+
+/* La carte devient une colonne : le lien d'action se cale en bas, quelle que
+   soit la longueur de l'intitulé. Sans cela, dans une grille, les boutons de
+   deux cartes voisines ne s'alignent pas. */
+@media (min-width: 1000px) {
+  .offres-liste > li {
+    display: flex;
+  }
+
+  .offre-carte {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .offre-carte > :last-child {
+    margin-top: auto;
+  }
 }
 
 .offre-carte {
@@ -425,4 +458,15 @@
   /* Ne se comprime pas : c'est un libellé d'une ligne, pas une colonne
      élastique. */
   flex-shrink: 0;
+}
+
+
+/* Le champ de recherche : plus large que les autres filtres, parce que c'est
+   le contrôle principal de l'écran. */
+.offres-filtre--recherche {
+  flex: 1 1 18rem;
+}
+
+.offres-filtre--recherche input {
+  width: 100%;
 }

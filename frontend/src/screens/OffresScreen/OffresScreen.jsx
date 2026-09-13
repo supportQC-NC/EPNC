@@ -63,13 +63,53 @@ const Rythme = ({ mois }) => {
   );
 };
 
+// Normalisation pour la recherche : sans accents et sans casse. « Noumea »
+// doit trouver « Nouméa », et « CHARGE » doit trouver « Chargé ».
+const normaliser = (t) =>
+  (t || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+
 const OffresScreen = () => {
   const [ouvertesSeules, setOuvertesSeules] = useState(false);
   const [employeur, setEmployeur] = useState("");
+  const [recherche, setRecherche] = useState("");
   const { data, isLoading, isError, error } = useGetAvpsQuery({
     ouvertesSeules,
     employeur,
   });
+
+  // ══════════════════════════════════════════════════════════════════
+  //  LA RECHERCHE SE FAIT CÔTÉ NAVIGATEUR, ET C'EST DÉLIBÉRÉ
+  // ══════════════════════════════════════════════════════════════════
+  // Le serveur renvoie déjà TOUTES les offres en une réponse — 230 documents,
+  // quelques centaines de kilo-octets. Ajouter un paramètre de recherche à
+  // l'API imposerait un aller-retour à chaque frappe, sur une liaison
+  // calédonienne, pour filtrer un tableau qu'on a déjà en mémoire. C'est
+  // exactement la sur-ingénierie que le barème sanctionne.
+  //
+  // Si le corpus atteignait des milliers d'offres, la réponse serait paginée
+  // et la recherche remonterait au serveur. À cette volumétrie, non.
+  const filtrees = (() => {
+    if (!data) return [];
+    const q = normaliser(recherche).trim();
+    if (!q) return data.offres;
+
+    // Tous les mots doivent être trouvés, dans n'importe quel ordre :
+    // « garde champetre » trouve « Garde champêtre », et « champetre garde »
+    // aussi. Un `includes` sur la chaîne entière échouerait sur le second.
+    const mots = q.split(/\s+/);
+
+    return data.offres.filter((o) => {
+      const foin = normaliser(
+        [o.intitule, o.employeur?.nom, o.direction, o.service, o.lieu, o.metier?.nom, o.extrait]
+          .filter(Boolean)
+          .join(" "),
+      );
+      return mots.every((m) => foin.includes(m));
+    });
+  })();
 
   return (
     <div className="conteneur conteneur--large offres">
@@ -94,21 +134,38 @@ const OffresScreen = () => {
 
       {data && (
         <>
-          <Rythme mois={data.rythme} />
-
           <div className="offres-barre">
             {/* Le compte est annoncé par aria-live : il change quand on coche
                 le filtre, et ce changement doit être perceptible autrement que
                 visuellement. */}
             <p className="offres-compte" aria-live="polite">
-              {data.offres.length} offre{data.offres.length > 1 ? "s" : ""}{" "}
-              affichée{data.offres.length > 1 ? "s" : ""}
-              {!ouvertesSeules && data.cloturees > 0 && (
+              {filtrees.length} offre{filtrees.length > 1 ? "s" : ""}{" "}
+              affichée{filtrees.length > 1 ? "s" : ""}
+              {/* Quand une recherche est active, on rappelle le total : sans
+                  lui, « 3 offres affichées » laisse croire que le catalogue en
+                  compte trois. */}
+              {recherche.trim() && <> sur {data.offres.length}</>}
+              {!ouvertesSeules && !recherche.trim() && data.cloturees > 0 && (
                 <> · {data.cloturees} clôturée{data.cloturees > 1 ? "s" : ""}</>
               )}
             </p>
 
             <div className="offres-filtres">
+              {/* La recherche AVANT les filtres : c'est le geste le plus
+                  fréquent, et sur 230 offres c'est souvent le seul dont on a
+                  besoin. Un écran qui n'offre que des listes déroulantes
+                  oblige à deviner dans quelle catégorie ranger ce qu'on
+                  cherche. */}
+              <label className="offres-filtre offres-filtre--recherche">
+                <span className="offres-filtre-libelle">Rechercher</span>
+                <input
+                  type="search"
+                  value={recherche}
+                  onChange={(e) => setRecherche(e.target.value)}
+                  placeholder="Un métier, un lieu, un service…"
+                />
+              </label>
+
               {/* Filtre par employeur. Ce n'est pas un confort : sans lui,
                   quelqu'un qui vise l'OPT-NC devrait trier à la main parmi
                   230 avis venus de dix-huit organisations. */}
@@ -140,14 +197,15 @@ const OffresScreen = () => {
             </div>
           </div>
 
-          {data.offres.length === 0 ? (
+          {filtrees.length === 0 ? (
             <p className="offres-vide">
-              Aucune offre ne correspond. Décochez le filtre pour voir aussi les
-              offres clôturées.
+              {recherche.trim()
+                ? `Aucune offre ne contient « ${recherche.trim()} ». Essayez un mot plus court, ou le nom d'un lieu.`
+                : "Aucune offre ne correspond. Décochez le filtre pour voir aussi les offres clôturées."}
             </p>
           ) : (
             <ul className="offres-liste">
-              {data.offres.map((offre) => (
+              {filtrees.map((offre) => (
                 <li key={offre.slug}>
                   <article
                     className={`offre-carte${offre.ouverte ? "" : " offre-carte--close"}`}
@@ -250,6 +308,14 @@ const OffresScreen = () => {
               ))}
             </ul>
           )}
+
+          {/* Le rythme de publication APRÈS la liste, et pas avant.
+              Il occupait la place d'honneur, au-dessus de la première offre :
+              c'est une fierté d'analyse, pas un besoin d'utilisateur.
+              Quelqu'un qui cherche un poste veut voir des postes ; savoir que
+              91 avis sont parus en août l'intéresse une fois qu'il a regardé,
+              pour décider s'il vaut la peine de revenir. */}
+          <Rythme mois={data.rythme} />
         </>
       )}
     </div>
