@@ -7,7 +7,7 @@ import "./admin.css";
 // passe son temps à faire l'aller-retour entre le tableau de bord et la liste.
 const AdminLayout = () => {
   return (
-    <div className="conteneur admin">
+    <div className="conteneur conteneur--large admin">
       <header className="admin-entete">
         <p className="admin-surtitre">Administration</p>
         <nav aria-label="Sections d'administration">
@@ -30,8 +30,33 @@ const AdminLayout = () => {
               </NavLink>
             </li>
             <li>
+              <NavLink to="/admin/demandes" className="admin-onglet">
+                Accès recruteurs
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/moderation" className="admin-onglet">
+                Modération
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/donnees" className="admin-onglet">
+                Données
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/envoi" className="admin-onglet">
+                Candidatures
+              </NavLink>
+            </li>
+            <li>
               <NavLink to="/admin/email" className="admin-onglet">
                 Envoi d'emails
+              </NavLink>
+            </li>
+            <li>
+              <NavLink to="/admin/integration" className="admin-onglet">
+                Intégration
               </NavLink>
             </li>
           </ul>

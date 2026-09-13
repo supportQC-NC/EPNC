@@ -349,3 +349,80 @@
     padding-block: var(--e7);
   }
 }
+
+
+/* -- Employeur -------------------------------------------------------- */
+
+/* Qui recrute, mis en avant sur chaque carte. L'application agrege dix-huit
+   organisations publiques distinctes : sans cette ligne, un candidat croirait
+   que toutes les offres viennent du meme employeur, et s'adresserait a la
+   mauvaise personne. */
+.offre-employeur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--e2);
+  margin: 0 0 var(--e1);
+}
+
+.offre-employeur-nom {
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--marque);
+}
+
+.offre-employeur-type {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.offres-filtres {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+}
+
+.offres-filtre-libelle {
+  display: block;
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texte-doux);
+  margin-bottom: var(--e1);
+}
+
+.offres-filtre select {
+  min-width: 16rem;
+}
+
+@media (min-width: 760px) {
+  .offres-filtres {
+    flex-direction: row;
+    align-items: flex-end;
+    gap: var(--e5);
+    /* Sans le retour à la ligne, la case à cocher débordait à droite et
+       faisait apparaître une barre de défilement horizontale sur toute la
+       page — le pire des symptômes, parce qu'il déplace tout le contenu. */
+    flex-wrap: wrap;
+  }
+
+  .offres-filtre--case {
+    padding-bottom: var(--e2);
+  }
+}
+
+/* `.offres-filtre` est un <label> : par défaut en ligne, il plaçait son
+   intitulé À CÔTÉ du sélecteur au lieu de le surmonter, et écrasait la case à
+   cocher voisine sur quatre lignes. */
+.offres-filtre {
+  display: block;
+}
+
+.offres-filtre--case {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  /* Ne se comprime pas : c'est un libellé d'une ligne, pas une colonne
+     élastique. */
+  flex-shrink: 0;
+}

@@ -35,6 +35,17 @@ export const SOURCES = [
     ingeree: false,
   },
   {
+    id: "hf_archive",
+    nom: "Dataset Hugging Face — archive mensuelle",
+    categorie: "Avis de vacance de poste",
+    type: "donnees",
+    url: "https://huggingface.co/api/datasets/opt-nc/odata-avps/tree/main/data/2026",
+    role: "Un fichier par offre et par mois. C'est la réserve du projet : le fichier des offres ouvertes est tombé à deux entrées le 13/09/2026, l'archive en conserve quarante-cinq.",
+    ingeree: true,
+    collection: "avps",
+    commande: "npm run data:archive",
+  },
+  {
     id: "portail_avps",
     nom: "Portail web des AVP",
     categorie: "Avis de vacance de poste",
@@ -142,8 +153,10 @@ export const SOURCES = [
     categorie: "Open data Nouvelle-Calédonie",
     type: "donnees",
     url: "https://data.gouv.nc/api/records/1.0/search/?dataset=avis-de-vacances-de-poste-avp-drhfpnc&rows=1",
-    role: "Publication historique des AVP sur le portail open data du territoire.",
-    ingeree: false,
+    role: "Avis de vacance de la fonction publique calédonienne (DRHFPNC) : 185 ouverts, près de 20 000 au total. Schéma propre au territoire, traduit en schema.org/JobPosting par backend/services/dataGouvNormaliser.js — c'est la démonstration que l'architecture essaime.",
+    ingeree: true,
+    collection: "avps",
+    commande: "npm run data:datagouv",
   },
 ];
 

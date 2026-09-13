@@ -1,0 +1,115 @@
+/* src/screens/ProfilScreen/ImportJsonResume.css */
+
+/* État replié : une invitation discrète, pas un appel à l'action concurrent
+   du formulaire. La saisie manuelle reste le chemin principal — l'import est
+   un raccourci pour ceux qui l'ont. */
+.import-jr-repli {
+  margin-bottom: var(--e5);
+  padding: var(--e4);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+}
+
+.import-jr-accroche {
+  margin: var(--e2) 0 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.import-jr {
+  margin-bottom: var(--e5);
+  border-left: 4px solid var(--marque);
+}
+
+.import-jr-intro {
+  margin: 0 0 var(--e4);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.import-jr-apercu {
+  margin-top: var(--e4);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+}
+
+.import-jr-apercu h3 {
+  font-size: var(--t-md);
+  margin: 0 0 var(--e3);
+}
+
+.import-jr-apercu h4 {
+  font-size: var(--t-sm);
+  margin: 0 0 var(--e2);
+}
+
+/* Les compteurs : ce qu'on lit en premier pour décider. */
+.import-jr-compteurs {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e4);
+  margin: 0 0 var(--e3);
+  padding: 0;
+  font-size: var(--t-sm);
+}
+
+.import-jr-compteurs strong {
+  font-size: var(--t-lg);
+  font-variant-numeric: tabular-nums;
+}
+
+.import-jr-titre {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-sm);
+}
+
+/* L'écrasement annoncé. Rouge parce que c'est destructeur, et placé avant les
+   boutons pour être lu avant de cliquer. */
+.import-jr-remplace {
+  padding: var(--e3);
+  margin-bottom: var(--e4);
+  background: var(--erreur-fond);
+  color: var(--erreur);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  max-width: var(--largeur-texte);
+}
+
+/* Ce qui a été interprété : à relire, sans être une erreur. La nuance est
+   portée par la couleur d'attention, pas par celle d'erreur. */
+.import-jr-avertissements {
+  padding: var(--e3);
+  margin-bottom: var(--e4);
+  background: var(--attention-fond);
+  border-radius: var(--rayon);
+}
+
+.import-jr-avertissements h4 {
+  color: var(--attention);
+}
+
+.import-jr-avertissements ul,
+.import-jr-ignores ul {
+  margin: 0;
+  padding-left: var(--e5);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+}
+
+.import-jr-ignores {
+  padding: var(--e3);
+  margin-bottom: var(--e4);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+}
+
+.import-jr-ignores p {
+  margin: var(--e2) 0 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}

@@ -76,7 +76,15 @@
   --h-entete: 64px;
 
   --largeur-texte: 68ch;
-  --largeur-page: 1100px;
+  /* Largeur de lecture courante : fiches, formulaires, articles.
+     1100 px etait cale sur un ecran de portable ; sur un 27 pouces,
+     l'application occupait un tiers de la surface et laissait deux bandes
+     vides de part et d'autre. */
+  --largeur-page: 1320px;
+  /* Ecrans de DONNEES : listes d'offres, vivier, grilles de cartes, tableaux
+     d'administration. Ils gagnent une colonne entiere au-dela de 1400 px, la
+     ou une colonne de texte n'y gagnerait rien. */
+  --largeur-page-large: 1600px;
 }
 
 @media (min-width: 700px) {
@@ -208,6 +216,14 @@ img {
   margin-inline: auto;
   /* Retrait sûr pour les écrans à encoche en orientation paysage. */
   padding-inline: max(var(--gouttiere), env(safe-area-inset-left));
+}
+
+/* Variante pour les ecrans qui affichent des DONNEES plutot que du texte :
+   une grille de cartes ou un tableau gagne une colonne a 1600 px, alors qu'un
+   paragraphe etale sur 1600 px devient illisible. La distinction est donc
+   portee par l'ecran, pas par une largeur unique imposee a tous. */
+.conteneur--large {
+  max-width: var(--largeur-page-large);
 }
 
 /* Colonne de lecture : tout ce qui est du texte suivi s'y limite. Au-delà
@@ -371,24 +387,15 @@ img {
   font-weight: 600;
 }
 
-.champ textarea {
-  padding: var(--e3);
-  border: 1px solid var(--bordure-forte);
-  border-radius: var(--rayon);
-  background: var(--surface);
-  color: var(--texte);
-  font: inherit;
-  font-size: var(--t-base);
-  line-height: 1.55;
-  /* Redimensionnement vertical seulement : en largeur, l'utilisateur peut
-     déborder de la mise en page. */
-  resize: vertical;
-}
-
-.champ input,
-.champ select {
-  min-height: 46px;
-  padding: var(--e3);
+/* Les cases à cocher, boutons radio, curseurs et sélecteurs de fichier
+   gardent leur apparence native : la redessiner coûte cher et casse
+   l'accessibilité pour un gain esthétique nul. */
+.champ-controle,
+textarea,
+select,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]) {
+  min-width: 0;
+  max-width: 100%;
   border: 1px solid var(--bordure-forte);
   border-radius: var(--rayon);
   background: var(--surface);
@@ -399,7 +406,21 @@ img {
   font-size: var(--t-base);
 }
 
-.champ select {
+textarea {
+  padding: var(--e3);
+  line-height: 1.55;
+  /* Redimensionnement vertical seulement : en largeur, l'utilisateur peut
+     déborder de la mise en page. */
+  resize: vertical;
+}
+
+select,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]) {
+  min-height: 46px;
+  padding: var(--e3);
+}
+
+select {
   /* Sans cela, le sélecteur natif garde la hauteur imposée par le système et
      ignore le `min-height` sur certains navigateurs. */
   appearance: none;
@@ -414,19 +435,23 @@ img {
   background-repeat: no-repeat;
 }
 
-.champ input::placeholder {
+input::placeholder,
+textarea::placeholder {
   color: var(--texte-doux);
+  /* Firefox applique une opacité par défaut qui fait passer le texte
+     indicatif sous le contraste minimal. */
   opacity: 1;
 }
 
-.champ input:hover,
-.champ textarea:hover {
+input:hover,
+select:hover,
+textarea:hover {
   border-color: var(--texte-doux);
 }
 
-.champ input:disabled,
-.champ select:disabled,
-.champ textarea:disabled {
+input:disabled,
+select:disabled,
+textarea:disabled {
   background: var(--surface-2);
   color: var(--texte-doux);
   cursor: not-allowed;
@@ -449,6 +474,23 @@ img {
 .champ-aide {
   font-size: var(--t-sm);
   color: var(--texte-doux);
+}
+
+/* Deux champs courts côte à côte (prénom/nom, ville/code postal). En dessous
+   de 460 px ils s'empilent : deux champs de saisie de 130 px l'un à côté de
+   l'autre ne se remplissent pas au pouce.
+   `.profil-duo` est l'ancien nom, conservé le temps que les écrans migrent. */
+.duo,
+.profil-duo {
+  display: grid;
+  gap: 0 var(--e4);
+}
+
+@media (min-width: 460px) {
+  .duo,
+  .profil-duo {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
 }
 
 /* ── Messages ────────────────────────────────────────────────────────── */

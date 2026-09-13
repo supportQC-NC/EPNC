@@ -5,6 +5,7 @@ import {
   getCandidature,
   creerCandidature,
   genererPiece,
+  preparerDossier,
   modifierPiece,
   changerStatut,
   telechargerPiece,
@@ -28,6 +29,8 @@ router.patch("/:id/statut", changerStatut);
 // ── Fonction ④ : les sorties ────────────────────────────────────────────
 // Trois formes, parce que les besoins ne sont pas les mêmes : une pièce seule
 // à relire, le dossier complet à conserver, la transmission à l'employeur.
+// Les quatre pièces d'un coup : le geste qui transforme une alerte en dossier.
+router.post("/:id/preparer", preparerDossier);
 router.get("/:id/dossier", telechargerDossier);
 router.get("/:id/resume.json", exporterJsonResume);
 router.post("/:id/envoi", envoyerCandidature);

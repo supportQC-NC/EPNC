@@ -1,0 +1,117 @@
+/* src/screens/MesSignalementsScreen/MesSignalementsScreen.css */
+
+.mes-signalements {
+  padding-block: var(--e5);
+}
+
+.mes-signalements-entete {
+  margin-bottom: var(--e5);
+}
+
+.mes-signalements-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+.mes-signalements-vide {
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+}
+
+.mes-signalements section + section {
+  margin-top: var(--e6);
+}
+
+/* L'etat de son propre compte passe avant tout le reste : c'est la seule
+   information de cette page qui demande une action. */
+.compte-alerte {
+  border-left: 4px solid var(--attention);
+  background: var(--attention-fond);
+  margin-bottom: var(--e6);
+}
+
+.compte-alerte h2 {
+  margin-top: 0;
+  color: var(--attention);
+}
+
+.compte-echeance {
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+.compte-avertissements {
+  margin: var(--e4) 0 0;
+  padding-left: var(--e5);
+  font-size: var(--t-sm);
+}
+
+.compte-avertissements li + li {
+  margin-top: var(--e2);
+}
+
+.dossiers {
+  list-style: none;
+  margin: var(--e4) 0 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.dossier-perso {
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.dossier-perso-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--e3);
+  margin: 0;
+}
+
+.dossier-perso-date {
+  margin: var(--e1) 0 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.dossier-perso-decision {
+  margin: var(--e3) 0;
+  padding: var(--e3);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+.dossier-perso-note {
+  margin: var(--e3) 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.dossier-recours {
+  margin-top: var(--e4);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+}
+
+.dossier-attente,
+.dossier-reponse {
+  margin: var(--e3) 0 0;
+  padding: var(--e3);
+  background: var(--marque-doux);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+}
+
+.dossier-reponse p {
+  margin: 0;
+}

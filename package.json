@@ -16,9 +16,15 @@
     "data:metiers": "node backend/ingest.js referentiel_metiers",
     "data:archive": "node backend/ingest.js hf_archive",
     "data:datagouv": "node backend/ingest.js datagouv_avps",
-    "data:tout": "node backend/ingest.js --tout"
+    "data:tout": "node backend/ingest.js --tout",
+    "data:comptes-test": "node backend/seedComptesTest.js",
+    "eval": "node backend/eval.js",
+    "moderation:echeances": "node backend/echeances.js",
+    "veille": "node backend/veille.js",
+    "mcp": "node backend/mcp.js"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
     "archiver": "^8.0.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",

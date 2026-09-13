@@ -37,7 +37,7 @@ const SOCLE = [
   {
     titre: "Les offres réelles",
     texte:
-      "Les avis de vacance de poste ouverts à l'OPT-NC, normalisés au format schema.org/JobPosting et republiés en open data. Aucune saisie manuelle, aucune offre inventée.",
+      "Les avis de vacance de poste de dix-huit employeurs publics calédoniens — OPT-NC, Nouvelle-Calédonie, provinces, hôpitaux, communes — normalisés au format schema.org/JobPosting et republiés en open data. Aucune saisie manuelle, aucune offre inventée.",
   },
   {
     titre: "Le référentiel des métiers",
@@ -179,6 +179,33 @@ const LandingScreen = () => {
               </li>
             ))}
           </ul>
+        </div>
+      </section>
+
+      {/* ── L'autre côté du guichet ───────────────────────────────────
+          Cette page s'adresse à des candidats, et un employeur qui la lit n'y
+          trouverait rien pour lui. Un bandeau, pas une troisième grande
+          promesse : il ne doit pas concurrencer l'appel principal, seulement
+          exister pour qui le cherche.
+
+          Il dit d'emblée que l'accès est vérifié — c'est aussi, et surtout, ce
+          qui rassure les candidats qui lisent cette page. */}
+      <section className="section recruteur-bande" aria-labelledby="titre-recruteur">
+        <div className="conteneur recruteur-bande-inner">
+          <div>
+            <h2 id="titre-recruteur" className="recruteur-bande-titre">
+              Vous recrutez pour un organisme public&nbsp;?
+            </h2>
+            <p className="recruteur-bande-texte">
+              L'espace recruteur donne accès aux profils des candidats et au
+              rapprochement dans l'autre sens, du poste vers les personnes.
+              Chaque demande est vérifiée par un administrateur — la réponse
+              arrive par courriel, motivée.
+            </p>
+          </div>
+          <Link to="/devenir-recruteur" className="btn btn-secondaire">
+            Devenir recruteur
+          </Link>
         </div>
       </section>
 

@@ -62,6 +62,44 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    // ── Modération ────────────────────────────────────────────────
+    //
+    // Les avertissements sont CUMULATIFS et NOMINATIFS : chacun porte son
+    // motif et qui l'a donné. Un compte sanctionné sans qu'on puisse dire
+    // pourquoi ni par qui n'est pas défendable — ni devant la personne, ni
+    // devant qui que ce soit d'autre.
+    avertissements: {
+      type: [
+        {
+          motif: { type: String, required: true },
+          donnePar: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            default: null,
+          },
+          signalement: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Signalement",
+            default: null,
+          },
+          date: { type: Date, default: Date.now },
+          // Un avertissement levé reste au dossier mais ne compte plus.
+          // L'effacer réécrirait l'histoire ; le neutraliser suffit.
+          leveLe: { type: Date, default: null },
+          leveMotif: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
+
+    // Posée au troisième avertissement actif : le profil cesse d'être visible
+    // et la personne dispose d'un délai pour régulariser.
+    masqueLe: { type: Date, default: null },
+    // Échéance au-delà de laquelle le compte est supprimé faute de contact.
+    // Stockée plutôt que recalculée : la durée du délai peut changer, mais
+    // l'échéance annoncée à quelqu'un ne doit pas bouger sous ses pieds.
+    regulariserAvant: { type: Date, default: null, index: true },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -94,6 +132,12 @@ userSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
+// Avertissements qui comptent encore : les levés restent au dossier mais
+// n'entrent plus dans le décompte.
+userSchema.methods.avertissementsActifs = function () {
+  return (this.avertissements || []).filter((a) => !a.leveLe);
+};
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);

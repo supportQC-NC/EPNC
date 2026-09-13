@@ -47,7 +47,8 @@
 // "archiver"` échoue au démarrage avec « does not provide an export named
 // default ». La classe par format est le point d'entrée désormais.
 import { ZipArchive } from "archiver";
-import { piecePdf, nomFichier } from "./pdfService.js";
+import { piecePdf, lettrePdf, nomFichier } from "./pdfService.js";
+import { cvPdf } from "./cvPdfService.js";
 import { versJsonResume } from "./jsonResumeService.js";
 import { smtpConfigure } from "./smtpService.js";
 import { lireParametre } from "../models/ParametreModel.js";
@@ -203,6 +204,36 @@ export const etatEnvoi = async (avp = null) => {
   };
 };
 
+// Date à inscrire dans un PDF : celle de la pièce, jamais l'heure courante.
+// C'est ce qui rend le fichier reproductible d'un appel à l'autre.
+const dateDePiece = (candidature, piece) =>
+  candidature.pieces?.[piece]?.modifieLe ||
+  candidature.pieces?.[piece]?.genereLe ||
+  candidature.updatedAt;
+
+// Accroche du CV : le premier paragraphe du texte produit, à condition qu'il
+// ressemble à une accroche.
+//
+// On écarte les lignes qui sont manifestement un en-tête (le nom du candidat
+// en capitales, un intitulé de rubrique) : reprises telles quelles, elles
+// feraient doublon avec le bloc d'identité que la mise en page rend déjà.
+const premiereAccroche = (texte) => {
+  const lignes = String(texte || "")
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  for (const ligne of lignes) {
+    if (ligne.length < 40) continue;
+    if (ligne === ligne.toUpperCase()) continue;
+    if (/^(cv|curriculum|expériences?|formations?|compétences?)/i.test(ligne))
+      continue;
+    return ligne;
+  }
+
+  return null;
+};
+
 // Produit les PDF demandés. Les pièces vides sont ignorées plutôt que rendues
 // en pages blanches : un dossier à trois pièces se voit, une page blanche se
 // découvre chez l'employeur.
@@ -213,26 +244,47 @@ const rendre = async (candidature, avp, user, profil, pieces) => {
     const contenu = candidature.pieces?.[piece]?.contenu;
     if (!contenu?.trim()) continue;
 
+    // Le CV est rendu depuis le PROFIL STRUCTURÉ, pas depuis le texte produit
+    // par le modèle : c'est ce qui garantit qu'aucun employeur, aucune date et
+    // aucun diplôme absent du profil ne peut y figurer. Le texte du modèle ne
+    // sert qu'à l'accroche recentrée sur le poste.
+    //
+    // On prend la PREMIÈRE ligne non vide du texte comme accroche quand le
+    // modèle en a produit une : c'est ce qu'imposent les consignes de
+    // rédaction (« accroche en deux lignes » en tête du CV).
+    const donnees =
+      piece === "lettre"
+        ? await lettrePdf({
+            texte: contenu,
+            avp,
+            user,
+            profil,
+            date: dateDePiece(candidature, piece),
+          })
+        : piece === "cv"
+        ? await cvPdf({
+            profil,
+            user,
+            avp,
+            accroche: premiereAccroche(contenu),
+            date: dateDePiece(candidature, piece),
+          })
+        : await piecePdf({
+            piece,
+            texte: contenu,
+            avp,
+            user,
+            profil,
+            date: dateDePiece(candidature, piece),
+          });
+
     fichiers.push({
       piece,
       nom: nomFichier(piece, user, avp.slug),
       // La date de génération de la pièce, pas l'heure courante : le PDF d'une
       // pièce inchangée est ainsi identique d'un appel à l'autre.
-      date:
-        candidature.pieces[piece].modifieLe ||
-        candidature.pieces[piece].genereLe ||
-        candidature.updatedAt,
-      donnees: await piecePdf({
-        piece,
-        texte: contenu,
-        avp,
-        user,
-        profil,
-        date:
-          candidature.pieces[piece].modifieLe ||
-          candidature.pieces[piece].genereLe ||
-          candidature.updatedAt,
-      }),
+      date: dateDePiece(candidature, piece),
+      donnees,
     });
   }
 

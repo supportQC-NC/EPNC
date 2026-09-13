@@ -1,6 +1,11 @@
 // backend/controllers/avpController.js
 import asyncHandler from "../middleware/asyncHandler.js";
 import Avp from "../models/AvpModel.js";
+import {
+  expliquerCorps,
+  termesPresents,
+  metierClasse,
+} from "../services/langageClairService.js";
 
 // Longueur de l'extrait public. Assez pour comprendre le poste, trop court
 // pour se passer de la fiche complète.
@@ -32,13 +37,21 @@ const vuePublique = (avp) => ({
   idAvp: avp.idAvp,
   intitule: avp.intitule,
   extrait: extraire(avp.description),
+  // Exposé dès la vue publique : savoir qui recrute fait partie des
+  // informations qu'on ne doit pas faire payer d'un compte.
+  employeur: avp.employeur,
   direction: avp.direction,
   service: avp.service,
   lieu: avp.lieu,
   familles: avp.familles,
+  // `classe: false` quand l'employeur n'a pas rangé le poste dans la
+  // nomenclature — le libellé source est alors « Hors rome », qu'il ne faut
+  // surtout pas afficher tel quel. L'interface masque la ligne ; c'est le
+  // corps/grade traduit qui porte l'information utile.
   metier: {
     nom: avp.metier?.nom || null,
     ficheUrl: avp.metier?.ficheUrl || null,
+    classe: metierClasse(avp.metier),
   },
   typeContrat: avp.typeContrat,
   nbPostes: avp.nbPostes,
@@ -46,6 +59,55 @@ const vuePublique = (avp) => ({
   dateLimite: avp.dateLimite,
   ouverte: avp.estOuverte(),
 });
+
+// Ce que l'employeur publie RÉELLEMENT, section par section.
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  POURQUOI LE SERVEUR DIT CE QUI MANQUE, PLUTÔT QUE DE LAISSER DEVINER
+// ══════════════════════════════════════════════════════════════════════════
+// Jusqu'ici, un champ vide produisait une section absente : la page d'une
+// offre sans missions ni compétences n'affichait qu'un titre et du blanc, et
+// se lisait comme une application cassée. C'est le cas de 139 des 188 offres
+// ouvertes — les trois quarts du catalogue.
+//
+// Or ce vide est une INFORMATION : il dit que cet employeur-là ne publie pas
+// le détail de ses postes. La constater et la nommer vaut mieux que
+// l'afficher en creux, et infiniment mieux que de la combler en inventant.
+//
+// Le diagnostic est calculé ici, côté serveur, pour une raison simple : c'est
+// le même verdict qui doit servir à l'interface, à l'API d'intégration et à la
+// veille. Trois lectures indépendantes de « cette offre est-elle vide ? »
+// finiraient par diverger.
+const SECTIONS = [
+  ["description", "Présentation du poste"],
+  ["missions", "Missions"],
+  ["competencesAttendues", "Compétences attendues"],
+  ["savoirFaire", "Savoir-faire"],
+  ["qualifications", "Diplômes et habilitations"],
+  ["experienceRequise", "Expérience requise"],
+];
+
+const renseigne = (v) =>
+  Array.isArray(v) ? v.length > 0 : Boolean(String(v || "").trim());
+
+const diagnostiquerContenu = (avp) => {
+  const publie = [];
+  const absent = [];
+
+  for (const [champ, libelle] of SECTIONS) {
+    (renseigne(avp[champ]) ? publie : absent).push(libelle);
+  }
+
+  return {
+    publie,
+    absent,
+    // « Muette » : l'employeur ne publie NI missions NI compétences attendues.
+    // Ce sont les deux sections sans lesquelles un rapprochement n'a aucun
+    // fondement — le reste est du confort de lecture.
+    muette:
+      !renseigne(avp.missions) && !renseigne(avp.competencesAttendues),
+  };
+};
 
 // Vue COMPLÈTE — comptes connectés uniquement.
 const vueComplete = (avp) => ({
@@ -60,6 +122,25 @@ const vueComplete = (avp) => ({
   contraintePhysique: avp.contraintePhysique,
   experienceRemplaceDiplome: avp.experienceRemplaceDiplome,
   metier: avp.metier,
+
+  contenu: diagnostiquerContenu(avp),
+
+  // Le vocabulaire administratif traduit. `corps` est souvent le SEUL contenu
+  // exploitable d'une offre muette : c'est lui qui permet de dire quelque
+  // chose d'utile là où l'employeur n'a rien écrit.
+  langageClair: {
+    corps: expliquerCorps(avp.corpsDomaine),
+    // Uniquement les termes présents dans CETTE offre : un glossaire générique
+    // collé sous chaque annonce se survole et ne se lit pas.
+    termes: termesPresents(
+      avp.qualifications,
+      avp.description,
+      avp.missions,
+      avp.competencesAttendues,
+      avp.experienceRequise,
+      avp.contraintePhysique,
+    ),
+  },
 });
 
 // @desc    Liste publique des offres, de la plus récente à la plus ancienne
@@ -77,6 +158,13 @@ const listerAvps = asyncHandler(async (req, res) => {
     filtre.$or = [{ dateLimite: null }, { dateLimite: { $gte: new Date() } }];
   }
 
+  // Filtre par employeur. L'application agrège plusieurs organisations
+  // publiques ; quelqu'un qui vise l'OPT-NC ne doit pas avoir à trier à la
+  // main parmi les avis de la fonction publique.
+  if (req.query.employeur) {
+    filtre["employeur.code"] = req.query.employeur;
+  }
+
   // Tri secondaire sur idAvp : sans lui, deux offres publiées le même jour
   // (c'est la règle ici, elles arrivent par lots) remonteraient dans un ordre
   // variable d'une requête à l'autre, et la liste « sauterait » au rechargement.
@@ -91,10 +179,55 @@ const listerAvps = asyncHandler(async (req, res) => {
     total,
     ouvertes,
     cloturees: total - ouvertes,
+    // Combien d'offres par employeur, et combien sont encore ouvertes. C'est
+    // ce qui permet à l'interface de proposer un filtre honnête plutôt qu'une
+    // liste où l'on découvre l'employeur offre par offre.
+    employeurs: await repartitionEmployeurs(),
     rythme: await rythmePublication(),
     offres: offres.map(vuePublique),
   });
 });
+
+// Répartition des offres par employeur.
+const repartitionEmployeurs = async () => {
+  const maintenant = new Date();
+
+  const lignes = await Avp.aggregate([
+    {
+      $group: {
+        _id: "$employeur.code",
+        nom: { $first: "$employeur.nom" },
+        nomComplet: { $first: "$employeur.nomComplet" },
+        type: { $first: "$employeur.type" },
+        total: { $sum: 1 },
+        ouvertes: {
+          $sum: {
+            $cond: [
+              {
+                $or: [
+                  { $eq: ["$dateLimite", null] },
+                  { $gte: ["$dateLimite", maintenant] },
+                ],
+              },
+              1,
+              0,
+            ],
+          },
+        },
+      },
+    },
+    { $sort: { ouvertes: -1, total: -1 } },
+  ]);
+
+  return lignes.map((l) => ({
+    code: l._id,
+    nom: l.nom,
+    nomComplet: l.nomComplet,
+    type: l.type,
+    total: l.total,
+    ouvertes: l.ouvertes,
+  }));
+};
 
 // Nombre de publications par mois sur les douze derniers mois.
 //

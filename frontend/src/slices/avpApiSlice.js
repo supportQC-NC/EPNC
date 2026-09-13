@@ -8,10 +8,18 @@ export const avpApiSlice = apiSlice.injectEndpoints({
     // paramètre que s'il est demandé, pour garder des URLs (et donc des clés
     // de cache) stables.
     getAvps: builder.query({
-      query: ({ ouvertesSeules } = {}) => ({
-        url: AVPS_URL,
-        params: ouvertesSeules ? { ouvertes: "1" } : undefined,
-      }),
+      query: ({ ouvertesSeules, employeur } = {}) => {
+        const params = {};
+        if (ouvertesSeules) params.ouvertes = "1";
+        if (employeur) params.employeur = employeur;
+
+        return {
+          url: AVPS_URL,
+          // `undefined` plutot qu'un objet vide : on garde des URLs, et donc
+          // des cles de cache, stables quand aucun filtre n'est pose.
+          params: Object.keys(params).length ? params : undefined,
+        };
+      },
       providesTags: ["Avp"],
     }),
 

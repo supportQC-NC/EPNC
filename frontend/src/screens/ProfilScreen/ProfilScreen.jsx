@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { useGetProfilQuery, useUpdateProfilMutation } from "../../slices/profilApiSlice";
 import { useGetCompetencesReferentielQuery } from "../../slices/metierApiSlice";
 import { messageErreur } from "../../utils/erreurApi";
+import { useSelector } from "react-redux";
 import ListeRepetable from "../../components/Form/ListeRepetable";
+import PhotoProfil from "../../components/Form/PhotoProfil";
+import ImportJsonResume from "./ImportJsonResume";
 import "./ProfilScreen.css";
 
 const PROVINCES = [
@@ -62,7 +65,10 @@ const Section = ({ titre, aide, children, onEnregistrer, enCours, enregistre }) 
 );
 
 const ProfilScreen = () => {
-  const { data, isLoading, isError, error } = useGetProfilQuery();
+  // Nom et prénom vivent sur le COMPTE, pas sur le profil (une seule source).
+  // Ils servent ici aux initiales affichées tant qu'aucune photo n'est posée.
+  const utilisateur = useSelector((s) => s.auth.userInfo);
+  const { data, isLoading, isError, error, refetch } = useGetProfilQuery();
   const [enregistrer, { isLoading: enCours }] = useUpdateProfilMutation();
 
   // Vocabulaire officiel des compétences, proposé en autocomplétion.
@@ -168,6 +174,10 @@ const ProfilScreen = () => {
         )}
       </header>
 
+      {/* L'import EN HAUT, avant le formulaire : proposé après trois cartes de
+          saisie, il n'aurait servi qu'à ceux qui auraient déjà tout retapé. */}
+      <ImportJsonResume onImporte={refetch} />
+
       {erreur && (
         <div className="message message-erreur" role="alert">
           {erreur}
@@ -180,6 +190,31 @@ const ProfilScreen = () => {
         aide="Vos coordonnées et votre présentation en quelques phrases."
         {...props("basics")}
       >
+        <PhotoProfil
+          valeur={profil.basics.photo || ""}
+          nom={`${utilisateur?.prenom || ""} ${utilisateur?.nom || ""}`.trim()}
+          onChange={(photo) =>
+            setProfil((p) => ({ ...p, basics: { ...p.basics, photo } }))
+          }
+        />
+
+        <div className="champ">
+          <label htmlFor="titre">Intitulé de votre métier</label>
+          <input
+            id="titre"
+            type="text"
+            value={profil.basics.titre || ""}
+            onChange={majChamp("basics", "titre")}
+            aria-describedby="aide-titre"
+            placeholder="Conseillère clientèle, Technicien fibre optique…"
+          />
+          <span id="aide-titre" className="champ-aide">
+            La première ligne que lit un recruteur, juste sous votre nom. Écrivez
+            le métier que vous exercez ou que vous visez, pas un titre de poste
+            interne que personne d'autre ne comprendrait.
+          </span>
+        </div>
+
         <div className="profil-duo">
           <div className="champ">
             <label htmlFor="telephone">Téléphone</label>
@@ -198,6 +233,35 @@ const ProfilScreen = () => {
               type="text"
               value={profil.basics.ville}
               onChange={majChamp("basics", "ville")}
+            />
+          </div>
+        </div>
+
+        <div className="profil-duo">
+          <div className="champ">
+            <label htmlFor="adresse">Adresse</label>
+            <input
+              id="adresse"
+              type="text"
+              autoComplete="street-address"
+              value={profil.basics.adresse || ""}
+              onChange={majChamp("basics", "adresse")}
+              aria-describedby="aide-adresse"
+            />
+            <span id="aide-adresse" className="champ-aide">
+              Facultative. Elle figure sur le CV et sert au courrier ; elle
+              n'entre jamais dans le rapprochement.
+            </span>
+          </div>
+          <div className="champ">
+            <label htmlFor="codePostal">Code postal</label>
+            <input
+              id="codePostal"
+              type="text"
+              inputMode="numeric"
+              autoComplete="postal-code"
+              value={profil.basics.codePostal || ""}
+              onChange={majChamp("basics", "codePostal")}
             />
           </div>
         </div>
@@ -487,6 +551,134 @@ const ProfilScreen = () => {
             </div>
           )}
         </ListeRepetable>
+      </Section>
+
+      {/* ── Liens ─────────────────────────────────────────────────────── */}
+      <Section
+        titre="Vos liens"
+        aide="Profil professionnel en ligne, portfolio, dépôt de code. Ils figurent sur le CV et dans l'export JSON Resume."
+        {...props("basics")}
+      >
+        <ListeRepetable
+          items={profil.basics.liens || []}
+          onChange={(v) =>
+            setProfil((p) => ({ ...p, basics: { ...p.basics, liens: v } }))
+          }
+          gabarit={() => ({ reseau: "", url: "" })}
+          nomElement="Lien"
+          libelleAjout="Ajouter un lien"
+          libelleVide="Aucun lien pour l'instant."
+        >
+          {(item, maj, i) => (
+            <div className="profil-duo">
+              <div className="champ">
+                <label htmlFor={`lien-reseau-${i}`}>Intitulé</label>
+                <input
+                  id={`lien-reseau-${i}`}
+                  value={item.reseau}
+                  onChange={maj("reseau")}
+                  placeholder="LinkedIn, portfolio, GitHub…"
+                />
+              </div>
+              <div className="champ">
+                <label htmlFor={`lien-url-${i}`}>Adresse</label>
+                <input
+                  id={`lien-url-${i}`}
+                  type="url"
+                  value={item.url}
+                  onChange={maj("url")}
+                  placeholder="https://…"
+                />
+              </div>
+            </div>
+          )}
+        </ListeRepetable>
+      </Section>
+
+      {/* ── Centres d'intérêt ─────────────────────────────────────────── */}
+      <Section
+        titre="Centres d'intérêt"
+        aide="Facultatifs. Ils figurent sur le CV et ouvrent souvent un entretien — mais ils ne pèsent jamais dans le rapprochement."
+        {...props("interets")}
+      >
+        <ListeRepetable
+          items={profil.interets || []}
+          onChange={(v) => majSection("interets", v)}
+          gabarit={() => ({ nom: "", motsCles: [] })}
+          nomElement="Centre d'intérêt"
+          libelleAjout="Ajouter un centre d'intérêt"
+          libelleVide="Aucun centre d'intérêt pour l'instant."
+        >
+          {(item, maj, i) => (
+            <div className="profil-duo">
+              <div className="champ">
+                <label htmlFor={`interet-${i}`}>Intitulé</label>
+                <input
+                  id={`interet-${i}`}
+                  value={item.nom}
+                  onChange={maj("nom")}
+                  placeholder="Sport, musique, bénévolat…"
+                />
+              </div>
+              <div className="champ">
+                <label htmlFor={`interet-mots-${i}`}>Précisions</label>
+                {/* Séparé par des virgules : `keywords` est un tableau dans
+                    JSON Resume, mais demander un champ répétable pour deux ou
+                    trois mots alourdirait le formulaire pour rien. */}
+                <input
+                  id={`interet-mots-${i}`}
+                  value={(item.motsCles || []).join(", ")}
+                  onChange={(e) =>
+                    maj("motsCles")({
+                      target: {
+                        value: e.target.value
+                          .split(",")
+                          .map((m) => m.trim())
+                          .filter(Boolean),
+                      },
+                    })
+                  }
+                  aria-describedby={`aide-interet-${i}`}
+                  placeholder="arbitrage, encadrement de jeunes"
+                />
+                <span id={`aide-interet-${i}`} className="champ-aide">
+                  Séparez par des virgules. « Sport » seul ne dit rien ;
+                  « arbitrage, encadrement » dit quelque chose.
+                </span>
+              </div>
+            </div>
+          )}
+        </ListeRepetable>
+      </Section>
+
+      {/* ── Visibilité ────────────────────────────────────────────────── */}
+      <Section
+        titre="Visibilité auprès des recruteurs"
+        aide="Vous décidez si les employeurs peuvent vous trouver."
+        {...props("visibleRecruteurs")}
+      >
+        <label className="profil-bascule">
+          <input
+            type="checkbox"
+            checked={Boolean(profil.visibleRecruteurs)}
+            onChange={(e) =>
+              setProfil((p) => ({ ...p, visibleRecruteurs: e.target.checked }))
+            }
+          />
+          <span>
+            Rendre mon profil consultable par les recruteurs inscrits sur la
+            plateforme
+          </span>
+        </label>
+
+        <p className="champ-aide">
+          Décoché par défaut, et c'est délibéré : vous avez créé un compte pour
+          chercher un poste, pas pour figurer dans un annuaire. En le cochant,
+          les recruteurs voient votre parcours, vos compétences et vos
+          coordonnées, et peuvent vous contacter. Vous pouvez le décocher à tout
+          moment — votre profil disparaît alors immédiatement de leurs
+          recherches.
+        </p>
       </Section>
 
       {/* ── Projet ────────────────────────────────────────────────────── */}

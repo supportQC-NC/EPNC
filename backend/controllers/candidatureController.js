@@ -13,6 +13,7 @@ import {
   piecesManquantes,
 } from "../services/envoiService.js";
 import { versJsonResume } from "../services/jsonResumeService.js";
+import { rapprocher } from "../services/matchingService.js";
 
 const PIECES = ["lettre", "cv", "restitution", "preparation"];
 
@@ -175,12 +176,27 @@ const genererPiece = asyncHandler(async (req, res) => {
     );
   }
 
+  // Le rapprochement est calculé AVANT la rédaction et transmis au modèle :
+  // ses `evidences[]` relient chaque attendu de l'annonce à l'élément du
+  // parcours qui y répond. C'est ce qui distingue une lettre ancrée d'une
+  // lettre de généralités. Voir l'en-tête de redactionService.
+  //
+  // Un échec du rapprochement ne doit pas empêcher de produire la pièce : on
+  // rédige alors sans, exactement comme avant.
+  let rapprochement = null;
+  try {
+    rapprochement = await rapprocher(profil, avp);
+  } catch (erreur) {
+    console.warn(`⚠️  Rapprochement indisponible pour ${avp.slug} : ${erreur.message}`);
+  }
+
   // `await` : la rédaction par le modèle est un appel réseau. Sans lui, on
   // enregistrerait une promesse à la place du texte.
   const { contenu, source, modele, critique } = await GENERATEURS[piece](
     profil,
     avp,
     req.user,
+    rapprochement,
   );
 
   candidature.pieces[piece] = {
@@ -193,6 +209,95 @@ const genererPiece = asyncHandler(async (req, res) => {
   await candidature.save();
 
   res.json(candidature);
+});
+
+// @desc    Produire les QUATRE pièces d'un coup
+// @route   POST /api/candidatures/:id/preparer
+// @access  Privé
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  C'EST CE QUI FAIT QU'UNE ALERTE NE S'ARRÊTE PAS À LA NOTIFICATION
+// ══════════════════════════════════════════════════════════════════════════
+// Le règlement est explicite : un service de veille qui s'arrête à la
+// notification ne concourt pas. Prévenir quelqu'un qu'un poste existe, c'est
+// déplacer le problème — il sait qu'il y a une offre, et reste devant une page
+// blanche.
+//
+// Depuis une alerte, un seul geste doit mener au dossier complet. D'où cette
+// route : elle produit les quatre pièces en une fois.
+//
+// Les pièces DÉJÀ écrites ne sont pas écrasées : quelqu'un qui a retravaillé
+// sa lettre puis reclique perdrait son texte. C'est la seule façon de rendre
+// le bouton rejouable sans danger.
+const preparerDossier = asyncHandler(async (req, res) => {
+  const candidature = await trouverSienne(req);
+  if (!candidature) {
+    res.status(404);
+    throw new Error("Candidature introuvable");
+  }
+
+  const avp = await Avp.findById(candidature.avp);
+  if (!avp) {
+    res.status(409);
+    throw new Error("L'offre d'origine n'est plus en base.");
+  }
+
+  const profil = await Profil.findOne({ user: req.user._id });
+  if (!profil || profil.completude() < 30) {
+    res.status(400);
+    throw new Error(
+      "Votre profil est trop incomplet pour produire un dossier utile. Complétez-le d'abord.",
+    );
+  }
+
+  let rapprochement = null;
+  try {
+    rapprochement = await rapprocher(profil, avp);
+  } catch (erreur) {
+    console.warn(`⚠️  Rapprochement indisponible : ${erreur.message}`);
+  }
+
+  const produites = [];
+  const echecs = [];
+
+  for (const piece of PIECES) {
+    if (candidature.pieces?.[piece]?.contenu?.trim()) continue;
+
+    try {
+      const { contenu, source, modele, critique } = await GENERATEURS[piece](
+        profil,
+        avp,
+        req.user,
+        rapprochement,
+      );
+
+      candidature.pieces[piece] = {
+        contenu,
+        source,
+        modele: modele || null,
+        critique: critique || undefined,
+        genereLe: new Date(),
+      };
+
+      produites.push(piece);
+    } catch (erreur) {
+      // Une pièce en échec ne doit pas empêcher les autres : trois documents
+      // valent mieux que zéro, et l'on dit lesquels manquent.
+      echecs.push({ piece, erreur: erreur.message });
+    }
+  }
+
+  await candidature.save();
+
+  res.json({
+    candidature,
+    produites,
+    echecs,
+    message: produites.length
+      ? `${produites.length} pièce(s) produite(s).` +
+        (echecs.length ? ` ${echecs.length} en échec.` : "")
+      : "Toutes les pièces étaient déjà écrites : rien n'a été écrasé.",
+  });
 });
 
 // @desc    Enregistrer une pièce réécrite à la main
@@ -431,6 +536,7 @@ export {
   getCandidature,
   creerCandidature,
   genererPiece,
+  preparerDossier,
   modifierPiece,
   changerStatut,
   telechargerPiece,

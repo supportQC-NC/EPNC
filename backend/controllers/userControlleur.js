@@ -10,7 +10,7 @@ import sendEmail from "../utils/sendEmail.js";
 // Forme unique du compte renvoyé au client. Centralisée pour que login,
 // inscription et profil ne divergent jamais — le front lit toujours les mêmes
 // champs, et aucun champ sensible ne peut se glisser dans la réponse.
-const publicUser = (user) => ({
+const publicUser = (user, photo = null) => ({
   _id: user._id,
   email: user.email,
   nom: user.nom,
@@ -18,7 +18,26 @@ const publicUser = (user) => ({
   role: user.role,
   isActive: user.isActive,
   lastLogin: user.lastLogin,
+  // Vignette du profil, jointe à l'IDENTITÉ et non au profil.
+  //
+  // POURQUOI : l'en-tête affiche l'avatar sur toutes les pages, mais ne
+  // connaît que `userInfo` — le compte. La photo, elle, vit dans le profil
+  // candidat. Sans ce champ, le bandeau restait bloqué sur les initiales alors
+  // que la personne avait posé une photo deux écrans plus tôt.
+  //
+  // On ne DUPLIQUE pas la donnée : elle reste stockée dans ProfilModel et
+  // n'est que recopiée dans la réponse. Une seule source, deux lectures.
+  photo,
 });
+
+// Lit la vignette du profil, si elle existe.
+//
+// Requête volontairement projetée sur le seul champ utile : le profil complet
+// pèse plusieurs kilo-octets, et on ne le charge pas pour un avatar.
+const photoDe = async (userId) => {
+  const profil = await Profil.findOne({ user: userId }, "basics.photo").lean();
+  return profil?.basics?.photo || null;
+};
 
 // @desc    Connexion
 // @route   POST /api/users/login
@@ -53,7 +72,7 @@ const authUser = asyncHandler(async (req, res) => {
 
   generateToken(res, user._id);
 
-  res.json(publicUser(user));
+  res.json(publicUser(user, await photoDe(user._id)));
 });
 
 // @desc    Inscription publique d'un candidat
@@ -126,7 +145,7 @@ const logoutUser = asyncHandler(async (req, res) => {
 // cookie httpOnly étant illisible en JavaScript, c'est le seul moyen de savoir
 // si la session tient encore.
 const getUserProfile = asyncHandler(async (req, res) => {
-  res.json(publicUser(req.user));
+  res.json(publicUser(req.user, await photoDe(req.user._id)));
 });
 
 // @desc    Mise à jour de son propre profil

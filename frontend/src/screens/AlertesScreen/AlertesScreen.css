@@ -1,0 +1,231 @@
+/* src/screens/AlertesScreen/AlertesScreen.css */
+
+.alertes {
+  padding-block: var(--e5);
+}
+
+.alertes-entete {
+  margin-bottom: var(--e5);
+}
+
+.alertes-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+.alertes-reglages {
+  margin-bottom: var(--e5);
+}
+
+.alertes-reglages-grille {
+  display: grid;
+  gap: var(--e5);
+  margin-top: var(--e4);
+}
+
+@media (min-width: 760px) {
+  .alertes-reglages-grille {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.alertes-reglages input[type="range"] {
+  width: 100%;
+}
+
+.alertes-barre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--e3);
+  margin-bottom: var(--e4);
+}
+
+.alertes-compte {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.alertes-vide {
+  padding: var(--e6) var(--e4);
+  text-align: center;
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+  background: var(--surface);
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon-lg);
+  max-width: var(--largeur-texte);
+  margin-inline: auto;
+}
+
+.alertes-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+@media (min-width: 1100px) {
+  .alertes-liste {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.alerte {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+/* Une alerte non lue se distingue par un liseré ET par le mot « Nouveau » :
+   la couleur ne porte jamais seule l'information. */
+.alerte--nouvelle {
+  border-left-color: var(--marque);
+}
+
+.alerte-pastille {
+  display: inline-block;
+  margin-bottom: var(--e1);
+  padding: 1px var(--e2);
+  border-radius: 999px;
+  background: var(--marque-doux);
+  color: var(--marque);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.alerte-haut {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e4);
+}
+
+.alerte-titre {
+  margin: 0;
+  font-size: var(--t-md);
+}
+
+.alerte-meta {
+  margin: var(--e1) 0 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.alerte-score {
+  text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.alerte-score-valeur {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  color: var(--marque);
+}
+
+.alerte-score-sur {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.alerte-score-assiette {
+  display: block;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  max-width: 9rem;
+  white-space: normal;
+}
+
+.alerte-verdict {
+  margin: 0;
+  font-size: var(--t-sm);
+}
+
+/* Les preuves ne sont pas repliées : une alerte sans justification est
+   indiscernable d'une publicite, et c'est ce qui la fait ignorer. */
+.alerte-preuves {
+  padding: var(--e3);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+}
+
+.alerte-preuves-titre {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texte-doux);
+}
+
+.alerte-preuves ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--t-sm);
+}
+
+.alerte-preuves li {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: baseline;
+  gap: var(--e2);
+}
+
+.alerte-preuves li + li {
+  margin-top: var(--e2);
+  padding-top: var(--e2);
+  border-top: 1px solid var(--bordure);
+}
+
+.alerte-attendu {
+  color: var(--texte-doux);
+}
+
+.alerte-fleche {
+  color: var(--marque);
+}
+
+.alerte-preuve {
+  font-weight: 600;
+}
+
+@media (max-width: 560px) {
+  .alerte-preuves li {
+    grid-template-columns: 1fr;
+  }
+
+  .alerte-fleche {
+    display: none;
+  }
+}
+
+.alerte-date {
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.alerte-close {
+  margin: 0;
+  padding: var(--e3);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.alerte-actions {
+  margin-top: auto;
+  flex-wrap: wrap;
+}

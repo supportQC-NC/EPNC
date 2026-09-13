@@ -14,7 +14,7 @@ const MetiersScreen = () => {
 
   if (isLoading) {
     return (
-      <div className="conteneur metiers">
+      <div className="conteneur conteneur--large metiers">
         <p role="status">Chargement du référentiel…</p>
       </div>
     );
@@ -22,7 +22,7 @@ const MetiersScreen = () => {
 
   if (isError) {
     return (
-      <div className="conteneur metiers">
+      <div className="conteneur conteneur--large metiers">
         <div className="message message-erreur" role="alert">
           {messageErreur(error, "Référentiel indisponible.")}
         </div>
@@ -43,7 +43,7 @@ const MetiersScreen = () => {
   });
 
   return (
-    <div className="conteneur metiers">
+    <div className="conteneur conteneur--large metiers">
       <header className="metiers-entete">
         <h1>Les métiers de l'OPT-NC</h1>
         <p className="metiers-intro">

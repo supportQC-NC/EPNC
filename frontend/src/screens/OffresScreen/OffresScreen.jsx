@@ -32,8 +32,8 @@ const Rythme = ({ mois }) => {
       <p className="rythme-resume">
         {total} offre{total > 1 ? "s" : ""} publiée{total > 1 ? "s" : ""} sur
         les 12 derniers mois, réparties sur {moisActifs} mois. Les postes
-        clôturés restent affichés : ils indiquent ce que l'OPT-NC recrute, et à
-        quelle fréquence.
+        clôturés restent affichés : ils indiquent ce que ces employeurs
+        recrutent, et à quelle fréquence.
       </p>
 
       {/* Chaque barre porte son chiffre en texte : la hauteur seule ne serait
@@ -65,16 +65,22 @@ const Rythme = ({ mois }) => {
 
 const OffresScreen = () => {
   const [ouvertesSeules, setOuvertesSeules] = useState(false);
-  const { data, isLoading, isError, error } = useGetAvpsQuery({ ouvertesSeules });
+  const [employeur, setEmployeur] = useState("");
+  const { data, isLoading, isError, error } = useGetAvpsQuery({
+    ouvertesSeules,
+    employeur,
+  });
 
   return (
-    <div className="conteneur offres">
+    <div className="conteneur conteneur--large offres">
       <header className="offres-entete">
-        <h1>Les postes ouverts à l'OPT-NC</h1>
+        <h1>Les postes ouverts dans la fonction publique calédonienne</h1>
         <p className="offres-intro">
-          Tous les avis de vacance de poste publiés par l'Office, de la
-          publication la plus récente à la plus ancienne. Données publiques,
-          reprises telles quelles.
+          Les avis de vacance de poste de plusieurs employeurs publics du
+          territoire, rassemblés au même endroit : l'OPT-NC, la
+          Nouvelle-Calédonie, les provinces, les hôpitaux, les communes.
+          Données publiques, reprises telles quelles — l'employeur est indiqué
+          sur chaque offre.
         </p>
       </header>
 
@@ -102,14 +108,36 @@ const OffresScreen = () => {
               )}
             </p>
 
-            <label className="offres-filtre">
-              <input
-                type="checkbox"
-                checked={ouvertesSeules}
-                onChange={(e) => setOuvertesSeules(e.target.checked)}
-              />
-              Uniquement les offres encore ouvertes
-            </label>
+            <div className="offres-filtres">
+              {/* Filtre par employeur. Ce n'est pas un confort : sans lui,
+                  quelqu'un qui vise l'OPT-NC devrait trier à la main parmi
+                  230 avis venus de dix-huit organisations. */}
+              <label className="offres-filtre">
+                <span className="offres-filtre-libelle">Employeur</span>
+                <select
+                  value={employeur}
+                  onChange={(e) => setEmployeur(e.target.value)}
+                >
+                  <option value="">
+                    Tous ({data.employeurs?.length || 0} employeurs)
+                  </option>
+                  {data.employeurs?.map((e) => (
+                    <option key={e.code} value={e.code}>
+                      {e.nom} — {e.ouvertes} ouverte{e.ouvertes > 1 ? "s" : ""}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="offres-filtre offres-filtre--case">
+                <input
+                  type="checkbox"
+                  checked={ouvertesSeules}
+                  onChange={(e) => setOuvertesSeules(e.target.checked)}
+                />
+                Offres ouvertes seulement
+              </label>
+            </div>
           </div>
 
           {data.offres.length === 0 ? (
@@ -157,6 +185,21 @@ const OffresScreen = () => {
                         <span className="offre-badge">Clôturée</span>
                       )}
                     </div>
+
+                    {/* QUI RECRUTE, avant tout le reste. La ligne suivante ne
+                        porte que la direction, c'est-à-dire le service INTERNE
+                        à cet employeur — les confondre laisserait croire que
+                        toutes ces offres viennent du même endroit. */}
+                    <p className="offre-employeur">
+                      <span className="offre-employeur-nom">
+                        {offre.employeur?.nom || "Employeur non précisé"}
+                      </span>
+                      {offre.employeur?.type && (
+                        <span className="offre-employeur-type">
+                          {offre.employeur.type}
+                        </span>
+                      )}
+                    </p>
 
                     <p className="offre-meta">
                       {[offre.direction, offre.lieu, libelleContrat(offre.typeContrat)]

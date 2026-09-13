@@ -37,6 +37,36 @@ export const adminApiSlice = apiSlice.injectEndpoints({
       }),
     }),
 
+    // ── Données : ingestion et journal ───────────────────────────────
+    getIngestion: builder.query({
+      query: () => ({ url: `${ADMIN_URL}/ingestion` }),
+      providesTags: ["Ingestion"],
+    }),
+
+    lancerIngestion: builder.mutation({
+      query: (source) => ({
+        url: `${ADMIN_URL}/ingestion/${source}`,
+        method: "POST",
+      }),
+      // La synchro change le contenu de la base : le journal, l'inventaire des
+      // sources, le tableau de bord et les listes d'offres sont tous périmés.
+      invalidatesTags: ["Ingestion", "Dashboard", "Avp", "Metier", "Referentiel"],
+    }),
+
+    // ── Mode d'envoi des candidatures ────────────────────────────────
+    getEnvoi: builder.query({
+      query: () => ({ url: `${ADMIN_URL}/envoi` }),
+      providesTags: ["Envoi"],
+    }),
+
+    changerModeEnvoi: builder.mutation({
+      query: (mode) => ({ url: `${ADMIN_URL}/envoi`, method: "PUT", body: { mode } }),
+      // Le mode conditionne la destination affichée sur CHAQUE candidature :
+      // sans cette invalidation, un dossier ouvert avant le basculement
+      // continuerait d'annoncer l'ancienne adresse.
+      invalidatesTags: ["Envoi", "Candidature", "CandidatureListe"],
+    }),
+
     getUsers: builder.query({
       query: (params) => ({ url: USERS_URL, params }),
       providesTags: ["UserList"],
@@ -86,6 +116,10 @@ export const adminApiSlice = apiSlice.injectEndpoints({
 
 export const {
   useGetDashboardQuery,
+  useGetIngestionQuery,
+  useLancerIngestionMutation,
+  useGetEnvoiQuery,
+  useChangerModeEnvoiMutation,
   useGetSourcesQuery,
   useGetSmtpQuery,
   useTesterSmtpMutation,

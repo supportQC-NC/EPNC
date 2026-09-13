@@ -18,6 +18,12 @@ import candidatureRoutes from "./routes/candidatureRoutes.js";
 import assistantRoutes from "./routes/assistantRoutes.js";
 import matchRoutes from "./routes/matchRoutes.js";
 import metierRoutes from "./routes/metierRoutes.js";
+import recruteurRoutes from "./routes/recruteurRoutes.js";
+import moderationRoutes from "./routes/moderationRoutes.js";
+import veilleRoutes from "./routes/veilleRoutes.js";
+import demandeRecruteurRoutes from "./routes/demandeRecruteurRoutes.js";
+import integrationRoutes from "./routes/integrationRoutes.js";
+import { documentOpenApi } from "./services/openapiService.js";
 
 const PORT = process.env.PORT || 5000;
 
@@ -54,6 +60,25 @@ app.use("/api/candidatures", candidatureRoutes);
 app.use("/api/assistant", assistantRoutes);
 app.use("/api/matchs", matchRoutes);
 app.use("/api/metiers", metierRoutes);
+app.use("/api/recruteur", recruteurRoutes);
+app.use("/api/moderation", moderationRoutes);
+app.use("/api/veille", veilleRoutes);
+app.use("/api/demandes-recruteur", demandeRecruteurRoutes);
+app.use("/api/integration", integrationRoutes);
+
+// La description machine de l'API. Servie par le serveur lui-même plutôt que
+// déposée sur une page de documentation : une spec qui vit ailleurs que
+// l'implémentation finit par décrire une version qui n'existe plus.
+app.get("/api/openapi.json", (req, res) => {
+  res.type("application/json").json(
+    documentOpenApi({
+      version: process.env.npm_package_version || "0.1.0",
+      // L'URL réelle de ce serveur, pas une constante : la spec téléchargée
+      // depuis la démo doit pointer vers la démo, pas vers localhost.
+      urlPublique: `${req.protocol}://${req.get("host")}`,
+    }),
+  );
+});
 
 // ── Front en production ─────────────────────────────────────────────────
 // Express sert le build pour n'avoir qu'UNE SEULE origine : le cookie JWT

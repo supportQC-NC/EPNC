@@ -50,12 +50,81 @@ const normaliser = (texte) =>
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 
-const motsUtiles = (texte) =>
+export const motsUtiles = (texte) =>
   new Set(
     normaliser(texte)
       .split(" ")
       .filter((m) => m.length > 3 && !MOTS_VIDES.has(m)),
   );
+
+// Deux mots désignent-ils la même chose, à la flexion près ?
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  POURQUOI CETTE FONCTION EXISTE — MESURÉ, PAS SUPPOSÉ
+// ══════════════════════════════════════════════════════════════════════════
+// La première version comparait les mots à l'identique. `npm run eval` a
+// montré ce que ça coûtait : rappel de 0 % sur la classe « pertinent », 69
+// rapprochements justes manqués sur 69. En regardant une paire au hasard —
+// une secrétaire médicale face à un poste d'assistant administratif, noté
+// 31/100 — la cause saute aux yeux :
+//
+//   attendu « Accueillir et prendre en charge le public »
+//   profil  « Accueil et relation au public »            → non trouvé
+//
+//   attendu « Maîtrise de l'organisation et des procédures ADMINISTRATIVES »
+//   profil  « Rédaction de courriers ADMINISTRATIFS »    → non trouvé
+//
+// Le français fléchit : accueil/accueillir, administratif/administratives,
+// gestion/gestionnaire. Une comparaison exacte les traite comme des mots sans
+// rapport, et le moteur conclut que le candidat ne couvre rien.
+//
+// On compare donc les PRÉFIXES plutôt que les mots entiers. Pas de vraie
+// racinisation — il faudrait un dictionnaire, pour un gain marginal sur ce
+// volume — mais un préfixe commun proportionnel à la longueur du plus court
+// des deux mots. C'est suffisant pour la flexion, et assez exigeant pour ne
+// pas rapprocher n'importe quoi.
+export const memeRacine = (a, b) => {
+  if (a === b) return true;
+
+  const court = Math.min(a.length, b.length);
+
+  // En dessous de cinq lettres, un préfixe commun ne prouve rien :
+  // « cadre » et « cadeau » partagent « cad ».
+  if (court < 5) return false;
+
+  // 85 % du mot le plus court, avec un plancher à cinq caractères.
+  //
+  // ⚠️ Le ratio était de 0,75, et c'était trop lâche sur les mots longs : à
+  // douze lettres, il n'en exigeait que neuf, si bien que « INFORMATIQUE » et
+  // « INFORMATION » se confondaient. Repéré sur une alerte de veille — un
+  // profil de relation client se voyait proposer un poste d'ingénieur en
+  // systèmes d'information à 69/100, « Diplôme de niveau 7 en informatique »
+  // étant réputé couvert par « conduite d'entretiens de recueil
+  // d'information ». C'est précisément le faux positif que le règlement
+  // sanctionne, et le genre d'alerte qui fait classer l'expéditeur en
+  // indésirable.
+  //
+  // À 0,85 : « informatique » exige onze lettres communes et ne rejoint plus
+  // « information », tandis que « accueil » / « accueillir » et
+  // « administratif » / « administratives » continuent de se retrouver.
+  const exige = Math.max(5, Math.ceil(court * 0.85));
+
+  return a.slice(0, exige) === b.slice(0, exige);
+};
+
+// Nombre de mots de `attendus` qui trouvent leur équivalent dans `sources`.
+export const motsCommuns = (attendus, sources) => {
+  let communs = 0;
+  for (const m of attendus) {
+    for (const s of sources) {
+      if (memeRacine(m, s)) {
+        communs += 1;
+        break;
+      }
+    }
+  }
+  return communs;
+};
 
 // Mesure ASYMÉTRIQUE : quelle part de l'attendu se retrouve dans le profil ?
 //
@@ -77,10 +146,7 @@ const couvrance = (attendu, source) => {
   const mb = motsUtiles(source);
   if (ma.size === 0 || mb.size === 0) return 0;
 
-  let communs = 0;
-  for (const m of ma) if (mb.has(m)) communs++;
-
-  return communs / ma.size;
+  return motsCommuns(ma, mb) / ma.size;
 };
 
 // Proximité symétrique, pour comparer deux libellés de même nature (deux
@@ -96,31 +162,90 @@ const proximite = (a, b) => {
   const mb = motsUtiles(b);
   if (ma.size === 0 || mb.size === 0) return 0;
 
-  let communs = 0;
-  for (const m of ma) if (mb.has(m)) communs++;
+  const communs = motsCommuns(ma, mb);
   if (communs === 0) return 0;
 
-  return communs / new Set([...ma, ...mb]).size;
+  // Union approchée : les mots communs sont comptés une fois.
+  return communs / (ma.size + mb.size - communs);
 };
 
-// Seuil de reconnaissance. En deçà, on considère qu'il n'y a pas de
-// recouvrement : mieux vaut un écart signalé à tort qu'un point accordé à tort,
-// car c'est le faux positif qui décrédibilise le score.
+// Seuil de reconnaissance, pour les mesures qui restent proportionnelles
+// (ressemblance de deux intitulés, couverture d'une mission).
 const SEUIL_PROXIMITE = 0.34;
 
-// Cherche dans le profil ce qui répond le mieux à un attendu.
-// Renvoie la meilleure correspondance et sa force, ou null.
-const chercherDansProfil = (attendu, sources) => {
-  let meilleur = null;
+// Un attendu est-il couvert ?
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  UNE RÈGLE EN NOMBRE DE MOTS, PAS EN POURCENTAGE
+// ══════════════════════════════════════════════════════════════════════════
+// Le seuil proportionnel de 0,34 produisait un effet de bord invisible mais
+// systématique : un attendu de TROIS mots utiles exigeait DEUX correspondances,
+// puisque 1/3 = 0,333 tombe juste sous la barre. Or les attendus de trois mots
+// sont les plus fréquents des fiches de poste. `npm run eval` l'a rendu
+// visible — le rappel restait à zéro quoi qu'on change ailleurs.
+//
+// La règle ci-dessous dit la même chose qu'un lecteur humain :
+//   - deux mots porteurs en commun suffisent ;
+//   - un seul suffit s'il représente la moitié de l'attendu (« Rédaction
+//     administrative » couvert par « Rédaction de courriers administratifs »).
+//
+// Elle reste exigeante : un mot isolé noyé dans un attendu de cinq ne compte
+// pas. C'est ce qui tient l'absence de faux positifs, mesurée à chaque
+// exécution de l'évaluation.
+const attenduCouvert = (communs, total) => {
+  if (total === 0) return false;
+  if (communs >= 2) return true;
+  return communs >= 1 && communs / total >= 0.5;
+};
 
+// Cherche dans le profil ce qui répond à un attendu.
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  UN ATTENDU PEUT ÊTRE COUVERT PAR PLUSIEURS LIGNES DU PROFIL
+// ══════════════════════════════════════════════════════════════════════════
+// Première version, on cherchait la MEILLEURE source unique : un attendu
+// n'était couvert que si une seule ligne du profil le portait à elle seule.
+// `npm run eval` a montré la limite sur un cas net :
+//
+//   attendu « Maîtrise de l'organisation et des procédures administratives »
+//   profil  « Gestion administrative de dossiers »    → 1 mot sur 3
+//           « Planification et gestion d'agendas »    → 1 mot sur 3
+//
+// Chacune sous le seuil, l'attendu déclaré non couvert — alors que les deux
+// ensemble y répondent, et que c'est ainsi qu'un recruteur lit un CV : il ne
+// cherche pas la ligne qui dit tout, il rassemble.
+//
+// On mesure donc la couverture contre l'ENSEMBLE du profil. L'exigence ne
+// baisse pas — il faut toujours qu'une part suffisante des mots de l'attendu
+// se retrouve quelque part — mais elle cesse de porter sur une ligne unique.
+//
+// La CITATION, elle, reste la meilleure source individuelle : une preuve doit
+// désigner un élément précis du parcours, pas « votre profil en général ».
+const chercherDansProfil = (attendu, sources) => {
+  if (!sources.length) return null;
+
+  const mots = motsUtiles(attendu);
+  if (mots.size === 0) return null;
+
+  // Tous les mots du profil, d'un bloc.
+  const tousLesMots = new Set();
   for (const source of sources) {
-    const force = couvrance(attendu, source.libelle);
-    if (force >= SEUIL_PROXIMITE && (!meilleur || force > meilleur.force)) {
-      meilleur = { ...source, force };
-    }
+    for (const m of motsUtiles(source.libelle)) tousLesMots.add(m);
   }
 
-  return meilleur;
+  const communs = motsCommuns(mots, tousLesMots);
+  if (!attenduCouvert(communs, mots.size)) return null;
+
+  const force = communs / mots.size;
+
+  // Quelle ligne du profil contribue le plus ? C'est elle qu'on citera.
+  let meilleure = null;
+  for (const source of sources) {
+    const part = couvrance(attendu, source.libelle);
+    if (!meilleure || part > meilleure.part) meilleure = { source, part };
+  }
+
+  return { ...meilleure.source, force };
 };
 
 // Tout ce que le profil peut opposer à un attendu, avec son origine — c'est
@@ -351,7 +476,7 @@ const composanteExperience = (profil, avp) => {
       points: 0,
       maximum: BAREME.experience,
       applicable: true,
-      note: "Aucune expérience renseignée dans votre profil.",
+      note: "Aucune expérience renseignée dans ce profil.",
       evidences: [],
       manques: [{ attendu: avp.experienceRequise || "Expérience professionnelle" }],
     };
@@ -361,23 +486,91 @@ const composanteExperience = (profil, avp) => {
   // la pertinence qui compte, pas l'accumulation.
   const volume = Math.min(1, experiences.length / 2) * (BAREME.experience * 0.4);
 
-  let meilleure = 0;
-  for (const e of experiences) {
-    const p = Math.max(
-      proximite(avp.intitule, e.poste || ""),
-      proximite(avp.metier?.nom || "", e.poste || ""),
+  // ══════════════════════════════════════════════════════════════════════
+  //  LA PERTINENCE NE SE JUGE PAS SUR LE SEUL INTITULÉ
+  // ══════════════════════════════════════════════════════════════════════
+  // Première version, cette composante comparait l'intitulé du poste à
+  // l'intitulé de l'expérience, et rien d'autre. `npm run eval` a montré ce
+  // que ça coûtait : une secrétaire médicale face à un poste d'assistant
+  // administratif obtenait « aucune expérience directement comparable »,
+  // alors que douze ans de gestion de dossiers et d'accueil du public
+  // répondent exactement aux missions de l'annonce.
+  //
+  // Un intitulé fait trois mots ; les missions d'une fiche de poste en font
+  // deux cents. C'est là qu'est le signal. On confronte donc CHAQUE
+  // expérience — intitulé ET description — aux missions de l'offre, et l'on
+  // retient le meilleur rapprochement des deux mesures.
+  const missions = avp.missions || [];
+
+  // ⚠️ Les missions sont confrontées UNE PAR UNE, jamais en bloc.
+  //
+  // Première tentative, on concaténait les quinze missions d'une fiche en un
+  // seul texte, puis on mesurait combien de ses mots se retrouvaient dans le
+  // parcours. Deux cents mots d'annonce face à quarante mots d'expérience :
+  // la couverture ne pouvait mathématiquement pas franchir le seuil, et
+  // l'expérience plafonnait à 7/15 même pour un profil taillé pour le poste.
+  // Mission par mission, la question redevient sensée : « celle-ci,
+  // l'a-t-il déjà faite ? »
+  const parcours = experiences.map((e) => ({
+    intitule: e.poste || "",
+    texte: `${e.poste || ""} ${e.description || ""} ${(e.realisations || []).join(" ")}`.trim(),
+  }));
+
+  let missionsCouvertes = 0;
+  let porteuse = null;
+
+  for (const mission of missions) {
+    const motsMission = motsUtiles(mission);
+    const trouve = parcours.find((p) =>
+      attenduCouvert(
+        motsCommuns(motsMission, motsUtiles(p.texte)),
+        motsMission.size,
+      ),
     );
-    if (p > meilleure) {
-      meilleure = p;
-      if (p >= SEUIL_PROXIMITE) {
-        evidences.length = 0;
-        evidences.push({
-          attendu: `Poste visé : ${avp.intitule}`,
-          couvertPar: e.poste,
-          origine: "expérience",
-        });
-      }
+    if (trouve) {
+      missionsCouvertes += 1;
+      if (!porteuse) porteuse = trouve;
     }
+  }
+
+  // Couvrir 40 % des missions vaut la note pleine. Même raisonnement que pour
+  // les autres composantes : une fiche de poste décrit tout ce que le poste
+  // mobilise, y compris ce qu'on apprend en arrivant. Exiger la totalité
+  // ferait plafonner tout le monde et ne hiérarchiserait plus rien.
+  const CIBLE_MISSIONS = 0.4;
+  const partMissions = missions.length
+    ? Math.min(1, missionsCouvertes / missions.length / CIBLE_MISSIONS)
+    : 0;
+
+  // Ressemblance des intitulés : symétrique, deux libellés de même nature.
+  let meilleurIntitule = 0;
+  let porteuseIntitule = null;
+
+  for (const p of parcours) {
+    const proche = Math.max(
+      proximite(avp.intitule, p.intitule),
+      proximite(avp.metier?.nom || "", p.intitule),
+    );
+    if (proche > meilleurIntitule) {
+      meilleurIntitule = proche;
+      porteuseIntitule = p;
+    }
+  }
+
+  const meilleure = Math.max(meilleurIntitule, partMissions);
+
+  if (partMissions >= meilleurIntitule && missionsCouvertes > 0 && porteuse) {
+    evidences.push({
+      attendu: `${missionsCouvertes} mission${missionsCouvertes > 1 ? "s" : ""} sur ${missions.length} de ce poste`,
+      couvertPar: porteuse.intitule || "Expérience professionnelle",
+      origine: "expérience",
+    });
+  } else if (meilleurIntitule >= SEUIL_PROXIMITE && porteuseIntitule) {
+    evidences.push({
+      attendu: `Poste visé : ${avp.intitule}`,
+      couvertPar: porteuseIntitule.intitule,
+      origine: "expérience",
+    });
   }
 
   const pertinence = meilleure * (BAREME.experience * 0.6);
@@ -389,9 +582,11 @@ const composanteExperience = (profil, avp) => {
     maximum: BAREME.experience,
     applicable: true,
     note:
-      meilleure >= SEUIL_PROXIMITE
-        ? "Une de vos expériences est proche de l'intitulé du poste."
-        : `${experiences.length} expérience${experiences.length > 1 ? "s" : ""}, aucune directement comparable à ce poste.`,
+      missionsCouvertes > 0
+        ? `${missionsCouvertes} des ${missions.length} missions de ce poste sont recoupées par le parcours.`
+        : meilleurIntitule >= SEUIL_PROXIMITE
+          ? "Un poste précédent est proche de l'intitulé."
+          : `${experiences.length} expérience${experiences.length > 1 ? "s" : ""}, aucune ne recoupe les missions de ce poste.`,
     evidences,
     manques: [],
   };
@@ -446,7 +641,7 @@ const composanteAffinite = (profil, avp) => {
     if (p >= SEUIL_PROXIMITE) {
       points += BAREME.affinite / 2;
       evidences.push({
-        attendu: "Votre projet professionnel",
+        attendu: "Projet professionnel",
         couvertPar: "recoupe l'objet de ce poste",
         origine: "projet",
       });
@@ -455,26 +650,63 @@ const composanteAffinite = (profil, avp) => {
 
   return {
     cle: "affinite",
-    libelle: "Correspondance avec votre projet",
+    libelle: "Correspondance avec le projet professionnel",
     points: Math.round(points),
     maximum: Math.round(maximum),
     applicable: maximum > 0,
     note:
       maximum === 0
-        ? "Vous n'avez pas indiqué ce que vous cherchez : cette composante est neutralisée. Renseignez la section « Ce que vous cherchez » pour qu'elle compte."
+        ? "Aucun projet professionnel renseigné : cette composante est neutralisée. La section « Ce que vous cherchez » du profil la réactive."
         : evidences.length
-          ? "Ce poste rejoint ce que vous cherchez."
-          : "Rien dans ce que vous avez déclaré chercher ne pointe vers ce poste.",
+          ? "Ce poste rejoint le projet déclaré."
+          : "Rien dans le projet déclaré ne pointe vers ce poste.",
     evidences,
     manques: [],
   };
 };
 
+// Part du barème réellement applicable, en dessous de laquelle un score ne
+// veut plus rien dire.
+//
+// CONSTAT DE TERRAIN : sur les 185 avis ouverts de data.gouv.nc, 139 ne
+// publient AUCUN attendu, aucune mission et aucune description — tout le
+// contenu vit dans le PDF, et les champs structurés sont absents. Ces offres ne
+// sont rattachées à aucun métier du référentiel OPT non plus. Il ne reste alors
+// que l'expérience et l'affinité, soit 23 des 100 points du barème.
+//
+// Or 14 points sur 23 s'affichaient « 61/100 », à côté d'une offre complète
+// notée 61/100 sur les 100 points. Les deux chiffres ne mesurent pas la même
+// chose, et rien ne le disait. C'est exactement le faux positif que le
+// règlement sanctionne : un score flatteur obtenu parce que l'employeur n'a
+// rien publié.
+//
+// En dessous de ce seuil, on ne publie donc PAS de score. Dire « cette offre ne
+// contient pas assez d'informations » est plus utile, et plus honnête, qu'un
+// nombre sur lequel personne ne peut s'appuyer.
+const FIABILITE_MINIMALE = 40;
+
 // Verdict lisible. Les seuils sont assumés et affichés : un score nu ne dit
 // pas s'il faut candidater.
-const verdict = (score) => {
+const verdict = (score, fiabilite) => {
+  if (fiabilite < FIABILITE_MINIMALE) {
+    return {
+      niveau: "indetermine",
+      // ⚠️ Ne PAS renvoyer vers « la fiche de poste » : sur ces offres-là, la
+      // fiche est vide elle aussi — c'est précisément la raison du verdict.
+      // La première version le faisait, et envoyait donc la personne lire une
+      // page blanche. On oriente vers ce qui existe vraiment : le corps ou
+      // grade indiqué, et le service qui recrute.
+      texte:
+        "Cette offre ne publie ni compétences attendues ni missions : il n'y a " +
+        "pas de quoi calculer un rapprochement honnête, et nous préférons ne " +
+        "rien annoncer. Le corps indiqué sur la fiche dit le type de fonctions ; " +
+        "pour le reste, contacter le service qui recrute est la démarche la " +
+        "plus sûre.",
+    };
+  }
+
   if (score >= 70)
-    return { niveau: "solide", texte: "Votre profil répond à l'essentiel des attendus." };
+    return { niveau: "solide", texte: "Le profil répond à l'essentiel des attendus." };
   if (score >= 45)
     return {
       niveau: "jouable",
@@ -482,7 +714,7 @@ const verdict = (score) => {
     };
   return {
     niveau: "eloigne",
-    texte: "Ce poste est loin de votre profil actuel.",
+    texte: "Ce poste est loin du profil actuel.",
   };
 };
 
@@ -627,6 +859,11 @@ export const rapprocher = async (profil, avp, metiers = null) => {
   const possibles = applicables.reduce((t, c) => t + c.maximum, 0);
   const score = possibles > 0 ? Math.round((obtenus / possibles) * 100) : 0;
 
+  // Le barème total vaut 100 points : la somme des maxima applicables se lit
+  // donc directement comme un pourcentage de fiabilité.
+  const fiabilite = possibles;
+  const fiable = fiabilite >= FIABILITE_MINIMALE;
+
   return {
     avpSlug: avp.slug,
     avpIntitule: avp.intitule,
@@ -640,8 +877,16 @@ export const rapprocher = async (profil, avp, metiers = null) => {
     ecarte: motifsExclusion.length > 0,
     motifsExclusion,
 
-    score: motifsExclusion.length > 0 ? null : score,
-    verdict: motifsExclusion.length > 0 ? null : verdict(score),
+    // Le score n'est publié QUE s'il repose sur assez de matière. Renvoyer
+    // `null` plutôt qu'un nombre bas force l'interface à dire pourquoi — elle
+    // ne peut pas afficher un chiffre par défaut.
+    score: motifsExclusion.length > 0 || !fiable ? null : score,
+    // Le score brut reste disponible : il sert au classement interne et à
+    // l'évaluation, sans jamais être présenté comme un résultat au candidat.
+    scoreBrut: motifsExclusion.length > 0 ? null : score,
+    fiabilite,
+    fiable,
+    verdict: motifsExclusion.length > 0 ? null : verdict(score, fiabilite),
     composantes,
   };
 };
@@ -667,9 +912,17 @@ export const rapprocherToutes = async (profil, avps) => {
   );
 
   return {
+    // Tri sur le score BRUT : `score` peut être nul quand l'offre est trop
+    // pauvre, et `b.score - a.score` sur des `null` renvoie NaN — l'ordre
+    // devenait alors celui de la base, c'est-à-dire aucun.
+    // Les offres non évaluables passent derrière toutes les autres : elles ne
+    // sont pas mauvaises, elles ne sont simplement pas jugeables.
     retenus: tous
       .filter((r) => !r.ecarte)
-      .sort((a, b) => b.score - a.score),
+      .sort((a, b) => {
+        if (a.fiable !== b.fiable) return a.fiable ? -1 : 1;
+        return (b.scoreBrut ?? 0) - (a.scoreBrut ?? 0);
+      }),
     ecartes: tous.filter((r) => r.ecarte),
   };
 };

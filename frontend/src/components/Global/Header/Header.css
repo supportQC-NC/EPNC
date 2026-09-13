@@ -27,6 +27,16 @@
   flex-shrink: 0;
 }
 
+/* Logo déposé dans public/images/. Hauteur fixe, largeur libre : un logo
+   carré et un logo en bandeau tiennent tous les deux sans déformation. */
+.entete-logo {
+  height: 32px;
+  width: auto;
+  max-width: 160px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .entete-sigle {
   display: inline-grid;
   place-items: center;
@@ -96,9 +106,276 @@
   .entete-inner {
     padding-block: var(--e4);
   }
+}
 
+/* ══════════════════════════════════════════════════════════════════════════
+   PANNEAU : en ligne au-dessus de 900 px, escamotable en dessous
+   ══════════════════════════════════════════════════════════════════════════
+   Le point de bascule n'est pas « mobile » au sens des appareils, mais le
+   moment ou quatre ou cinq destinations plus le nom du compte cessent de
+   tenir sur une ligne. */
+
+.entete-panneau {
+  display: flex;
+  align-items: center;
+  gap: var(--e4);
+  margin-left: auto;
+  /* Ordre explicite : marque (1), navigation (2), bouton (3), identité (4).
+     Il doit correspondre à l'ordre du DOM, sinon la tabulation saute d'un
+     bout à l'autre de l'en-tête. */
+  order: 2;
+}
+
+.entete-identite {
+  order: 4;
+  flex-shrink: 0;
+}
+
+.entete-burger {
+  order: 3;
+}
+
+.entete-burger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e3);
+  background: transparent;
+  border: 1px solid var(--bordure-forte);
+  border-radius: var(--rayon);
+  color: var(--texte);
+  font: inherit;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.entete-burger:hover {
+  background: var(--surface-2);
+}
+
+.entete-burger-traits {
+  display: grid;
+  gap: 3px;
+  width: 16px;
+}
+
+.entete-burger-traits span {
+  display: block;
+  height: 2px;
+  background: currentColor;
+  border-radius: 2px;
+}
+
+@media (max-width: 1099px) {
+  /* Ferme : retire du flux ET de l'ordre de tabulation. `display: none` fait
+     les deux — masquer par l'opacite laisserait des liens focalisables
+     invisibles, piege classique au clavier. */
+  .entete-panneau {
+    display: none;
+    /* `order` passe après l'identité : le panneau se déplie SOUS la première
+       ligne, pas entre la marque et l'avatar. */
+    order: 5;
+    width: 100%;
+    margin-left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--e3);
+    padding-top: var(--e3);
+    border-top: 1px solid var(--bordure);
+  }
+
+  /* Le bouton se pousse à droite, juste avant l'identité. */
+  .entete-burger {
+    margin-left: auto;
+  }
+
+  .entete-panneau--ouvert {
+    display: flex;
+  }
+
+  .entete-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+
+  .entete-lien {
+    padding: var(--e3);
+  }
+}
+
+@media (max-width: 479px) {
+  .entete-burger-mot {
+    display: none;
+  }
+}
+
+@media (min-width: 1100px) {
+  .entete-burger {
+    display: none;
+  }
+
+  .entete-lien {
+    font-size: var(--t-sm);
+    padding-inline: var(--e3);
+  }
+}
+
+@media (min-width: 1200px) {
   .entete-lien {
     font-size: var(--t-base);
     padding-inline: var(--e4);
   }
+}
+
+/* -- Menu du compte --------------------------------------------------- */
+
+.entete-compte {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.entete-compte-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e1) var(--e3) var(--e1) var(--e1);
+  background: transparent;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  color: var(--texte);
+  font: inherit;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.entete-compte-bouton:hover,
+.entete-compte-bouton[aria-expanded="true"] {
+  background: var(--surface-2);
+}
+
+.entete-avatar {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--marque);
+  color: #ffffff;
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+@media (prefers-color-scheme: dark) {
+  .entete-avatar {
+    color: #08131c;
+  }
+}
+
+.entete-chevron {
+  font-size: 10px;
+  color: var(--texte-doux);
+}
+
+.entete-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--e2));
+  min-width: 15rem;
+  padding: var(--e2);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 18%);
+  z-index: 30;
+}
+
+/* Sous 900 px, le menu se deplie dans le flux : un panneau flottant par-dessus
+   un panneau deja ouvert est illisible sur un ecran de telephone. */
+@media (max-width: 1099px) {
+  .entete-menu {
+    position: static;
+    min-width: 0;
+    box-shadow: none;
+    margin-top: var(--e2);
+  }
+}
+
+.entete-menu-identite {
+  margin: 0;
+  padding: var(--e2) var(--e3) var(--e3);
+  border-bottom: 1px solid var(--bordure);
+  font-size: var(--t-sm);
+  /* Cesure : une adresse email longue elargissait le menu jusqu'a le faire
+     sortir de l'ecran. */
+  overflow-wrap: anywhere;
+}
+
+.entete-menu-identite strong {
+  display: block;
+}
+
+.entete-menu-identite span {
+  color: var(--texte-doux);
+  font-size: var(--t-xs);
+}
+
+.entete-menu ul {
+  list-style: none;
+  margin: var(--e2) 0;
+  padding: 0;
+}
+
+.entete-menu-lien {
+  display: block;
+  width: 100%;
+  padding: var(--e2) var(--e3);
+  border: 0;
+  border-radius: var(--rayon);
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  font-size: var(--t-sm);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.entete-menu-lien:hover {
+  background: var(--surface-2);
+}
+
+.entete-menu-lien[aria-current="page"] {
+  background: var(--marque-doux);
+  color: var(--marque);
+}
+
+.entete-menu-deconnexion {
+  border-top: 1px solid var(--bordure);
+  border-radius: 0;
+  color: var(--erreur);
+}
+
+/* Sous 420 px, le prénom laisse la place : l'avatar suffit à désigner le
+   menu, et le nom accessible du bouton le nomme de toute façon. */
+.entete-compte-nom {
+  display: none;
+}
+
+@media (min-width: 420px) {
+  .entete-compte-nom {
+    display: inline;
+  }
+}
+
+/* La photo occupe le même gabarit que les initiales : sans cela, le bouton du
+   compte change de largeur selon que la personne a posé une photo ou non, et
+   l'en-tête se décale au chargement. */
+.entete-avatar--photo {
+  object-fit: cover;
+  object-position: center top;
+  border: 1px solid var(--bordure);
+  background: var(--surface-2);
 }

@@ -1,0 +1,419 @@
+/* src/screens/RecruteurScreen/recruteur.css */
+
+.recruteur {
+  padding-block: var(--e5);
+}
+
+.recruteur-entete {
+  display: flex;
+  align-items: center;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e5);
+}
+
+/* Le logo est posé sur du blanc et jamais recadré : la plupart sont des PNG
+   transparents larges, et un `cover` en couperait le nom. Une hauteur fixe,
+   une largeur libre — c'est ce qui fait qu'un logo carré et un logo en
+   bandeau tiennent tous les deux sans déformation. */
+.recruteur-logo {
+  height: 56px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  padding: var(--e2);
+  background: #fff;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+}
+
+.recruteur-intro {
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+.recruteur-section-entete {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e3);
+}
+
+.recruteur-section-entete h2 {
+  margin: 0;
+}
+
+.lien-discret {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.recruteur-vide {
+  padding: var(--e5) var(--e4);
+  color: var(--texte-doux);
+  font-size: var(--t-sm);
+  background: var(--surface);
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon-lg);
+  max-width: var(--largeur-texte);
+}
+
+/* ── Chiffres ────────────────────────────────────────────────────────── */
+
+.recruteur-chiffres {
+  list-style: none;
+  margin: 0 0 var(--e6);
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--e3);
+}
+
+@media (min-width: 700px) {
+  .recruteur-chiffres {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.recruteur-chiffres li {
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.chiffre-valeur {
+  display: block;
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--marque);
+}
+
+.chiffre-libelle {
+  display: block;
+  margin-top: var(--e1);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.recruteur-colonnes {
+  display: grid;
+  gap: var(--e6);
+  margin-bottom: var(--e6);
+}
+
+@media (min-width: 1000px) {
+  .recruteur-colonnes {
+    /* Les suggestions prennent deux tiers : c'est le contenu qu'on vient
+       consulter, les listes sont un rappel. */
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+/* ── Suggestions ─────────────────────────────────────────────────────── */
+
+.suggestions-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+@media (min-width: 1100px) {
+  .suggestions-liste--large {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.suggestion {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.suggestion-haut {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e3);
+}
+
+.suggestion-nom {
+  font-size: var(--t-md);
+  margin: 0 0 var(--e1);
+}
+
+.suggestion-score {
+  margin-left: auto;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.suggestion-score-valeur {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  color: var(--marque);
+}
+
+.suggestion-score-sur {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+/* La justification n'est pas repliée derrière un « voir pourquoi » : traiter
+   l'explication comme un détail optionnel reviendrait à faire du classement un
+   oracle. */
+.suggestion-pourquoi {
+  padding: var(--e3);
+  background: var(--marque-doux);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+}
+
+.suggestion-pourquoi-titre {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texte-doux);
+}
+
+.suggestion-pourquoi ul {
+  margin: 0;
+  padding-left: var(--e5);
+}
+
+.suggestion-pourquoi li + li {
+  margin-top: var(--e1);
+}
+
+.suggestion-origine {
+  color: var(--texte-doux);
+  font-size: var(--t-xs);
+}
+
+.suggestion-confirmation {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--succes);
+}
+
+.suggestion-actions {
+  margin-top: auto;
+  flex-wrap: wrap;
+}
+
+.suggestion-listes {
+  width: 100%;
+}
+
+.suggestion-listes-titre {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.suggestion-listes ul {
+  list-style: none;
+  margin: 0 0 var(--e2);
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+}
+
+/* ── Critères ────────────────────────────────────────────────────────── */
+
+.criteres-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+}
+
+.criteres-liste li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--e2);
+  padding: var(--e1) var(--e3);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-xs);
+}
+
+.critere-libelle {
+  font-weight: 600;
+}
+
+.critere-poids,
+.critere-origine {
+  color: var(--texte-doux);
+}
+
+/* ── Listes ──────────────────────────────────────────────────────────── */
+
+.listes-apercu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e2);
+}
+
+.liste-apercu {
+  display: block;
+  padding: var(--e3) var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  text-decoration: none;
+}
+
+.liste-apercu-nom {
+  display: block;
+  font-weight: 600;
+  color: var(--texte);
+}
+
+.liste-apercu-meta {
+  display: block;
+  margin-top: var(--e1);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.liste-formulaire {
+  display: grid;
+  gap: var(--e3);
+}
+
+@media (min-width: 760px) {
+  .liste-formulaire {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+  }
+}
+
+.liste-bloc {
+  margin-top: var(--e5);
+}
+
+.liste-description {
+  margin: var(--e1) 0 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.liste-compte {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  white-space: nowrap;
+}
+
+.liste-entrees {
+  list-style: none;
+  margin: var(--e4) 0;
+  padding: 0;
+}
+
+.liste-entrees li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e4);
+  padding-block: var(--e3);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.liste-entrees li:last-child {
+  border-bottom: 0;
+}
+
+.liste-entree-titre {
+  display: block;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.liste-entree-note {
+  margin: var(--e1) 0 0;
+  font-size: var(--t-sm);
+}
+
+.liste-entree-date {
+  display: block;
+  margin-top: var(--e1);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+/* Un profil dont la personne a retiré la visibilité : nommé, mais plus
+   ouvrable. Le signaler vaut mieux qu'un lien mort. */
+.liste-entree-retire {
+  color: var(--texte-doux);
+  font-style: italic;
+}
+
+/* ── Offres de l'organisation ────────────────────────────────────────── */
+
+.mes-offres {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.mes-offres li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e4);
+  padding-block: var(--e3);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.mes-offres li:last-child {
+  border-bottom: 0;
+}
+
+.mes-offres-titre {
+  font-weight: 600;
+  flex-basis: 100%;
+}
+
+.mes-offres-meta {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  margin-right: auto;
+}
+
+/* ── Formulaire de profil ────────────────────────────────────────────── */
+
+.recruteur-cases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3) var(--e5);
+}
+
+.recruteur-case {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  font-size: var(--t-sm);
+  cursor: pointer;
+}
+
+.recruteur input[type="range"] {
+  width: 100%;
+  max-width: 26rem;
+}

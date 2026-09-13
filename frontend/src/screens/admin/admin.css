@@ -709,3 +709,540 @@
   padding-top: var(--e4);
   border-top: 1px solid var(--bordure);
 }
+
+/* ── Données : synchronisations ──────────────────────────────────────── */
+
+.admin-intro {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+  margin-bottom: var(--e4);
+}
+
+.admin-vide {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  font-style: italic;
+}
+
+.admin-code {
+  background: var(--surface-2);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  padding: var(--e3) var(--e4);
+  font-size: var(--t-xs);
+  /* Les commandes ne se coupent pas : on défile plutôt que de casser une
+     ligne de commande en deux, ce qui la rendrait incopiable. */
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.ingestion-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ingestion-ligne {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  padding-block: var(--e4);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.ingestion-ligne:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.ingestion-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e1);
+}
+
+.ingestion-derniere {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+/* Verdict d'une synchronisation. Le mot porte l'information ; la couleur ne
+   fait que la renforcer — un daltonien lit « Échec » comme tout le monde. */
+.pastille--ok {
+  background: var(--succes-fond);
+  color: var(--succes);
+}
+
+.pastille--ko {
+  background: var(--erreur-fond);
+  color: var(--erreur);
+}
+
+@media (min-width: 640px) {
+  .ingestion-ligne {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--e4);
+  }
+}
+
+/* ── Mode d'envoi des candidatures ───────────────────────────────────── */
+
+.mode-envoi {
+  border-left: 4px solid var(--bordure-forte);
+}
+
+.mode-envoi--test {
+  border-left-color: var(--marque);
+}
+
+/* La production se voit de loin : c'est le seul état où un clic de candidat
+   atteint une personne réelle. */
+.mode-envoi--production {
+  border-left-color: var(--attention);
+  background: var(--attention-fond);
+}
+
+.mode-valeur {
+  font-family: inherit;
+  letter-spacing: 0.04em;
+}
+
+.mode-envoi--production .mode-valeur {
+  color: var(--attention);
+}
+
+.mode-explication {
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+.mode-etat {
+  margin: var(--e5) 0 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.mode-etat dt {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texte-doux);
+  margin-bottom: var(--e1);
+}
+
+.mode-etat dd {
+  margin: 0;
+  font-size: var(--t-sm);
+  max-width: var(--largeur-texte);
+}
+
+.mode-etat code {
+  background: var(--surface-2);
+  padding: 0 var(--e1);
+  border-radius: 3px;
+  font-size: 0.95em;
+}
+
+/* ── Modération ──────────────────────────────────────────────────────── */
+
+.moderation-onglets {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: 0 0 var(--e5);
+  padding: 0;
+}
+
+.moderation-onglet {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--e2);
+  padding: var(--e2) var(--e4);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--texte);
+  font: inherit;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.moderation-onglet--actif {
+  background: var(--marque-doux);
+  border-color: var(--marque);
+  color: var(--marque);
+}
+
+.moderation-compte {
+  padding: 0 var(--e2);
+  border-radius: 999px;
+  background: var(--marque);
+  color: #ffffff;
+  font-size: var(--t-xs);
+}
+
+@media (prefers-color-scheme: dark) {
+  .moderation-compte {
+    color: #08131c;
+  }
+}
+
+.moderation-liste {
+  display: grid;
+  gap: var(--e4);
+}
+
+.dossier {
+  padding: var(--e5);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--bordure-forte);
+  border-radius: var(--rayon-lg);
+}
+
+/* Un dossier en attente se distingue ; un dossier clos s'efface. La couleur
+   ne porte jamais seule l'information : le statut est aussi écrit. */
+.dossier--nouveau {
+  border-left-color: var(--attention);
+}
+
+.dossier--en_cours {
+  border-left-color: var(--marque);
+}
+
+.dossier--traite {
+  border-left-color: var(--succes);
+}
+
+.dossier--rejete {
+  opacity: 0.75;
+}
+
+.dossier-entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e4);
+}
+
+.dossier-cible {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: 0;
+  font-size: var(--t-md);
+}
+
+.dossier-role {
+  font-size: var(--t-xs);
+  font-weight: 400;
+  color: var(--texte-doux);
+}
+
+.dossier-meta {
+  margin: var(--e1) 0 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.dossier-statut--nouveau {
+  background: var(--attention-fond);
+  color: var(--attention);
+}
+
+/* Les demandes d'accès recruteur réutilisent le dossier de modération : même
+   objet (une décision motivée sur une personne), même présentation. Seules
+   manquaient les pastilles des deux états clos. */
+.dossier-statut--traite {
+  background: var(--succes-fond);
+  color: var(--succes);
+}
+
+.dossier-statut--rejete {
+  background: var(--surface-2);
+  color: var(--texte-doux);
+}
+
+.dossier-corps {
+  display: grid;
+  gap: var(--e3);
+  margin: 0 0 var(--e4);
+}
+
+@media (min-width: 700px) {
+  .dossier-corps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dossier-details {
+    grid-column: 1 / -1;
+  }
+}
+
+.dossier-corps dt {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texte-doux);
+  margin-bottom: var(--e1);
+}
+
+.dossier-corps dd {
+  margin: 0;
+  font-size: var(--t-sm);
+}
+
+.dossier-details dd {
+  padding: var(--e3);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  white-space: pre-wrap;
+}
+
+.dossier-decision {
+  padding: var(--e4);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+}
+
+.dossier-decision p {
+  margin: 0;
+}
+
+.dossier-formulaire {
+  display: grid;
+  gap: var(--e4);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+}
+
+.dossier-mesures {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
+}
+
+/* ── Échéances de régularisation ─────────────────────────────────────── */
+
+.echeances {
+  border-left: 4px solid var(--attention);
+}
+
+.echeances-liste {
+  list-style: none;
+  margin: 0 0 var(--e4);
+  padding: 0;
+}
+
+.echeances-liste li {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e4);
+  padding-block: var(--e3);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.echeances-liste li:last-child {
+  border-bottom: 0;
+}
+
+.echeances-nom {
+  font-weight: 600;
+}
+
+.echeances-meta {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  margin-right: auto;
+}
+
+/* ── Recours ─────────────────────────────────────────────────────────── */
+
+/* Un recours rouvre un dossier : il doit sauter aux yeux, sinon il reste au
+   fond d'une liste et personne n'y répond. */
+.dossier-recours-recu {
+  margin-bottom: var(--e4);
+  padding: var(--e4);
+  background: var(--marque-doux);
+  border-left: 3px solid var(--marque);
+  border-radius: var(--rayon);
+}
+
+.dossier-recours-titre {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--marque);
+}
+
+.dossier-recours-message,
+.dossier-recours-reponse {
+  margin: 0;
+  font-size: var(--t-sm);
+  white-space: pre-wrap;
+}
+
+.dossier-recours-reponse {
+  margin-top: var(--e3);
+  padding-top: var(--e3);
+  border-top: 1px solid var(--bordure);
+}
+
+.dossier-echanges {
+  margin-bottom: var(--e4);
+  font-size: var(--t-sm);
+}
+
+.dossier-echanges summary {
+  cursor: pointer;
+  color: var(--texte-doux);
+}
+
+.dossier-echanges ul {
+  margin: var(--e3) 0 0;
+  padding-left: var(--e5);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.dossier-retour {
+  flex-basis: 100%;
+  margin: var(--e3) 0 0;
+  font-size: var(--t-sm);
+  color: var(--succes);
+}
+
+
+/* ── Integration : clés d'API et webhooks ──────────────────────────────── */
+
+.integration-liste {
+  list-style: none;
+  margin: 0 0 var(--e5);
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.integration-item {
+  padding: var(--e4);
+  border: 1px solid var(--bordure);
+  border-left: 4px solid var(--succes);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+/* Révoquée ou suspendue : la couleur s efface, mais le texte de la pastille
+   porte deja l'information. La couleur ne dit jamais rien toute seule. */
+.integration-item--inactif {
+  border-left-color: var(--bordure-forte);
+  opacity: 0.72;
+}
+
+.integration-entete {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin-bottom: var(--e2);
+}
+
+/* Le préfixe d'une clé et l'URL d'un webhook : données techniques qu'on lit
+   caractère par caractère, jamais en diagonale. */
+.integration-prefixe {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  padding: var(--e1) var(--e2);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-xs);
+}
+
+.integration-portees {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+  margin: var(--e2) 0;
+  padding: 0;
+}
+
+.integration-portees li {
+  padding: 0 var(--e2);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.integration-erreur {
+  margin: var(--e2) 0 0;
+  padding: var(--e2) var(--e3);
+  background: var(--erreur-fond);
+  color: var(--erreur);
+  border-radius: var(--rayon);
+  font-size: var(--t-xs);
+  overflow-wrap: anywhere;
+}
+
+.integration-case {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e2);
+  margin-bottom: var(--e2);
+  font-size: var(--t-sm);
+  font-weight: 400;
+}
+
+.integration-case input {
+  width: auto;
+  margin-top: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Le secret affiché une seule fois ──────────────────────────────────
+   Volontairement voyant : le refermer sans l'avoir noté oblige à tout
+   recommencer, et l'erreur ne se découvre que chez l'intégrateur. */
+.secret-unique {
+  margin: var(--e4) 0;
+  padding: var(--e4);
+  border: 2px solid var(--attention);
+  border-radius: var(--rayon);
+  background: var(--attention-fond);
+}
+
+.secret-unique h3 {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-md);
+  color: var(--attention);
+}
+
+.secret-unique p {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-sm);
+}
+
+.secret-valeur {
+  display: block;
+  padding: var(--e3);
+  margin-bottom: var(--e3);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  font-size: var(--t-xs);
+  overflow-wrap: anywhere;
+  /* Sélectionnable d'un geste : le presse-papiers peut être refusé par le
+     navigateur, il faut que la copie à la main reste facile. */
+  user-select: all;
+}

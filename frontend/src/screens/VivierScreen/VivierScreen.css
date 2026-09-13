@@ -1,0 +1,336 @@
+/* src/screens/VivierScreen/VivierScreen.css */
+
+.vivier {
+  padding-block: var(--e5);
+}
+
+.vivier-entete {
+  margin-bottom: var(--e5);
+}
+
+.vivier-intro {
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+/* ── Filtres ─────────────────────────────────────────────────────────── */
+
+.vivier-filtres {
+  display: grid;
+  gap: var(--e4);
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+  margin-bottom: var(--e4);
+}
+
+.vivier-reset {
+  justify-self: start;
+}
+
+@media (min-width: 720px) {
+  .vivier-filtres {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Le champ de recherche libre prend toute la largeur : c'est celui qu'on
+     utilise en premier, et il reçoit des phrases, pas des mots isolés. */
+  .vivier-champ-large {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1000px) {
+  .vivier-filtres {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.vivier-compte {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  margin-bottom: var(--e4);
+}
+
+.vivier-vide {
+  padding: var(--e6) var(--e4);
+  text-align: center;
+  color: var(--texte-doux);
+  background: var(--surface);
+  border: 1px dashed var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+/* ── Cartes ──────────────────────────────────────────────────────────── */
+
+.vivier-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+@media (min-width: 780px) {
+  .vivier-liste {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1200px) {
+  .vivier-liste {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.candidat-carte {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  padding: var(--e4);
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.candidat-haut {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e3);
+}
+
+.candidat-photo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  flex-shrink: 0;
+  border: 1px solid var(--bordure);
+}
+
+/* Repli : les initiales. Dans une grille de cartes, un rond vide ne distingue
+   personne — et c'est précisément là que la photo sert. */
+.candidat-photo--vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--marque-doux);
+  color: var(--marque);
+  font-weight: 700;
+  font-size: var(--t-md);
+  border: 0;
+}
+
+.candidat-identite {
+  min-width: 0;
+}
+
+.candidat-nom {
+  font-size: var(--t-md);
+  margin: 0 0 var(--e1);
+}
+
+.candidat-titre {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--marque);
+}
+
+.candidat-lieu {
+  margin: var(--e1) 0 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+/* L'accroche est bornée à quatre lignes : sans cela, une carte à présentation
+   longue étire toute la rangée de la grille et casse l'alignement. */
+.candidat-accroche {
+  margin: 0;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.candidat-chiffres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e4);
+  margin: 0;
+}
+
+.candidat-chiffres dt {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texte-doux);
+}
+
+.candidat-chiffres dd {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.candidat-competences {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2);
+}
+
+.candidat-competences li {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--e1);
+  padding: 2px var(--e2);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-xs);
+}
+
+.candidat-niveau {
+  color: var(--texte-doux);
+  font-size: 0.9em;
+}
+
+.candidat-competences-reste {
+  color: var(--texte-doux);
+}
+
+/* Pousse le pied en bas de la carte quelle que soit la hauteur du contenu :
+   les liens « Voir le parcours » restent alignés d'une carte à l'autre. */
+.candidat-pied {
+  margin: auto 0 0;
+  padding-top: var(--e3);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+/* ── Fiche candidat ──────────────────────────────────────────────────── */
+
+.candidat-detail-entete {
+  display: flex;
+  align-items: center;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e5);
+}
+
+.candidat-detail-photo {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center top;
+  border: 2px solid var(--bordure);
+}
+
+.candidat-detail-entete h1 {
+  margin: 0;
+}
+
+.candidat-contact {
+  display: grid;
+  gap: var(--e3);
+  margin: 0;
+}
+
+@media (min-width: 620px) {
+  .candidat-contact {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.candidat-contact dt {
+  font-size: var(--t-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--texte-doux);
+  margin-bottom: var(--e1);
+}
+
+.candidat-contact dd {
+  margin: 0;
+  font-size: var(--t-sm);
+}
+
+.candidat-liens {
+  list-style: none;
+  margin: var(--e4) 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e3);
+  font-size: var(--t-sm);
+}
+
+/* Rappel de finalité. Un recruteur consulte ici des donnees personnelles
+   confiees pour un usage precis : le dire a l'ecran vaut mieux que de le
+   supposer acquis. */
+.candidat-avertissement {
+  margin: var(--e4) 0 0;
+  padding-top: var(--e3);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+.candidat-parcours {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.candidat-parcours > li + li {
+  margin-top: var(--e5);
+  padding-top: var(--e5);
+  border-top: 1px solid var(--bordure);
+}
+
+.candidat-parcours h3 {
+  margin: 0 0 var(--e1);
+  font-size: var(--t-base);
+}
+
+.candidat-parcours-meta {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.candidat-interets {
+  margin: var(--e4) 0 0;
+  padding-left: var(--e5);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.candidat-detail-actions {
+  margin-top: var(--e3);
+  flex-wrap: wrap;
+}
+
+/* Liste des candidats rapprochés d'une offre. Elle réutilise les classes
+   `.match` de l'écran des correspondances : c'est le même moteur, ce doit
+   être la même lecture — un recruteur et un candidat qui comparent leurs
+   écrans doivent voir la même justification. */
+.offre-candidats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--e4);
+}
+
+.fiche-recruteur {
+  margin-bottom: var(--e4);
+}

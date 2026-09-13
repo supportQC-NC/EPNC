@@ -27,6 +27,125 @@ const Bloc = ({ titre, items }) => {
   );
 };
 
+// Le corps ou grade, traduit.
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  C'EST SOUVENT LE SEUL CONTENU EXPLOITABLE DE L'OFFRE
+// ══════════════════════════════════════════════════════════════════════════
+// « attaché », « ACDP-grille rémunération 1-sans diplôme », « conseiller des
+// APS » : ces mots ne disent rien à qui cherche un emploi. Sur les 139 offres
+// (des 188 ouvertes) où l'employeur ne publie ni missions ni compétences, ce
+// libellé est littéralement tout ce qui reste.
+//
+// Le libellé d'origine est TOUJOURS conservé à côté de la traduction. C'est
+// lui qui figure sur l'avis officiel, sur le formulaire de candidature et dans
+// la bouche du service RH : le masquer ferait perdre la personne au moment où
+// elle en aurait besoin.
+const Corps = ({ corps }) => {
+  if (!corps) return null;
+
+  return (
+    <div className="corps-clair">
+      <p className="corps-clair-titre">
+        {corps.clair}
+        {/* Le terme officiel, en second. On traduit, on ne remplace pas. */}
+        {corps.clair.toLowerCase() !== corps.brut.toLowerCase() && (
+          <span className="corps-clair-brut">
+            appelé « {corps.brut} » dans l'avis officiel
+          </span>
+        )}
+      </p>
+
+      {corps.explication && <p className="corps-clair-texte">{corps.explication}</p>}
+
+      {/* Notre lecture, pas une certitude. Le dire coûte une ligne et évite
+          qu'une personne organise sa candidature sur une explication que nous
+          n'avons pas pu vérifier dans la source. */}
+      {corps.certitude === "partielle" && corps.reserve && (
+        <p className="corps-clair-reserve">
+          <strong>À vérifier :</strong> {corps.reserve}
+        </p>
+      )}
+    </div>
+  );
+};
+
+// Le jargon présent dans CETTE offre, expliqué.
+//
+// En `<details>` replié : quelqu'un qui connaît déjà ces mots ne doit pas les
+// relire à chaque annonce, et quelqu'un qui les découvre doit pouvoir les
+// trouver sans quitter la page.
+const Jargon = ({ termes }) => {
+  if (!termes?.length) return null;
+
+  return (
+    <details className="jargon">
+      <summary>
+        Les mots de l'administration employés ici ({termes.length})
+      </summary>
+      <dl className="jargon-liste">
+        {termes.map((t) => (
+          <div key={t.terme}>
+            <dt>{t.terme}</dt>
+            <dd>{t.definition}</dd>
+          </div>
+        ))}
+      </dl>
+    </details>
+  );
+};
+
+// Ce que l'employeur n'a pas publié.
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  UN VIDE NOMMÉ VAUT MIEUX QU'UN VIDE SUBI
+// ══════════════════════════════════════════════════════════════════════════
+// Avant, une offre sans missions ni compétences affichait un titre puis rien.
+// Ça se lit comme une panne — et c'est le cas de trois quarts du catalogue.
+//
+// Ce bloc dit trois choses, dans cet ordre : ce qui manque, que ça vient de
+// l'employeur et non de nous, et ce qu'on peut faire quand même. La troisième
+// est la plus importante : constater sans proposer de suite, c'est laisser
+// quelqu'un devant une porte fermée.
+const ContenuAbsent = ({ contenu, employeur }) => {
+  if (!contenu?.muette) return null;
+
+  return (
+    <section className="fiche-bloc offre-muette" aria-labelledby="titre-muette">
+      <h2 id="titre-muette">Cet employeur ne publie pas le détail du poste</h2>
+
+      <p>
+        {employeur || "L'employeur"} diffuse l'intitulé, le service et le corps
+        concerné, mais ni les missions ni les compétences attendues. Ce n'est
+        pas une information que nous aurions perdue : elle ne figure pas dans
+        l'avis publié.
+      </p>
+
+      <p className="offre-muette-consequence">
+        <strong>Conséquence :</strong> aucun score de correspondance n'est
+        affiché pour cette offre. Nous préférons ne rien annoncer plutôt que de
+        noter un poste sur ce que nous aurions supposé.
+      </p>
+
+      <p>Ce que vous pouvez faire :</p>
+      <ul className="offre-muette-pistes">
+        <li>
+          Vous appuyer sur le corps indiqué ci-dessus — il dit le type de
+          fonctions et le niveau attendu.
+        </li>
+        <li>
+          Contacter le service qui recrute avant de candidater : c'est la
+          question la plus légitime qui soit, et elle vous distingue.
+        </li>
+        <li>
+          Préparer tout de même un dossier : la lettre s'appuiera sur
+          l'intitulé, le service et votre parcours.
+        </li>
+      </ul>
+    </section>
+  );
+};
+
 const OffreDetailScreen = () => {
   const { slug } = useParams();
   const location = useLocation();
@@ -100,7 +219,41 @@ const OffreDetailScreen = () => {
         </div>
       )}
 
+      {/* Passerelle vers le vivier, pour qui a le rôle. Le rapprochement est
+          bidirectionnel : depuis une offre, un recruteur doit pouvoir voir qui
+          pourrait y répondre, sans repasser par la liste des candidats. */}
+      {["recruteur", "admin"].includes(userInfo?.role) && (
+        <p className="fiche-recruteur">
+          <Link to={`/vivier/offres/${slug}`} className="btn btn-secondaire btn-compact">
+            Voir les candidats du vivier pour ce poste
+          </Link>
+        </p>
+      )}
+
       <header className="fiche-entete">
+        {/* L'employeur AVANT le titre du poste. Quelqu'un qui arrive sur cette
+            fiche par un lien doit savoir à qui il s'apprête à écrire avant de
+            lire la fiche — l'application rassemble dix-huit organisations
+            publiques distinctes, aux procédures de candidature différentes. */}
+        <p className="fiche-employeur">
+          <span className="fiche-employeur-nom">
+            {apercu.employeur?.nom || "Employeur non précisé"}
+          </span>
+          {apercu.employeur?.type && (
+            <span className="fiche-employeur-type">{apercu.employeur.type}</span>
+          )}
+          {apercu.employeur?.url && (
+            <a
+              className="fiche-employeur-lien"
+              href={apercu.employeur.url}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              Site de l'employeur
+            </a>
+          )}
+        </p>
+
         <h1>{apercu.intitule}</h1>
 
         {/* Set : dans la donnée source, le service porte souvent le même nom
@@ -156,7 +309,11 @@ const OffreDetailScreen = () => {
               </dd>
             </div>
           )}
-          {apercu.metier?.nom && (
+          {/* Uniquement si l'employeur a VRAIMENT classé le poste. 139 offres
+              sur 188 portent « Hors rome » : afficher « Métier de
+              rattachement : Hors rome » n'apprend rien et fait douter du
+              reste de la page. Le corps traduit, lui, dit quelque chose. */}
+          {apercu.metier?.classe && apercu.metier?.nom && (
             <div>
               <dt>Métier de rattachement</dt>
               <dd>
@@ -180,12 +337,26 @@ const OffreDetailScreen = () => {
       {/* ── Extrait public, visible par tout le monde ─────────────────── */}
       <section className="fiche-bloc">
         <h2>Le poste</h2>
-        <p>{complet ? complet.description : apercu.extrait}</p>
+
+        {/* La traduction du corps AVANT la description : sur une offre muette
+            la description est vide, et c'est alors la seule chose à lire. */}
+        {complet?.langageClair?.corps && (
+          <Corps corps={complet.langageClair.corps} />
+        )}
+
+        {(complet ? complet.description : apercu.extrait) && (
+          <p>{complet ? complet.description : apercu.extrait}</p>
+        )}
       </section>
 
       {complet ? (
         /* ── Contenu réservé aux comptes connectés ────────────────────── */
         <>
+          <ContenuAbsent
+            contenu={complet.contenu}
+            employeur={complet.employeur?.nom}
+          />
+
           <Bloc titre="Missions" items={complet.missions} />
           <Bloc
             titre="Compétences attendues"
@@ -231,6 +402,8 @@ const OffreDetailScreen = () => {
             </section>
           )}
 
+          <Jargon termes={complet.langageClair?.termes} />
+
           {/* Le pas suivant, à l'endroit où on vient de lire le poste.
               Sur une offre clôturée, proposer de préparer un dossier serait
               envoyer quelqu'un travailler pour rien : on le dit, et on le
@@ -267,7 +440,7 @@ const OffreDetailScreen = () => {
                   {formaterDate(apercu.dateLimite)}
                 </time>
                 . Cette fiche reste consultable à titre d'information : elle
-                indique ce que l'OPT-NC recherche sur ce métier, et les
+                indique ce que l'employeur recherche sur ce métier, et les
                 compétences qui y sont attendues.
               </p>
               <Link to="/offres" className="btn btn-principal">

@@ -5,3 +5,7 @@ frontend/build/
 uploads/
 npm-debug.log*
 .DS_Store
+
+# Identifiants des comptes de démonstration — jamais versionnés.
+user_test.txt
+evaluation.csv

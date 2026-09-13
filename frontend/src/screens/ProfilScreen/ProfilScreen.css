@@ -101,16 +101,10 @@
   color: var(--succes);
 }
 
-.profil-duo {
-  display: grid;
-  gap: 0 var(--e4);
-}
-
-@media (min-width: 460px) {
-  .profil-duo {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-}
+/* `.profil-duo` (deux champs courts côte à côte) a été promu dans index.css
+   sous le nom `.duo` : il servait déjà ici, puis dans le formulaire « devenir
+   recruteur », et un second exemplaire de la même règle aurait divergé du
+   premier au premier ajustement. L'ancien nom y reste en alias. */
 
 /* ── Blocs répétables ─────────────────────────────────────────────────── */
 
@@ -152,4 +146,21 @@
   .profil-section {
     padding: var(--e6);
   }
+}
+
+/* Interrupteur de visibilite. Une case a cocher explicite plutot qu'un
+   commutateur decoratif : l'etat doit se lire sans interpretation, et un
+   lecteur d'ecran annonce « coche / non coche » sans ambiguite. */
+.profil-bascule {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e3);
+  cursor: pointer;
+  font-size: var(--t-sm);
+  margin-bottom: var(--e3);
+}
+
+.profil-bascule input {
+  margin-top: 2px;
+  flex-shrink: 0;
 }

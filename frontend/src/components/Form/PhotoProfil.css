@@ -1,0 +1,91 @@
+/* src/components/Form/PhotoProfil.css */
+
+.photo-profil {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e4);
+  flex-wrap: wrap;
+  margin-bottom: var(--e5);
+}
+
+.photo-profil-image,
+.photo-profil-vide {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 2px solid var(--bordure);
+}
+
+.photo-profil-image {
+  object-fit: cover;
+  /* La vignette est carrée en base ; sans ce recadrage, un portrait en mode
+     portrait serait écrasé plutôt que centré. */
+  object-position: center top;
+}
+
+/* Repli : les initiales. Un rond vide dans une liste de candidats ne distingue
+   personne, et c'est précisément là que la photo sert. */
+.photo-profil-vide {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--marque-doux);
+  color: var(--marque);
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ── Variante logo ──────────────────────────────────────────────────────
+   Un logo n'est pas un portrait. Le rond couperait le nom de l'organisation,
+   et `cover` recadrerait un logo large en gardant son centre — c'est-à-dire
+   souvent rien de reconnaissable. On garde donc le cadre entier, on pose le
+   logo dedans en `contain`, et sur un fond blanc : la plupart des logos sont
+   fournis en PNG transparent pensé pour du blanc. */
+.photo-profil--logo .photo-profil-image,
+.photo-profil--logo .photo-profil-vide {
+  border-radius: var(--rayon);
+  width: 132px;
+  height: 96px;
+  background: #fff;
+}
+
+.photo-profil--logo .photo-profil-image {
+  object-fit: contain;
+  object-position: center;
+  padding: var(--e2);
+}
+
+.photo-profil--logo .photo-profil-vide {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--surface-2);
+  color: var(--texte-doux);
+}
+
+.photo-profil-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e2);
+  min-width: 15rem;
+  flex: 1;
+}
+
+.photo-profil-aide {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+  max-width: 40ch;
+}
+
+.photo-profil-erreur {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: var(--t-xs);
+  color: var(--erreur);
+}

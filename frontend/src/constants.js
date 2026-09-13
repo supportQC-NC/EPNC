@@ -19,6 +19,10 @@ export const PROFIL_URL = "/api/profil";
 export const ASSISTANT_URL = "/api/assistant";
 export const MATCHS_URL = "/api/matchs";
 export const METIERS_URL = "/api/metiers";
+export const RECRUTEUR_URL = "/api/recruteur";
+export const MODERATION_URL = "/api/moderation";
+export const VEILLE_URL = "/api/veille";
+export const DEMANDES_RECRUTEUR_URL = "/api/demandes-recruteur";
 
 // Questions proposées au démarrage. Elles ne servent pas qu'à dépanner celui
 // qui ne sait pas quoi écrire : elles annoncent le PÉRIMÈTRE de l'assistant.
@@ -123,4 +127,16 @@ export const libelleRole = (valeur) =>
 // ne démarre plus. Appliquée en style en ligne depuis React, l'URL n'est pas
 // résolue : si le fichier manque, le navigateur n'affiche simplement pas
 // d'image et le hero garde sa couleur de repli.
+// Logo de la plateforme, affiché dans l'en-tête.
+//
+// Déposez le fichier dans `public/images/` sous ce nom. Tant qu'il est absent,
+// l'en-tête garde le sigle textuel « EPNC » : le composant bascule tout seul
+// (voir `Header.jsx`, `onError`). Un `<img>` dont la source n'existe pas
+// afficherait sinon une icône d'image cassée — pire que pas de logo du tout.
+//
+// Format conseillé : PNG détouré sur fond transparent, hauteur utile d'au
+// moins 64 px (128 px pour rester net sur un écran à densité double). Un SVG
+// fonctionne aussi et sera plus léger.
+export const LOGO = "/images/logo.png";
+
 export const HERO_PHOTO = "/images/bg_hero.jpg";

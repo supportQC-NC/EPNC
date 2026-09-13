@@ -411,6 +411,53 @@
   }
 }
 
+/* ── Bande recruteur ──────────────────────────────────────
+
+   Volontairement plus discrète que les sections candidats : padding réduit,
+   titre à la taille d'un sous-titre, bouton secondaire. Elle s'adresse à une
+   minorité des visiteurs, et doit se trouver sans se faire remarquer. */
+
+.recruteur-bande {
+  padding-block: var(--e6);
+  background: var(--surface-2);
+  border-block: 1px solid var(--bordure);
+}
+
+.recruteur-bande-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--e4);
+}
+
+.recruteur-bande-titre {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-lg);
+}
+
+.recruteur-bande-texte {
+  margin: 0;
+  max-width: 56ch;
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  line-height: 1.6;
+}
+
+@media (min-width: 760px) {
+  .recruteur-bande-inner {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--e6);
+  }
+
+  /* Le bouton ne doit pas se comprimer quand le texte est long : sa largeur
+     est celle de son libellé, un point c'est tout. */
+  .recruteur-bande-inner > .btn {
+    flex-shrink: 0;
+  }
+}
+
 /* ── Rappel final ─────────────────────────────────────────────────────── */
 
 .rappel-inner {

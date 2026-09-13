@@ -320,3 +320,38 @@
     padding-block: var(--e7);
   }
 }
+
+/* ── Score non publiable ─────────────────────────────────────────────── */
+
+/* Une offre dont l'employeur n'a publié ni attendus ni rattachement métier ne
+   reçoit pas de note. Le dire en toutes lettres vaut mieux qu'un chiffre bas,
+   qui se lirait comme un jugement sur le candidat alors qu'il ne juge que la
+   complétude de l'annonce. */
+.match-score-absent {
+  display: block;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--texte-doux);
+  text-align: right;
+  max-width: 9rem;
+}
+
+/* L'assiette du calcul, sous le score. Deux offres notées 61 ne sont
+   comparables que si elles ont été jugées sur le même barème. */
+.match-score-assiette {
+  display: block;
+  font-size: var(--t-xs);
+  font-weight: 400;
+  color: var(--texte-doux);
+  text-align: right;
+  margin-top: var(--e1);
+  max-width: 11rem;
+}
+
+.match--indetermine {
+  opacity: 0.9;
+}
+
+.match-verdict--indetermine {
+  color: var(--texte-doux);
+}

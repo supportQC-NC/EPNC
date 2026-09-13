@@ -84,7 +84,7 @@ const MatchsScreen = () => {
 
   if (isLoading) {
     return (
-      <div className="conteneur matchs">
+      <div className="conteneur conteneur--large matchs">
         <p role="status">Rapprochement en cours…</p>
       </div>
     );
@@ -92,7 +92,7 @@ const MatchsScreen = () => {
 
   if (isError) {
     return (
-      <div className="conteneur matchs">
+      <div className="conteneur conteneur--large matchs">
         <div className="message message-erreur" role="alert">
           {messageErreur(error, "Le rapprochement a échoué.")}
         </div>
@@ -104,7 +104,7 @@ const MatchsScreen = () => {
   }
 
   return (
-    <div className="conteneur matchs">
+    <div className="conteneur conteneur--large matchs">
       <header className="matchs-entete">
         <h1>Les postes qui vous correspondent</h1>
         <p className="matchs-intro">
@@ -143,9 +143,26 @@ const MatchsScreen = () => {
                     </p>
                   </div>
 
+                  {/* Pas de score quand l'offre n'en publie pas les moyens.
+                      Afficher « 61/100 » calculé sur 23 points de barème, à
+                      côté d'un 61/100 calculé sur 100, ferait passer une offre
+                      vide pour une bonne correspondance. */}
                   <div className="match-score">
-                    <span className="match-score-valeur">{m.score}</span>
-                    <span className="match-score-sur">/100</span>
+                    {m.score === null ? (
+                      <span className="match-score-absent">
+                        Non évaluable
+                      </span>
+                    ) : (
+                      <>
+                        <span className="match-score-valeur">{m.score}</span>
+                        <span className="match-score-sur">/100</span>
+                        {m.fiabilite < 100 && (
+                          <span className="match-score-assiette">
+                            calculé sur {m.fiabilite} points de barème
+                          </span>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
 

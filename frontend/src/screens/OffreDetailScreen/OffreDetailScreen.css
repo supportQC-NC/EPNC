@@ -248,3 +248,138 @@
     padding: var(--e6);
   }
 }
+
+
+/* -- Employeur -------------------------------------------------------- */
+
+.fiche-employeur {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--e2) var(--e4);
+  margin: 0 0 var(--e2);
+}
+
+.fiche-employeur-nom {
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--marque);
+}
+
+.fiche-employeur-type,
+.fiche-employeur-lien {
+  font-size: var(--t-xs);
+  color: var(--texte-doux);
+}
+
+
+/* ── Le corps ou grade, traduit ────────────────────────────────────────── */
+
+.corps-clair {
+  padding: var(--e4);
+  margin-bottom: var(--e4);
+  background: var(--marque-doux);
+  border-radius: var(--rayon);
+}
+
+.corps-clair-titre {
+  margin: 0;
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--marque);
+}
+
+/* Le libellé officiel reste visible, en retrait : c'est lui qui figure sur
+   l'avis et sur le formulaire de candidature. */
+.corps-clair-brut {
+  display: block;
+  margin-top: var(--e1);
+  font-size: var(--t-xs);
+  font-weight: 400;
+  color: var(--texte-doux);
+}
+
+.corps-clair-texte {
+  margin: var(--e3) 0 0;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  max-width: var(--largeur-texte);
+}
+
+.corps-clair-reserve {
+  margin: var(--e3) 0 0;
+  padding: var(--e2) var(--e3);
+  background: var(--attention-fond);
+  color: var(--attention);
+  border-radius: var(--rayon);
+  font-size: var(--t-xs);
+  line-height: 1.5;
+}
+
+/* ── Offre sans contenu publié ─────────────────────────────────────────── */
+
+.offre-muette {
+  border-left: 4px solid var(--attention);
+  padding-left: var(--e4);
+}
+
+.offre-muette p,
+.offre-muette li {
+  max-width: var(--largeur-texte);
+  line-height: 1.6;
+}
+
+.offre-muette-consequence {
+  padding: var(--e3);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+  font-size: var(--t-sm);
+}
+
+.offre-muette-pistes {
+  margin: var(--e2) 0 0;
+  padding-left: var(--e5);
+}
+
+.offre-muette-pistes li {
+  margin-bottom: var(--e2);
+  font-size: var(--t-sm);
+}
+
+/* ── Glossaire du jargon ───────────────────────────────────────────────── */
+
+.jargon {
+  margin-bottom: var(--e5);
+  padding: var(--e3) var(--e4);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--surface);
+}
+
+.jargon summary {
+  cursor: pointer;
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.jargon-liste {
+  margin: var(--e4) 0 0;
+  display: grid;
+  gap: var(--e3);
+}
+
+.jargon-liste dt {
+  font-weight: 700;
+  font-size: var(--t-sm);
+  /* Le terme tel qu'il est écrit dans l'annonce : première lettre en
+     capitale seulement, on ne crie pas. */
+  text-transform: none;
+}
+
+.jargon-liste dd {
+  margin: var(--e1) 0 0;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}

@@ -28,6 +28,21 @@ const avpSchema = new mongoose.Schema(
     // ── Champs dérivés (affichage et tri) ─────────────────────────────
     intitule: { type: String, required: true, trim: true },
     description: { type: String, default: "" },
+
+    // QUI RECRUTE. Déterminant depuis que l'application agrège plusieurs
+    // employeurs publics : l'OPT-NC et la fonction publique calédonienne sont
+    // deux organisations distinctes, avec deux procédures de candidature
+    // différentes. Les confondre tromperait le candidat sur la personne à qui
+    // il écrit. Voir backend/config/employeurs.js.
+    employeur: {
+      code: { type: String, default: "inconnu", index: true },
+      nom: { type: String, default: "Employeur non précisé" },
+      nomComplet: { type: String, default: "" },
+      type: { type: String, default: null },
+      url: { type: String, default: null },
+    },
+
+    // Direction ou service AU SEIN de l'employeur — pas l'employeur lui-même.
     direction: { type: String, default: null },
     corpsDomaine: { type: String, default: null },
     service: { type: String, default: null },

@@ -60,6 +60,7 @@ export const contexteProfil = (profil, user) =>
   bloc(
     `CANDIDAT : ${nomComplet(user)}`,
     bloc(
+      ligne("Intitulé revendiqué", profil.basics?.titre),
       ligne("Email", user.email),
       ligne("Téléphone", profil.basics?.telephone),
       ligne("Commune", profil.basics?.ville),
@@ -96,6 +97,17 @@ export const contexteProfil = (profil, user) =>
         profil.competences.map((c) => `- ${c.nom} (${c.niveau})`).join("\n"),
     profil.langues?.length &&
       "LANGUES\n" + profil.langues.map((l) => `- ${l.nom} (${l.niveau})`).join("\n"),
+    // Les centres d'interet sont fournis au modele pour le CV, mais ils ne
+    // doivent JAMAIS servir d'argument dans une lettre : un recrutement ne se
+    // justifie pas par les loisirs du candidat.
+    profil.interets?.length &&
+      "CENTRES D'INTÉRÊT\n" +
+        profil.interets
+          .map(
+            (i) =>
+              `- ${i.nom}${i.motsCles?.length ? ` (${i.motsCles.join(", ")})` : ""}`,
+          )
+          .join("\n"),
     profil.aspirations?.projet && `PROJET PROFESSIONNEL\n${profil.aspirations.projet}`,
   );
 
@@ -306,14 +318,32 @@ Ne déclare un écart que si RIEN dans le profil ne s'en approche. Un écart ann
 // Mots et tournures qui condamnent une candidature à la pile du bas. Ils sont
 // interdits explicitement : un modèle les produit spontanément, parce que le
 // web en est rempli.
-const INTERDITS = `Vocabulaire interdit : « dynamique », « motivé », « passionné », « rigoureux », « polyvalent », « force de proposition », « votre prestigieux établissement », « je suis convaincu que mon profil », « n'hésitez pas à me contacter », « dans l'attente de votre retour ».`;
+const INTERDITS = `Vocabulaire interdit : « dynamique », « motivé », « passionné », « rigoureux », « polyvalent », « force de proposition », « votre prestigieux établissement », « je suis convaincu que mon profil », « n'hésitez pas à me contacter », « dans l'attente de votre retour ».
+
+Ouvertures interdites, quelle que soit la suite : « Je vous adresse ma candidature », « Je souhaite postuler », « Je me permets de », « C'est avec un vif intérêt », « Fort de mon expérience », « Actuellement en poste ». Elles parlent du candidat ; la première phrase doit parler du poste.`;
 
 const CONSIGNES = {
   lettre: `Rédige la LETTRE DE CANDIDATURE.
 
 - 250 à 300 mots maximum. Une page, pas davantage.
 - Commence par une ligne « Objet : candidature au poste de … ».
-- La PREMIÈRE phrase du corps parle DU POSTE, pas du candidat.
+- ⚠️ LA PREMIÈRE PHRASE DU CORPS PARLE DU POSTE, PAS DU CANDIDAT.
+  C'est la consigne la plus souvent manquée, alors relis-la avant d'écrire.
+  INTERDIT d'ouvrir par « Je », « Ma », « Mon », « C'est avec… », « Fort de… »,
+  « Actuellement… », « Titulaire de… », ni par aucune tournure qui commence par
+  le candidat.
+
+  ✗ « Je vous adresse ma candidature pour le poste de gestionnaire des
+     carrières. »
+  ✗ « Fort de douze ans d'expérience, je souhaite postuler… »
+  ✓ « Le poste de gestionnaire des carrières demande d'instruire des dossiers
+     statutaires et d'expliquer leurs règles à des agents : c'est ce que je
+     fais depuis douze ans, sur des dossiers médicaux. »
+  ✓ « Gérer les carrières de deux mille agents suppose une rigueur
+     documentaire que j'exerce quotidiennement depuis douze ans. »
+
+  La bonne ouverture NOMME une exigence du poste, puis y répond. Elle montre
+  que l'annonce a été lue — c'est la première chose qu'un recruteur vérifie.
 - Trois preuves concrètes tirées du parcours, chacune reliée à un attendu précis de l'annonce. Des faits, pas des qualités.
 - Du texte suivi. Au plus une courte énumération si elle sert vraiment.
 - Termine par une phrase de disponibilité sobre, puis le nom du candidat seul sur sa ligne.
@@ -349,18 +379,90 @@ Dis clairement, en une phrase de conclusion, si la candidature est solide, jouab
 - Termine par trois points à réviser avant l'entretien.`,
 };
 
-// Construit la demande envoyée au modèle : la fiche de poste, le profil, la
-// consigne.
+// ══════════════════════════════════════════════════════════════════════════
+//  LE RAPPROCHEMENT VÉRIFIÉ, DONNÉ COMME MATIÈRE — PAS COMME VERDICT
+// ══════════════════════════════════════════════════════════════════════════
+// Historique de ce choix, parce qu'il s'est joué deux fois en sens inverse.
 //
-// ⚠️ Le rapprochement par mots (`rapprocher`) n'est VOLONTAIREMENT pas joint.
-// Première version, il l'était « à titre indicatif » — et le modèle l'a suivi
-// contre le profil : il a écrit « vous n'avez pas de formation juridique de
-// niveau bac+3 » à une candidate titulaire d'une licence de droit, parce que
-// les mots « juridique » et « droit » ne se ressemblent pas. Une heuristique
-// plus faible que le modèle ne doit pas l'orienter ; il lit les deux textes,
-// il rapproche mieux tout seul.
-const demande = (piece, profil, avp, user) =>
+// Une PREMIÈRE version joignait le rapprochement par mots de ce fichier (la
+// fonction `rapprocher` ci-dessus, une simple comparaison de chaînes) « à titre
+// indicatif ». Le modèle l'a suivi CONTRE le profil : il a écrit « vous n'avez
+// pas de formation juridique de niveau bac+3 » à une candidate titulaire d'une
+// licence de droit, parce que « juridique » et « droit » ne se ressemblent pas.
+// On a donc tout retiré, et le modèle a mieux travaillé seul.
+//
+// Ce qu'on joint MAINTENANT est d'une autre nature : les `evidences[]` du
+// moteur de rapprochement (matchingService), qui raisonne sur le référentiel
+// métiers, par racine de mot et par cumul de sources. Et surtout, on ne les
+// joint pas de la même façon :
+//
+//   - LES CORRESPONDANCES sont données comme MATIÈRE À CITER. Chacune nomme
+//     l'attendu de l'annonce ET l'élément du parcours qui y répond. C'est
+//     exactement ce qu'une lettre doit contenir, et cela ne peut pas nuire :
+//     au pire le modèle en ignore une.
+//
+//   - LES ÉCARTS sont donnés comme PISTES À VÉRIFIER, avec l'instruction
+//     explicite de les confronter au profil avant d'en conclure quoi que ce
+//     soit. C'est le garde-fou tiré de l'incident ci-dessus : une analyse
+//     automatique rate les équivalences, et un écart annoncé à tort sur une
+//     compétence que la personne possède détruit sa confiance.
+//
+// Le gain attendu porte sur l'ancrage : sans ces extraits, le modèle recopie
+// des généralités ; avec eux, il écrit « ma licence de droit répond à
+// l'exigence de formation juridique », ce qu'un recruteur peut vérifier.
+const correspondances = (rapprochement) => {
+  if (!rapprochement?.composantes?.length) return null;
+
+  const preuves = [];
+  const ecarts = [];
+
+  for (const c of rapprochement.composantes) {
+    if (!c.applicable) continue;
+
+    for (const e of c.evidences || []) {
+      if (!e.attendu || !e.couvertPar) continue;
+      preuves.push(
+        `- L'annonce demande « ${e.attendu} » → votre parcours y répond par « ${e.couvertPar} »${e.origine ? ` (${e.origine})` : ""}.`,
+      );
+    }
+
+    for (const m of (c.manques || []).slice(0, 6)) {
+      if (m.attendu) ecarts.push(`- ${m.attendu}`);
+    }
+  }
+
+  if (!preuves.length && !ecarts.length) return null;
+
+  return bloc(
+    "=== RAPPROCHEMENT VÉRIFIÉ (analyse structurée du profil face à l'annonce) ===",
+    preuves.length
+      ? "CORRESPONDANCES ÉTABLIES — c'est la matière de ton texte. Appuie-toi\n" +
+          "dessus en priorité : chacune relie un attendu de l'annonce à un élément\n" +
+          "réel du parcours, et c'est ce qu'un recruteur peut vérifier.\n" +
+          preuves.join("\n")
+      : null,
+    ecarts.length
+      ? "ATTENDUS SANS CORRESPONDANCE AUTOMATIQUE — À VÉRIFIER, PAS À REPRENDRE.\n" +
+          "Cette liste vient d'une comparaison automatique qui rate les\n" +
+          "équivalences : une licence de droit ne « ressemble » pas à une\n" +
+          "« formation juridique », et une expérience de gestion de dossiers ne\n" +
+          "« ressemble » pas à « gérer plusieurs dossiers en parallèle ».\n" +
+          "AVANT de considérer l'un de ces points comme un écart, relis le profil\n" +
+          "et cherche ce qui pourrait y répondre. N'annonce un écart que si RIEN\n" +
+          "dans le parcours ne s'en approche.\n" +
+          ecarts.join("\n")
+      : null,
+  );
+};
+
+// Construit la demande envoyée au modèle : le rapprochement vérifié, la fiche
+// de poste, le profil, la consigne.
+//
+// L'ordre compte : les correspondances arrivent EN PREMIER. Le modèle lit un
+// texte long ; ce qu'on met en tête oriente ce qu'il retient.
+const demande = (piece, profil, avp, user, rapprochement = null) =>
   bloc(
+    correspondances(rapprochement),
     "=== FICHE DE POSTE ===",
     contexteOffre(avp),
     "=== PROFIL DU CANDIDAT ===",
@@ -419,7 +521,10 @@ CE QUE TU VÉRIFIES
 Un texte poli mais interchangeable ne dépasse pas 5.
 
 RÈGLES DE RÉDACTION EN VIGUEUR — tu ne peux pas demander l'inverse
-- La première phrase DOIT porter sur le poste, pas sur le candidat. Ne réclame jamais « une accroche personnelle » : une lettre qui s'ouvre sur « Je souhaite postuler… » est un défaut, pas une qualité.
+- ⚠️ La première phrase DOIT porter sur LE POSTE, pas sur le candidat. C'est une EXIGENCE, pas un défaut.
+  ✓ « Le poste de gestionnaire des carrières demande d'instruire des dossiers statutaires : c'est ce que je fais depuis douze ans. » → CORRECT, ne le reproche pas.
+  ✗ « Je vous adresse ma candidature au poste de… » → DÉFAUT, à signaler.
+  Si la lettre s'ouvre sur le poste, c'est qu'elle respecte la consigne. Ne le compte JAMAIS comme une erreur, et ne réclame jamais « une accroche personnelle ».
 - Le texte ne doit RIEN contenir qui ne figure pas au profil. Ne réclame donc jamais un exemple, un chiffre, un résultat ou un outil qui n'y est pas : ce serait demander une invention.
 - Les mots « dynamique », « motivé », « passionné », « rigoureux », « polyvalent » sont proscrits. N'en suggère aucun.
 Un reproche qui violerait l'une de ces règles ne doit pas être formulé.`;
@@ -430,6 +535,50 @@ Corrige PRÉCISÉMENT les points soulevés. Ne réécris pas ce qui fonctionne d
 Si des inventions sont signalées, supprime-les purement et simplement — n'essaie pas de les reformuler.
 
 Rends uniquement le texte corrigé, sans commentaire.`;
+
+// Reproches que le critique n'a PAS le droit de formuler, parce qu'ils
+// contredisent les consignes de rédaction.
+//
+// ══════════════════════════════════════════════════════════════════════════
+//  POURQUOI UN FILTRE, ET PAS SEULEMENT UNE CONSIGNE
+// ══════════════════════════════════════════════════════════════════════════
+// Le prompt de critique interdit déjà de reprocher l'ouverture sur le poste.
+// Le modèle le fait quand même, systématiquement : mesuré sur une lettre
+// parfaitement conforme, « Le texte commence par une accroche sur le poste,
+// ce qui est une erreur » — suivi d'un 4/10 et d'une réécriture.
+//
+// C'était la vraie cause des notes basses : la passe de critique sanctionnait
+// ce que la passe de rédaction exigeait, et les deux tournaient en rond.
+// Une consigne qu'un modèle enfreint une fois sur deux n'est pas une règle ;
+// le filtre, lui, ne se trompe pas.
+const REPROCHES_ILLEGITIMES = [
+  // L'ouverture sur le poste : exigée, jamais un défaut.
+  /accroche\s+(sur|portant sur)\s+le poste/i,
+  /commence\s+par\s+(une\s+)?(accroche\s+)?(sur|par)\s+le poste/i,
+  /accroche\s+personnelle/i,
+  /ne\s+commence\s+pas\s+par\s+(le\s+)?candidat/i,
+  /manque\s+d[e']\s*accroche\s+personnelle/i,
+
+  // Reprocher à une lettre de ne pas mentionner une expérience que la
+  // personne N'A PAS, c'est réclamer une invention — et les inventions sont
+  // précisément ce que cette passe est censée traquer.
+  //
+  // Observé sur une candidature en reconversion : « le texte ne mentionne pas
+  // de connaissances réglementaires en fonction publique », adressé à une
+  // secrétaire médicale qui n'en a évidemment aucune. Suivre ce reproche
+  // reviendrait à lui en faire inventer.
+  //
+  // Les écarts ne sont pas le sujet de la LETTRE : ils sont celui de
+  // l'ANALYSE, une pièce séparée, destinée au candidat, où ils sont nommés
+  // sans détour.
+  /absence\s+d[e']\s*(exp[ée]rience|connaissance|formation|dipl[oô]me|comp[ée]tence)/i,
+  /ne\s+mentionne\s+(pas|aucune?)\s+d?[e']?\s*(exp[ée]rience|connaissance|formation|dipl[oô]me)/i,
+  /manque\s+d[e']\s*(exp[ée]rience|connaissance|formation|dipl[oô]me)/i,
+  /(n'a|pas)\s+(pas\s+)?d[e']\s*exp[ée]rience\s+(directe\s+)?(en|dans|avec)/i,
+];
+
+const reprocheLegitime = (probleme) =>
+  !REPROCHES_ILLEGITIMES.some((r) => r.test(probleme));
 
 /**
  * Relit une pièce et renvoie son évaluation.
@@ -453,10 +602,24 @@ const critiquer = async (piece, texte, profil, avp, user) => {
 
     const avis = JSON.parse(brut);
 
+    const bruts = Array.isArray(avis.problemes) ? avis.problemes : [];
+    const problemes = bruts.filter(reprocheLegitime);
+    const ecartes = bruts.length - problemes.length;
+
+    if (ecartes > 0) {
+      console.log(
+        `⚖️  ${ecartes} reproche(s) écarté(s) sur « ${piece} » : ils contredisaient les consignes.`,
+      );
+    }
+
     return {
       note: Number(avis.note) || 0,
       inventions: Array.isArray(avis.inventions) ? avis.inventions : [],
-      problemes: Array.isArray(avis.problemes) ? avis.problemes : [],
+      problemes,
+      // Combien de reproches ont été écartés : la décision de réécrire s'appuie
+      // sur ce qui RESTE, pas sur une note calculée à partir de griefs
+      // invalides.
+      ecartes,
       verdict: typeof avis.verdict === "string" ? avis.verdict : "",
     };
   } catch (erreur) {
@@ -486,10 +649,10 @@ const REGLAGES = {
 export const GENERATEURS = Object.fromEntries(
   ["lettre", "cv", "restitution", "preparation"].map((piece) => [
     piece,
-    async (profil, avp, user) => {
+    async (profil, avp, user, rapprochement = null) => {
       if (!iaDisponible()) return ASSEMBLEURS[piece](profil, avp, user);
 
-      const consigne = demande(piece, profil, avp, user);
+      const consigne = demande(piece, profil, avp, user, rapprochement);
 
       // 1. Premier jet.
       let contenu = await appelerModele(SOCLE, consigne, {
@@ -509,7 +672,15 @@ export const GENERATEURS = Object.fromEntries(
       // signalée, quelle que soit la note. Un fait inventé dans une
       // candidature n'est pas un défaut de style : c'est le candidat qui le
       // signe.
-      const aReecrire = avis.note < SEUIL || avis.inventions.length > 0;
+      //
+      // ⚠️ Mais on ne réécrit PAS quand il ne reste aucun reproche valable :
+      // la note portait alors sur des griefs écartés, et réécrire pour y
+      // répondre ne pourrait que dégrader le texte. C'est exactement ce qui se
+      // produisait — une lettre conforme, notée 4/10 parce qu'elle respectait
+      // la consigne d'ouverture, puis réécrite pour l'enfreindre.
+      const aReecrire =
+        avis.inventions.length > 0 ||
+        (avis.note < SEUIL && avis.problemes.length > 0);
 
       if (!aReecrire) {
         return {

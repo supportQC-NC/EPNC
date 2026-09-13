@@ -24,6 +24,9 @@ const MARGE = 57;
 // en portent une.
 const POUR_EMPLOYEUR = new Set(["lettre", "cv"]);
 
+const MARQUE = "#14507d";
+const DOUX = "#555555";
+
 const TITRES = {
   lettre: "Lettre de candidature",
   cv: "Curriculum vitae",
@@ -105,6 +108,173 @@ const corps = (doc, texte) => {
       .text(nue, { align: "left", lineGap: 2, paragraphGap: 4 });
   }
 };
+
+// Extrait la ligne « Objet : … » du texte produit, et renvoie le corps sans
+// elle.
+//
+// Le modèle la place en tête comme le demandent les consignes. En mise en page,
+// l'objet n'est pas une phrase du corps : il se compose à part, en gras, après
+// les blocs d'adresse. Le laisser dans le flux donnait une lettre qui commence
+// par une ligne administrative perdue au milieu du texte.
+const extraireObjet = (texte) => {
+  const lignes = String(texte || "").split(/\r?\n/);
+  const index = lignes.findIndex((l) => /^\s*objet\s*:/i.test(l));
+
+  if (index === -1) return { objet: null, corps: texte };
+
+  const objet = lignes[index].replace(/^\s*objet\s*:\s*/i, "").trim();
+  const reste = [...lignes.slice(0, index), ...lignes.slice(index + 1)]
+    .join("\n")
+    .replace(/^\n+/, "");
+
+  return { objet, corps: reste };
+};
+
+const MOIS = [
+  "janvier", "février", "mars", "avril", "mai", "juin",
+  "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+];
+
+const dateLettre = (d) => `${d.getDate()} ${MOIS[d.getMonth()]} ${d.getFullYear()}`;
+
+/**
+ * Produit le PDF d'une LETTRE DE CANDIDATURE, mise en page.
+ *
+ * Une lettre administrative française a une forme attendue : expéditeur en haut
+ * à gauche, destinataire en face, lieu et date, objet, puis le corps. Un
+ * recruteur qui dépouille une pile la reconnaît avant de l'avoir lue — et une
+ * lettre qui n'a pas cette forme se remarque, dans le mauvais sens.
+ *
+ * Le corps vient du texte produit ; tout le reste est lu dans le profil et dans
+ * l'offre. Aucune coordonnée n'est donc réécrite par le modèle, qui est la
+ * façon la plus sûre d'inventer un numéro de téléphone.
+ */
+export const lettrePdf = ({ texte, avp, user, profil, date }) =>
+  new Promise((resolve, reject) => {
+    const creation = date ? new Date(date) : new Date();
+    const nom = `${user.prenom} ${user.nom}`.trim();
+    const { objet, corps: corpsTexte } = extraireObjet(texte);
+
+    const doc = new PDFDocument({
+      size: "A4",
+      margins: { top: MARGE, bottom: MARGE, left: MARGE, right: MARGE },
+      info: {
+        Title: `Lettre de candidature — ${avp.intitule}`,
+        Author: nom,
+        Subject: avp.intitule,
+        CreationDate: creation,
+        ModDate: creation,
+      },
+    });
+
+    const morceaux = [];
+    doc.on("data", (c) => morceaux.push(c));
+    doc.on("end", () => resolve(Buffer.concat(morceaux)));
+    doc.on("error", reject);
+
+    const largeur = doc.page.width - MARGE * 2;
+    const colonne = largeur * 0.45;
+    const xDroite = MARGE + largeur - colonne;
+
+    // ── Expéditeur, à gauche ──────────────────────────────────────────
+    const expediteur = [
+      profil?.basics?.titre || null,
+      profil?.basics?.adresse || null,
+      [profil?.basics?.codePostal, profil?.basics?.ville].filter(Boolean).join(" ") ||
+        null,
+      profil?.basics?.telephone || null,
+      user.email,
+    ].filter(Boolean);
+
+    doc.font("Helvetica-Bold").fontSize(11).fillColor("#111111");
+    doc.text(nom, MARGE, MARGE, { width: colonne });
+
+    doc.font("Helvetica").fontSize(9).fillColor(DOUX);
+    expediteur.forEach((l) => doc.text(l, MARGE, doc.y, { width: colonne, lineGap: 1 }));
+
+    const basExpediteur = doc.y;
+
+    // ── Destinataire, en face ─────────────────────────────────────────
+    const destinataire = [
+      avp.employeur?.nomComplet || avp.employeur?.nom || null,
+      avp.direction || null,
+      avp.service && avp.service !== avp.direction ? avp.service : null,
+      avp.idAvp ? `Référence : ${avp.idAvp}` : null,
+    ].filter(Boolean);
+
+    doc.font("Helvetica").fontSize(9.5).fillColor("#111111");
+    doc.text(destinataire[0] || "", xDroite, MARGE, { width: colonne });
+    doc.font("Helvetica").fontSize(9).fillColor(DOUX);
+    destinataire.slice(1).forEach((l) =>
+      doc.text(l, xDroite, doc.y, { width: colonne, lineGap: 1 }),
+    );
+
+    // ── Lieu et date, alignés à droite ────────────────────────────────
+    doc.y = Math.max(basExpediteur, doc.y) + 22;
+    doc
+      .font("Helvetica")
+      .fontSize(9.5)
+      .fillColor("#111111")
+      .text(
+        `${profil?.basics?.ville ? `${profil.basics.ville}, le` : "Le"} ${dateLettre(creation)}`,
+        xDroite,
+        doc.y,
+        { width: colonne, align: "right" },
+      );
+
+    // ── Objet ─────────────────────────────────────────────────────────
+    doc.y += 26;
+
+    if (objet) {
+      doc.font("Helvetica-Bold").fontSize(10).fillColor(MARQUE);
+      // `continued` : « Objet : » reste l'étiquette, l'intitulé la valeur —
+      // les composer sur une seule ligne évite un retour à la ligne disgracieux
+      // quand l'intitulé est long.
+      doc.text("Objet : ", MARGE, doc.y, { width: largeur, continued: true });
+      doc.font("Helvetica-Bold").fillColor("#111111").text(objet);
+      doc.y += 14;
+    }
+
+    // ── Corps ─────────────────────────────────────────────────────────
+    doc.fillColor("#111111");
+
+    String(corpsTexte || "")
+      .split(/\r?\n/)
+      .forEach((ligne) => {
+        const nue = ligne.trim();
+
+        if (!nue) {
+          doc.moveDown(0.55);
+          return;
+        }
+
+        if (estPuce(nue)) {
+          doc
+            .font("Helvetica")
+            .fontSize(10.5)
+            .text("•  " + nue.replace(/^\s*[-•*—]\s+/, ""), MARGE + 10, doc.y, {
+              width: largeur - 10,
+              lineGap: 2,
+              paragraphGap: 3,
+            });
+          return;
+        }
+
+        doc
+          .font("Helvetica")
+          .fontSize(10.5)
+          // Justifié : c'est la composition attendue d'une lettre, et elle
+          // rend le bloc de texte nettement plus propre à l'œil.
+          .text(nue, MARGE, doc.y, {
+            width: largeur,
+            align: "justify",
+            lineGap: 2.5,
+            paragraphGap: 4,
+          });
+      });
+
+    doc.end();
+  });
 
 /**
  * Produit le PDF d'une pièce et renvoie son contenu en mémoire.

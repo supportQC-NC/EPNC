@@ -30,6 +30,8 @@ import {
   telechargerDataGouv,
 } from "./dataGouvNormaliser.js";
 import { parserCsv, versBooleen, versNombre } from "../utils/csv.js";
+import { veillerPourCandidats, envoyerAlertes } from "./veilleService.js";
+import { emettre, chargeAvpPublie } from "./webhookService.js";
 import { trouverSource } from "../config/sources.js";
 
 // ── Écriture commune ──────────────────────────────────────────────────────
@@ -38,8 +40,11 @@ import { trouverSource } from "../config/sources.js";
 // des mises à jour — c'est la seule information vraiment utile sur un corpus
 // qui tourne : combien d'offres sont NOUVELLES.
 const enregistrerAvps = async (documents) => {
-  let crees = 0;
   let majs = 0;
+  // Les offres RÉELLEMENT nouvelles, conservées pour la veille : c'est sur
+  // elles, et elles seules, qu'il faut prévenir. Signaler une offre mise à
+  // jour reviendrait à re-notifier tout le corpus à chaque synchronisation.
+  const nouvelles = [];
 
   for (const doc of documents) {
     const res = await Avp.findOneAndUpdate({ idAvp: doc.idAvp }, doc, {
@@ -50,10 +55,10 @@ const enregistrerAvps = async (documents) => {
     });
 
     if (res.lastErrorObject?.updatedExisting) majs += 1;
-    else crees += 1;
+    else nouvelles.push(res.value);
   }
 
-  return { crees, majs };
+  return { crees: nouvelles.length, majs, nouvelles };
 };
 
 const telechargerTexte = async (url, quoi) => {
@@ -98,13 +103,14 @@ const ingererHfLive = async () => {
   );
 
   const documents = objets.map(normaliserAvp).filter(Boolean);
-  const { crees, majs } = await enregistrerAvps(documents);
+  const { crees, majs, nouvelles } = await enregistrerAvps(documents);
 
   return {
     recus: objets.length,
     crees,
     majs,
     ignores: objets.length - documents.length + rejetees,
+    nouvelles,
     message: `${objets.length} offre(s) publiée(s) dans le dataset.`,
   };
 };
@@ -130,6 +136,7 @@ const ingererHfArchive = async () => {
   }
 
   const detail = {};
+  const nouvelles = [];
   let recus = 0;
   let crees = 0;
   let majs = 0;
@@ -172,9 +179,11 @@ const ingererHfArchive = async () => {
     const r = await enregistrerAvps(documents);
     crees += r.crees;
     majs += r.majs;
+    nouvelles.push(...r.nouvelles);
     detail[dossier.path.split("/").pop()] = {
       recus: fichiers.length,
-      ...r,
+      crees: r.crees,
+      majs: r.majs,
     };
   }
 
@@ -183,6 +192,7 @@ const ingererHfArchive = async () => {
     crees,
     majs,
     ignores,
+    nouvelles,
     detail,
     message: `${recus} offre(s) archivée(s) sur ${Object.keys(detail).length} mois.`,
   };
@@ -207,13 +217,14 @@ const ingererDataGouv = async ({ statut = "PUBLIE", maximum = 1000 } = {}) => {
     })
     .filter(Boolean);
 
-  const { crees, majs } = await enregistrerAvps(documents);
+  const { crees, majs, nouvelles } = await enregistrerAvps(documents);
 
   return {
     recus: enregistrements.length,
     crees,
     majs,
     ignores: enregistrements.length - documents.length,
+    nouvelles,
     message:
       `${enregistrements.length} avis DRHFPNC` +
       (statut ? ` au statut ${statut}` : "") +
@@ -379,12 +390,69 @@ export const executerIngestion = async (
     const resultat = await ingestion.executer(options);
     const dureeMs = Date.now() - depart;
 
+    // ══════════════════════════════════════════════════════════════════
+    //  LA VEILLE SE DÉCLENCHE ICI, ET NULLE PART AILLEURS
+    // ══════════════════════════════════════════════════════════════════
+    // C'est le seul moment où l'on sait quelles offres sont NOUVELLES. Le
+    // faire plus tard obligerait à comparer des dates, et re-notifierait tout
+    // le corpus au premier décalage d'horloge.
+    //
+    // ⚠️ Un échec de la veille ne doit PAS faire échouer l'ingestion : les
+    // offres sont en base, c'est l'essentiel. L'alerte non partie est tracée
+    // et repartira au prochain tour.
+    let veille = null;
+    let webhooks = null;
+
+    // Les webhooks partent AVANT la veille, et pour la même raison qu'elle est
+    // ici : c'est le seul instant où l'on sait ce qui est nouveau.
+    //
+    // Avant, parce que la veille peut prendre du temps (rapprochements puis
+    // envoi de courriels) et qu'un intégrateur n'a pas à attendre nos courriels
+    // pour apprendre qu'un lot est arrivé.
+    if (resultat.nouvelles?.length) {
+      webhooks = await emettre(
+        "avp.publie",
+        chargeAvpPublie(ingestion.libelle, resultat.nouvelles),
+      );
+    }
+
+    if (resultat.nouvelles?.length && options.veille !== false) {
+      try {
+        const rapprochements = await veillerPourCandidats(resultat.nouvelles);
+        const envois = await envoyerAlertes();
+        veille = { ...rapprochements, ...envois };
+
+        if (rapprochements.notifications > 0) {
+          console.log(
+            `🔔 Veille : ${rapprochements.notifications} alerte(s) pour ` +
+              `${rapprochements.candidats} candidat(s) · ${envois.envoyes} courriel(s)`,
+          );
+        }
+      } catch (erreur) {
+        console.warn(`⚠️  Veille impossible après ingestion : ${erreur.message}`);
+        veille = { erreur: erreur.message };
+      }
+    }
+
     if (journal) {
-      Object.assign(journal, { ...resultat, statut: "succes", dureeMs });
+      // `nouvelles` porte des documents Mongoose entiers : on ne les écrit pas
+      // dans le journal, qui doit rester lisible.
+      const { nouvelles, ...pourJournal } = resultat;
+      Object.assign(journal, { ...pourJournal, statut: "succes", dureeMs });
       await journal.save();
     }
 
-    return { id, libelle: ingestion.libelle, statut: "succes", dureeMs, ...resultat };
+    const { nouvelles, ...sansDocuments } = resultat;
+
+    return {
+      id,
+      libelle: ingestion.libelle,
+      statut: "succes",
+      dureeMs,
+      ...sansDocuments,
+      veille,
+      webhooks,
+    };
   } catch (erreur) {
     const dureeMs = Date.now() - depart;
 

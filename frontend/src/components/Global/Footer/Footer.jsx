@@ -10,8 +10,9 @@ const Footer = () => {
           publique calédonienne.
         </p>
         <p>
-          Offres issues des avis de vacance de poste publics de l'OPT-NC, au
-          format{" "}
+          Offres issues des avis de vacance de poste publics de plusieurs
+          employeurs calédoniens — OPT-NC, Nouvelle-Calédonie, provinces,
+          hôpitaux, communes — normalisées au format{" "}
           <a
             href="https://schema.org/JobPosting"
             target="_blank"
@@ -19,8 +20,9 @@ const Footer = () => {
           >
             schema.org/JobPosting
           </a>
-          . Service indépendant, sans lien officiel avec l'employeur. Les
-          profils utilisés en démonstration sont fictifs.
+          . L'employeur est indiqué sur chaque offre. Service indépendant,
+          sans lien officiel avec aucun de ces employeurs. Les profils utilisés
+          en démonstration sont fictifs.
         </p>
       </div>
     </footer>

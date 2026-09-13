@@ -25,6 +25,8 @@ const date = (v) => {
 // "3134-26-1264/SR" → "3134-26-1264-sr"
 // Les identifiants OPT contiennent une barre oblique : telle quelle, elle
 // couperait le chemin de l'URL en deux segments.
+import { identifierEmployeur } from "../config/employeurs.js";
+
 export const slugifier = (idAvp) =>
   String(idAvp)
     .toLowerCase()
@@ -46,6 +48,12 @@ export const normaliserAvp = (raw) => {
 
     intitule: texte(raw.title) || texte(raw.name) || "Poste sans intitulé",
     description: texte(raw.description) || "",
+
+    // `hiringOrganization` est le champ schema.org prévu pour cela, et les
+    // deux sources le renseignent — « Office des postes et télécommunications »
+    // d'un côté, « Nouvelle-Calédonie » de l'autre.
+    employeur: identifierEmployeur(raw.hiringOrganization),
+
     direction: texte(additional.direction),
     corpsDomaine: texte(additional.corpsDomaine),
     service: texte(raw.employmentUnit?.name),

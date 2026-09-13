@@ -64,7 +64,7 @@ const EspaceScreen = () => {
         <section className="espace-carte">
           <h2>Postes ouverts</h2>
           <p className="espace-precision espace-precision--seule">
-            Les offres de l'OPT-NC, mises à jour à chaque publication.
+            Les avis de vacance de poste de la fonction publique calédonienne, mis à jour à chaque publication.
           </p>
           <Link to="/offres">Parcourir les offres</Link>
         </section>
