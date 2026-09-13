@@ -565,3 +565,15 @@ textarea:disabled {
   white-space: nowrap;
   border: 0;
 }
+
+/* Liens légaux du pied de page. Séparés du texte par un filet : ce sont des
+   destinations, pas de la prose. */
+.pied-legal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--e2) var(--e4);
+  margin-top: var(--e4);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-sm);
+}

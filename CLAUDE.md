@@ -286,6 +286,43 @@ Deux règles qui ne se négocient pas :
    apparaissent. Le défaut est `false` : on crée un compte pour chercher un
    poste, pas pour figurer dans un annuaire. Les 8 personas de démonstration
    sont à `true` parce qu'ils sont fictifs.
+
+   🔴 **Cocher ne suffit pas : il faut avoir lu ce qu'on partage.**
+   `backend/config/vivier.js` porte la liste exacte de ce qui sort — et la
+   seule. Elle est servie avec le profil (`profil.vivier`) et affichée **en
+   entier, dépliée, avant la décision** (`ConsentementVivier.jsx`). L'ancienne
+   rédaction disait « votre parcours, vos compétences et vos coordonnées » :
+   c'était vrai et incomplet — la case ouvrait aussi la **photo dès la liste**,
+   le **CV en PDF**, l'**export JSON Resume** et le **rapprochement du profil
+   avec les postes du recruteur, écarts compris**. On ne consent pas à ce
+   qu'on ne nous a pas dit.
+
+   Trois conséquences dans le code, à ne pas défaire :
+
+   - `PUT /api/profil` **refuse** `visibleRecruteurs: true` si le corps ne
+     porte pas `consentementVivier` égal à `VERSION_CONSENTEMENT_VIVIER`. La
+     garde est côté serveur : un import, un script ou un futur écran distrait
+     ne peuvent pas exposer quelqu'un à qui rien n'a été montré.
+   - **Le consentement est daté par le serveur** (`accepteLe`), et le retrait
+     aussi (`retireLe`, la trace de l'acceptation étant conservée). Un booléen
+     sans date ne permet ni de dire depuis quand un profil était visible, ni
+     de répondre à « je n'ai jamais autorisé ça ».
+   - **Accepter demande deux gestes, retirer un seul.** Et la section n'a pas
+     de bouton « Enregistrer » : le geste EST la décision, sinon on laisse
+     quelqu'un devant une case cochée alors que rien n'est partagé — ou
+     l'inverse.
+
+   Si la liste change, **changer `VERSION_CONSENTEMENT_VIVIER`**. Les
+   consentements antérieurs passent alors `aJour: false` : l'écran le signale
+   et demande de relire. Le profil **n'est pas masqué d'office** — faire
+   disparaître quelqu'un d'un vivier sans qu'il ait rien demandé serait une
+   décision prise à sa place.
+
+   ⚠️ Préfixe CSS **`partage-`**, jamais `vivier-` : l'écran recruteur possède
+   déjà `.vivier-liste`, et c'est une **grille**. Écrite `.vivier-liste`,
+   l'énumération du consentement s'affichait sur trois colonnes, sans puces,
+   dans le désordre de lecture — sur la page même qui demande de lire avant
+   d'accepter. (Même famille de bug que `.bulle` côté assistant.)
 2. **Les coordonnées ne sortent que sur la fiche détaillée**, jamais dans la
    liste — une liste qui les porterait se moissonne en une requête.
 
@@ -496,6 +533,51 @@ complet.
 ⚠️ Le rôle d'un message est `"utilisateur"` / `"assistant"` (enum du modèle
 `Conversation`), **pas** `"user"`. Comparer à « user » rangeait tous les
 messages du même côté du fil.
+
+### La refonte du hero et des deux publics
+
+**La photo de fond a été retirée.** Une poignée de main sur un bureau disait
+« entreprise » ; le sujet de l'outil est de rendre lisible un texte
+administratif. C'était l'élément le plus générique de la page, le plus lourd à
+charger, et il repoussait le produit au troisième écran.
+
+Le hero est désormais une **composition partagée** : la promesse à gauche, une
+**vraie capture de l'écran de rapprochement** à droite. Un visiteur décide en
+quelques secondes s'il a affaire à une plaquette ou à un outil.
+
+Supprimé avec la photo, et non laissé en place : `min-height: 100svh` (qui
+forçait un vide en bas et repoussait la suite hors de portée), le calque
+`::before` de contraste et les règles `.hero-defiler` du lien « Découvrir ».
+Du CSS qui ne s'applique plus à rien est du CSS qu'on croit encore actif.
+
+### « Vous renseignez. L'outil adapte. Le recruteur comprend. »
+
+C'est la phrase qui résume l'outil, et elle manquait. Elle titre une section en
+**deux colonnes à poids égal** — l'outil n'a pas un public principal et un
+public toléré :
+
+| Pour les candidats | Pour les recruteurs |
+|---|---|
+| Un profil, autant de CV que de postes | Des dossiers qui se comparent, pas qui se déchiffrent |
+| Rempli une fois, réutilisé partout | Une mise en page identique d'un dossier à l'autre |
+| Les expériences proches du poste remontent | Une lettre qui cite vos attendus |
+| Aucune expérience ne disparaît | Le vivier : du poste vers les profils |
+
+⚠️ Les deux promesses viennent d'**une seule décision technique** : le profil
+est stocké en JSON Resume et le CV est **composé** à partir de lui, jamais
+rédigé au fil de l'eau. Les présenter comme deux fonctionnalités distinctes
+raterait ce qui les relie.
+
+⚠️ La mention « l'accès recruteur est vérifié » est placée **avant** le bouton :
+en dessous, elle remontait l'action de sa propre hauteur et désalignait les
+deux colonnes de 27 px. Vérifié après correction : écart nul.
+
+L'ancienne bande « Vous recrutez pour un organisme public ? » a été retirée —
+elle disait, plus bas et plus discrètement, ce que cette section dit
+maintenant à poids égal.
+
+Accessibilité de la page refondue : **0 violation**, 37 règles passées, et le
+membre bleu du titre mesuré à **7,35:1**.
 
 ### Le logo d'organisation
 
@@ -1256,7 +1338,80 @@ Docker n'était pas lancé sur la machine de développement. `docker compose up
 --build` reste à éprouver au moins une fois avant le rendu — c'est la seule
 chose qui prouve le critère.
 
-## 21. Invariants de sécurité et de données
+## 21. Les pages légales et le consentement
+
+`LegalScreen/MentionsLegalesScreen` · `LegalScreen/ConfidentialiteScreen` ·
+bloc de consentement dans `RegisterScreen`. Publiques toutes les deux :
+quelqu'un qui veut savoir ce qu'on fait de ses données ne doit pas créer un
+compte pour le lire.
+
+### Écrites à partir du code, pas d'un modèle type
+
+Chaque affirmation correspond à quelque chose de vérifiable dans le dépôt : les
+champs des modèles Mongoose, les appels sortants, les suppressions en cascade.
+Une politique copiée sur un générateur décrit un service imaginaire — et c'est
+ce qui la rend inutile le jour où quelqu'un pose une vraie question.
+
+### 🔴 Le tiers est annoncé EN PREMIER
+
+Le contenu du profil est transmis à **OpenAI** au moment où une pièce est
+produite. C'est l'information qui peut faire changer d'avis quelqu'un **avant**
+qu'il ne saisisse son parcours — elle ouvre donc la page de confidentialité, et
+figure dans le bloc de consentement à l'inscription.
+
+Et la limite est dite avec : cette transmission n'a lieu **qu'à la demande de
+rédaction**. Consulter, remplir son profil ou voir ses correspondances
+n'envoie rien.
+
+### Ce que les pages disent, et qui est vrai dans le code
+
+| Affirmation | Où c'est vérifiable |
+|---|---|
+| Le mot de passe n'est lisible par personne | `select: false` + hachage |
+| Par défaut, aucun recruteur ne voit le profil | `visibleRecruteurs: false` |
+| Les coordonnées n'apparaissent pas dans les listes | `recruteurController` |
+| Supprimer son compte efface profil et candidatures | cascade dans `userControlleur` |
+| Vos données s'emportent | export JSON Resume (§ 13) |
+| Aucun cookie publicitaire ni traceur | un seul cookie, de session |
+
+Cette dernière ligne justifie l'**absence de bandeau cookies** : le site n'en
+dépose aucun qui en exigerait un. Poser un bandeau « nous respectons votre vie
+privée » alors qu'il n'y a rien à consentir serait du théâtre.
+
+### ⚠️ Les mentions manquantes se VOIENT
+
+Éditeur, contact et hébergeur dépendent de qui exploite le service : personne
+ne peut les deviner. Ils apparaissent en rouge, précédés d'un ⚠, avec la classe
+`.legal-attente`. **Un faux nom d'éditeur serait pire qu'une mention
+manquante** : il désignerait un responsable qui n'existe pas. Trois champs
+restent à compléter avant toute mise en ligne.
+
+### Le consentement dit ce qu'il engage
+
+La case n'est **pas pré-cochée** — un consentement par défaut n'en est pas un —
+et le bouton reste désactivé tant qu'elle ne l'est pas. Trois lignes la
+précèdent : ce à quoi sert le compte, qui voit le profil (personne par défaut),
+et la transmission au tiers. Une case « j'accepte les CGU » cochée sans rien
+lire ne vaut rien, ni juridiquement ni moralement.
+
+Le consentement n'est **pas envoyé au serveur ni stocké** : ce qui compte est
+qu'il ait été donné ici en connaissance de cause. L'enregistrer comme une
+donnée de plus n'ajouterait rien — sinon une donnée de plus.
+
+### ⚠️ Ce qui reste à faire trancher par un juriste
+
+Le régime applicable en Nouvelle-Calédonie **n'est pas celui de la France
+métropolitaine** : la collectivité a ses propres compétences, et le RGPD ne s'y
+applique pas de la même manière. Les pages ci-dessus décrivent **fidèlement ce
+que le service fait** — ce qui est la partie utile et vérifiable — mais leur
+cadrage réglementaire (base légale, mentions obligatoires, autorité compétente,
+durées imposées) doit être validé par quelqu'un de compétent avant mise en
+ligne. Je ne l'ai pas fait et je ne peux pas le faire.
+
+Accessibilité des deux pages : **0 violation**, 36 règles passées, vérifié à
+404 px de large.
+
+## 22. Invariants de sécurité et de données
 
 - 🔴 **Aucune adresse de recrutement réelle ne doit être joignable par le code.**
   Les fiches en contiennent : `DRH-candidature@opt.nc` dans `raw.applicationContact`
@@ -1287,7 +1442,7 @@ chose qui prouve le critère.
 - Les offres **clôturées sont conservées** : historique, corpus de test, et calcul
   du rythme de publication (`rythmePublication`).
 
-## 22. Conventions
+## 23. Conventions
 
 - **Tout est en français** : noms de fichiers, variables, fonctions, commentaires,
   messages d'erreur. `rapprocher`, `composanteReferentiel`, `motifsExclusion`.
@@ -1332,7 +1487,7 @@ chose qui prouve le critère.
 - `exemple.env` doit documenter **toute** variable lue par le code, même vide, et
   être mis à jour dans le même commit.
 
-## 23. État d'avancement
+## 24. État d'avancement
 
 **Fait** — socle d'authentification et d'administration ; ingestion idempotente
 des trois sources (**230 offres, 188 ouvertes, 18 employeurs**) ; profil

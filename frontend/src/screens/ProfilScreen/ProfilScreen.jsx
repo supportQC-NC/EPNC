@@ -1,6 +1,7 @@
 // src/screens/ProfilScreen/ProfilScreen.jsx
 import { useEffect, useState } from "react";
 import { useGetProfilQuery, useUpdateProfilMutation } from "../../slices/profilApiSlice";
+import ConsentementVivier from "./ConsentementVivier";
 import { useGetCompetencesReferentielQuery } from "../../slices/metierApiSlice";
 import { messageErreur } from "../../utils/erreurApi";
 import { useSelector } from "react-redux";
@@ -47,6 +48,11 @@ const Section = ({ titre, aide, children, onEnregistrer, enCours, enregistre }) 
 
     {children}
 
+    {/* Sans `onEnregistrer`, pas de pied. Une section qui se valide d'elle-meme
+        — la visibilite au vivier — afficherait sinon un bouton « Enregistrer »
+        qui ne correspond a rien, et laisserait croire qu'il reste un geste a
+        faire alors que le partage est deja actif. */}
+    {onEnregistrer && (
     <div className="profil-section-pied">
       <button
         type="button"
@@ -61,6 +67,7 @@ const Section = ({ titre, aide, children, onEnregistrer, enCours, enregistre }) 
         {enregistre ? "Enregistré" : ""}
       </span>
     </div>
+    )}
   </section>
 );
 
@@ -127,6 +134,28 @@ const ProfilScreen = () => {
       setTimeout(() => setDerniereEnregistree(null), 4000);
     } catch (err) {
       setErreur(messageErreur(err, "Enregistrement impossible."));
+    } finally {
+      setSectionEnCours(null);
+    }
+  };
+
+  // La visibilité s'enregistre seule, immédiatement.
+  //
+  // `consentementVivier` porte la version du texte affiché : le serveur refuse
+  // une activation qui ne la porte pas. Envoyer `true` tout court ne peut donc
+  // pas exposer quelqu'un à qui rien n'a été montré — la garde est côté
+  // serveur, pas dans la politesse de cet écran.
+  const changerVisibilite = async (visible, version) => {
+    setErreur("");
+    setSectionEnCours("visibleRecruteurs");
+    try {
+      const maj = await enregistrer({
+        visibleRecruteurs: visible,
+        ...(version ? { consentementVivier: version } : {}),
+      }).unwrap();
+      setProfil(maj);
+    } catch (err) {
+      setErreur(messageErreur(err, "Changement impossible."));
     } finally {
       setSectionEnCours(null);
     }
@@ -652,33 +681,21 @@ const ProfilScreen = () => {
       </Section>
 
       {/* ── Visibilité ────────────────────────────────────────────────── */}
+      {/* Pas de bouton « Enregistrer » sur cette section, et c'est voulu : un
+          consentement qui attend un enregistrement laisse la personne devant
+          une case cochée alors que RIEN n'est encore partagé — ou pire, l'a
+          rendue visible sans qu'elle s'en rende compte parce qu'elle avait
+          cliqué « Enregistrer » plus haut. Ici, le geste EST la décision, et
+          la réponse du serveur affiche aussitôt la date. */}
       <Section
         titre="Visibilité auprès des recruteurs"
-        aide="Vous décidez si les employeurs peuvent vous trouver."
-        {...props("visibleRecruteurs")}
+        aide="Rien n'est partagé tant que vous ne l'avez pas validé, en connaissance de ce qui l'est."
       >
-        <label className="profil-bascule">
-          <input
-            type="checkbox"
-            checked={Boolean(profil.visibleRecruteurs)}
-            onChange={(e) =>
-              setProfil((p) => ({ ...p, visibleRecruteurs: e.target.checked }))
-            }
-          />
-          <span>
-            Rendre mon profil consultable par les recruteurs inscrits sur la
-            plateforme
-          </span>
-        </label>
-
-        <p className="champ-aide">
-          Décoché par défaut, et c'est délibéré : vous avez créé un compte pour
-          chercher un poste, pas pour figurer dans un annuaire. En le cochant,
-          les recruteurs voient votre parcours, vos compétences et vos
-          coordonnées, et peuvent vous contacter. Vous pouvez le décocher à tout
-          moment — votre profil disparaît alors immédiatement de leurs
-          recherches.
-        </p>
+        <ConsentementVivier
+          profil={profil}
+          enCours={enCours && sectionEnCours === "visibleRecruteurs"}
+          onChanger={changerVisibilite}
+        />
       </Section>
 
       {/* ── Projet ────────────────────────────────────────────────────── */}

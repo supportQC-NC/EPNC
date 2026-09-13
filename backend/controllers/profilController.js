@@ -2,14 +2,36 @@
 import asyncHandler from "../middleware/asyncHandler.js";
 import Profil from "../models/ProfilModel.js";
 import { depuisJsonResume } from "../services/jsonResumeService.js";
+import {
+  CONSENTEMENT_VIVIER,
+  VERSION_CONSENTEMENT_VIVIER,
+} from "../config/vivier.js";
 
 // Forme renvoyée au client : le document, plus la complétude calculée.
 // Elle est calculée côté serveur pour que l'interface et un éventuel autre
 // consommateur (application mobile, export) voient le même chiffre.
-const sortie = (profil) => ({
-  ...profil.toObject(),
-  completude: profil.completude(),
-});
+const sortie = (profil) => {
+  const consentement = profil.consentementVivier || {};
+
+  return {
+    ...profil.toObject(),
+    completude: profil.completude(),
+    // Le texte du consentement voyage AVEC le profil.
+    //
+    // Le front pourrait le recopier, mais il finirait par diverger du code qui
+    // l'applique : on afficherait « vos compétences et vos coordonnées » à
+    // quelqu'un pendant qu'une route recruteur sert aussi son CV en PDF. Une
+    // seule rédaction, servie par celui qui la fait respecter.
+    vivier: {
+      ...CONSENTEMENT_VIVIER,
+      // Le consentement donné porte-t-il bien sur le texte affiché aujourd'hui ?
+      // Faux ne masque personne : cela affiche une invitation à reconfirmer.
+      aJour:
+        !profil.visibleRecruteurs ||
+        consentement.version === VERSION_CONSENTEMENT_VIVIER,
+    },
+  };
+};
 
 // @desc    Mon profil (créé vide s'il n'existe pas encore)
 // @route   GET /api/profil
@@ -89,8 +111,69 @@ const updateMonProfil = asyncHandler(async (req, res) => {
   // La visibilite aupres des recruteurs est un booleen de premier niveau, et
   // un choix a part : on ne la range pas dans une section, pour qu'elle ne
   // puisse pas etre modifiee par inadvertance en enregistrant autre chose.
+  //
+  // ════════════════════════════════════════════════════════════════════════
+  //  ACTIVER, C'EST CONSENTIR — ET UN CONSENTEMENT SE DATE
+  // ════════════════════════════════════════════════════════════════════════
+  // Le passage de `false` a `true` partage un nom, une photo, des coordonnees
+  // et un CV avec des tiers. Trois consequences, toutes ici :
+  //
+  //   1. L'activation exige `consentementVivier` dans le corps, avec la
+  //      version du texte affiche. Sans lui, la requete est REFUSEE. Un
+  //      client qui poserait `visibleRecruteurs: true` en passant — un import,
+  //      un script, un futur ecran distrait — ne peut donc pas exposer
+  //      quelqu'un sans lui avoir montre sur quoi il s'engage.
+  //   2. La date d'acceptation est posee par le SERVEUR. Une date envoyee par
+  //      le client ne prouve rien.
+  //   3. Le retrait est date lui aussi, et la trace de l'acceptation est
+  //      conservee : sinon on ne saurait plus dire depuis quand le profil
+  //      etait visible, ni jusqu'a quand.
   if (typeof req.body.visibleRecruteurs === "boolean") {
-    profil.visibleRecruteurs = req.body.visibleRecruteurs;
+    const avant = profil.visibleRecruteurs;
+    const apres = req.body.visibleRecruteurs;
+
+    if (apres && !avant) {
+      const accepte = req.body.consentementVivier;
+
+      if (accepte !== VERSION_CONSENTEMENT_VIVIER) {
+        res.status(400);
+        throw new Error(
+          "Pour apparaitre dans le vivier, il faut d'abord accepter ce qui " +
+            "sera partage avec les recruteurs. Rouvrez la section " +
+            "« Visibilite aupres des recruteurs » et validez le recapitulatif.",
+        );
+      }
+
+      profil.visibleRecruteurs = true;
+      profil.consentementVivier = {
+        accepteLe: new Date(),
+        retireLe: null,
+        version: VERSION_CONSENTEMENT_VIVIER,
+      };
+
+      console.log(
+        `👁️  Profil rendu visible au vivier par ${req.user.email} ` +
+          `(texte ${VERSION_CONSENTEMENT_VIVIER})`,
+      );
+    } else if (!apres && avant) {
+      profil.visibleRecruteurs = false;
+      profil.consentementVivier = {
+        ...(profil.consentementVivier?.toObject?.() ||
+          profil.consentementVivier ||
+          {}),
+        retireLe: new Date(),
+      };
+
+      console.log(`🚫 Profil retire du vivier par ${req.user.email}`);
+    } else if (apres && avant && req.body.consentementVivier) {
+      // Reconfirmation apres un changement de redaction : l'etat ne bouge pas,
+      // mais la version acceptee, elle, doit suivre.
+      profil.consentementVivier = {
+        accepteLe: new Date(),
+        retireLe: null,
+        version: String(req.body.consentementVivier),
+      };
+    }
   }
 
   await profil.save();

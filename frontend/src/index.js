@@ -44,6 +44,8 @@ import EspaceRecruteurScreen from "./screens/RecruteurScreen/EspaceRecruteurScre
 import SuggestionsScreen from "./screens/RecruteurScreen/SuggestionsScreen";
 import ListesScreen from "./screens/RecruteurScreen/ListesScreen";
 import ProfilRecruteurScreen from "./screens/RecruteurScreen/ProfilRecruteurScreen";
+import MentionsLegalesScreen from "./screens/LegalScreen/MentionsLegalesScreen";
+import ConfidentialiteScreen from "./screens/LegalScreen/ConfidentialiteScreen";
 import NotFoundScreen from "./screens/NotFoundScreen/NotFoundScreen";
 
 import AdminLayout from "./screens/admin/AdminLayout";
@@ -78,6 +80,12 @@ const router = createBrowserRouter(
           connecté peut très bien demander un accès recruteur, et le renvoyer
           vers son espace sans explication serait incompréhensible. */}
       <Route path="/devenir-recruteur" element={<DevenirRecruteurScreen />} />
+
+      {/* Pages légales : publiques, et elles doivent le rester. Quelqu'un qui
+          veut savoir ce qu'on fait de ses données ne doit pas avoir à créer un
+          compte pour le lire. */}
+      <Route path="/mentions-legales" element={<MentionsLegalesScreen />} />
+      <Route path="/confidentialite" element={<ConfidentialiteScreen />} />
 
       {/* Réinitialisation : volontairement HORS de PublicOnlyRoute.
           Le lien arrive par email et doit fonctionner même si un compte est

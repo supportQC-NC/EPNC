@@ -80,3 +80,37 @@
     border-radius: var(--rayon-lg);
   }
 }
+
+/* ── Consentement à l'inscription ─────────────────────────────────────
+   Le résumé se lit AVANT la case. Une case cochée sans rien lire ne vaut
+   rien ; trois lignes au-dessus suffisent à ce que le geste veuille dire
+   quelque chose. */
+.consentement {
+  margin-bottom: var(--e4);
+  padding: var(--e4);
+  background: var(--surface-2);
+  border-radius: var(--rayon);
+}
+
+.consentement-resume {
+  margin: 0 0 var(--e3);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  color: var(--texte-doux);
+}
+
+.consentement-case {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--e2);
+  font-size: var(--t-sm);
+  line-height: 1.5;
+  cursor: pointer;
+}
+
+.consentement-case input {
+  width: auto;
+  margin-top: 3px;
+  flex-shrink: 0;
+  cursor: pointer;
+}

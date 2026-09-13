@@ -1,0 +1,98 @@
+/* src/screens/LegalScreen/LegalScreen.css */
+
+/* Pages légales : colonne de lecture stricte. Ce sont des textes qu'on lit
+   ligne à ligne, souvent en cherchant une information précise — pas des
+   écrans de données. */
+.legal {
+  max-width: 48rem;
+  padding-block: var(--e6) var(--e8);
+}
+
+.legal-entete {
+  margin-bottom: var(--e6);
+  padding-bottom: var(--e5);
+  border-bottom: 1px solid var(--bordure);
+}
+
+.legal-intro {
+  margin: var(--e3) 0 0;
+  font-size: var(--t-md);
+  line-height: 1.6;
+  color: var(--texte-doux);
+}
+
+.legal-bloc {
+  margin-bottom: var(--e6);
+}
+
+.legal-bloc h2,
+.legal-alerte h2 {
+  font-size: var(--t-lg);
+  margin: 0 0 var(--e3);
+}
+
+.legal-bloc p,
+.legal-alerte p {
+  margin: 0 0 var(--e3);
+  line-height: 1.7;
+}
+
+/* Le bloc mis en avant : l'information qui peut faire changer d'avis
+   quelqu'un AVANT qu'il ne saisisse quoi que ce soit. Sur ces pages, c'est
+   la transmission à un tiers et l'absence de lien officiel. Les enterrer en
+   bas de page serait les dire sans les dire. */
+.legal-alerte {
+  padding: var(--e5);
+  margin-bottom: var(--e6);
+  background: var(--attention-fond);
+  border-left: 4px solid var(--attention);
+  border-radius: var(--rayon);
+}
+
+.legal-alerte h2 {
+  color: var(--attention);
+}
+
+.legal-liste {
+  display: grid;
+  gap: var(--e4);
+  margin: 0;
+}
+
+.legal-liste dt {
+  font-weight: 700;
+  font-size: var(--t-md);
+  margin-bottom: var(--e1);
+}
+
+.legal-liste dd {
+  margin: 0;
+  line-height: 1.7;
+  color: var(--texte-doux);
+}
+
+/* Une mention légale non renseignée. Elle se VOIT, volontairement : un champ
+   laissé vide passerait inaperçu à la relecture, et le service partirait en
+   ligne sans éditeur déclaré. */
+.legal-attente {
+  color: var(--erreur) !important;
+  font-style: italic;
+}
+
+.legal-attente::before {
+  content: "⚠ ";
+  font-style: normal;
+}
+
+.legal-secondaire {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
+.legal-maj {
+  margin-top: var(--e6);
+  padding-top: var(--e4);
+  border-top: 1px solid var(--bordure);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}

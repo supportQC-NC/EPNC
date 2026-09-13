@@ -19,6 +19,10 @@ const RegisterScreen = () => {
     confirmation: "",
   });
   const [error, setError] = useState("");
+  // Le consentement n'est PAS dans `form` : il n'est pas envoyé au serveur et
+  // ne doit pas l'être. Ce qui compte est qu'il ait été donné ici, en toute
+  // connaissance — l'enregistrer comme une donnée de plus n'ajouterait rien.
+  const [accepte, setAccepte] = useState(false);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -55,6 +59,13 @@ const RegisterScreen = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!accepte) {
+      setError(
+        "Pour créer un compte, il faut avoir pris connaissance des conditions et de l'usage fait de vos données.",
+      );
+      return;
+    }
 
     // Le serveur refait ces contrôles — c'est lui qui fait autorité. Ceux-ci
     // évitent seulement un aller-retour inutile.
@@ -161,11 +172,53 @@ const RegisterScreen = () => {
             etat={etatConfirmation}
           />
 
+          {/* ══════════════════════════════════════════════════════════
+              LE CONSENTEMENT DIT CE QU'IL ENGAGE
+              ══════════════════════════════════════════════════════════
+              Une case « j'accepte les CGU » cochée sans rien lire ne vaut
+              rien — ni juridiquement, ni moralement. Les trois lignes
+              au-dessus disent l'essentiel AVANT la case : ce qui est
+              collecté, qui le voit, et le seul point qui peut faire changer
+              d'avis — la transmission à un tiers au moment de la rédaction.
+
+              La case n'est PAS pré-cochée : un consentement par défaut n'est
+              pas un consentement. */}
+          <div className="consentement">
+            <p className="consentement-resume">
+              Votre compte sert à conserver votre parcours et vos candidatures.{" "}
+              <strong>Votre profil n'est visible d'aucun recruteur</strong> tant
+              que vous ne l'avez pas décidé. Si vous demandez la rédaction d'une
+              lettre ou d'un CV, le contenu de votre profil est alors{" "}
+              <strong>transmis à un prestataire tiers</strong> (OpenAI) pour la
+              produire.
+            </p>
+
+            <label className="consentement-case">
+              <input
+                type="checkbox"
+                checked={accepte}
+                onChange={(e) => setAccepte(e.target.checked)}
+                required
+              />
+              <span>
+                J'ai pris connaissance des{" "}
+                <Link to="/mentions-legales" target="_blank">
+                  conditions d'utilisation
+                </Link>{" "}
+                et de l'
+                <Link to="/confidentialite" target="_blank">
+                  usage fait de mes données
+                </Link>
+                .
+              </span>
+            </label>
+          </div>
+
           <div className="auth-actions">
             <button
               type="submit"
               className="btn btn-principal btn-bloc"
-              disabled={isLoading}
+              disabled={isLoading || !accepte}
             >
               {isLoading ? "Création…" : "Créer mon compte"}
             </button>

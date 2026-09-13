@@ -1,4 +1,5 @@
 // src/components/Global/Footer/Footer.jsx
+import { Link } from "react-router-dom";
 import { APP_NAME } from "../../../constants";
 
 const Footer = () => {
@@ -24,6 +25,16 @@ const Footer = () => {
           sans lien officiel avec aucun de ces employeurs. Les profils utilisés
           en démonstration sont fictifs.
         </p>
+
+        {/* Les pages légales vivent dans le pied de page, à l'endroit où on
+            les cherche. Elles sont publiques : quelqu'un qui veut savoir ce
+            qu'on fait de ses données ne doit pas créer un compte pour le
+            lire. */}
+        <nav className="pied-legal" aria-label="Informations légales">
+          <Link to="/mentions-legales">Mentions légales</Link>
+          <Link to="/confidentialite">Vos données</Link>
+          <Link to="/devenir-recruteur">Devenir recruteur</Link>
+        </nav>
       </div>
     </footer>
   );

@@ -171,6 +171,31 @@ const profilSchema = new mongoose.Schema(
     // son profil visible est une decision separee, explicite et reversible —
     // et la seule facon honnete de constituer un vivier.
     visibleRecruteurs: { type: Boolean, default: false, index: true },
+
+    // LE CONSENTEMENT QUI ACCOMPAGNE CETTE VISIBILITE.
+    //
+    // ══════════════════════════════════════════════════════════════════════
+    //  POURQUOI UN BOOLEEN NE SUFFIT PAS
+    // ══════════════════════════════════════════════════════════════════════
+    // `visibleRecruteurs` dit l'ETAT ; il ne dit ni QUAND la personne a
+    // accepte, ni SUR QUOI elle a accepte. Les deux manquent le jour ou
+    // quelqu'un ecrit « je n'ai jamais autorise ca » : sans date, on n'a rien
+    // a lui opposer, et sans version, on ne sait meme pas ce qu'on lui avait
+    // montre. Un vivier constitue de personnes reelles ne peut pas reposer
+    // sur une case a cocher sans memoire.
+    //
+    // `retireLe` est conserve apres un retrait. Effacer la trace d'un
+    // consentement retire reviendrait a ne plus pouvoir dater le retrait —
+    // exactement l'information qu'on veut pouvoir produire en cas de litige.
+    consentementVivier: {
+      accepteLe: { type: Date, default: null },
+      retireLe: { type: Date, default: null },
+      // Version du texte accepte. Si la liste de ce qui est partage change,
+      // un consentement donne sous l'ancienne redaction n'est plus eclaire :
+      // la comparaison avec VERSION_CONSENTEMENT_VIVIER permet de le dire a
+      // la personne au lieu de faire comme si de rien n'etait.
+      version: { type: String, default: "" },
+    },
   },
   { timestamps: true },
 );

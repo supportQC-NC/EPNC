@@ -35,6 +35,7 @@ import mongoose from "mongoose";
 import connectDB from "./config/db.js";
 import User from "./models/UserModel.js";
 import Profil from "./models/ProfilModel.js";
+import { VERSION_CONSENTEMENT_VIVIER } from "./config/vivier.js";
 
 // Mot de passe commun, volontairement évident : ce sont des comptes de
 // démonstration sur une base de développement. Il ne doit JAMAIS servir
@@ -728,6 +729,15 @@ const importer = async () => {
           // visibles des recruteurs dès le départ. Un compte réel, lui, arrive
           // avec `visibleRecruteurs: false` — c'est à la personne de décider.
           visibleRecruteurs: true,
+          // Le consentement va avec la visibilité, y compris ici : sans lui,
+          // ces profils s'afficheraient « accord donné sur une rédaction
+          // antérieure » et la démonstration montrerait un défaut qui n'existe
+          // que dans le jeu d'essai.
+          consentementVivier: {
+            accepteLe: new Date(),
+            retireLe: null,
+            version: VERSION_CONSENTEMENT_VIVIER,
+          },
         },
         { upsert: true, new: true, setDefaultsOnInsert: true },
       );

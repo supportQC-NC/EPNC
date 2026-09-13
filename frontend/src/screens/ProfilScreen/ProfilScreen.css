@@ -164,3 +164,115 @@
   margin-top: 2px;
   flex-shrink: 0;
 }
+
+/* ── Consentement au partage avec les recruteurs ─────────────────────────
+   La section la plus longue du profil, et c'est assumé : c'est la seule où
+   la personne engage des données auprès de tiers. Les quatre groupes sont
+   distingués par une barre de couleur plutôt que par un fond — un fond par
+   groupe aurait donné quatre rectangles qui se disputent l'attention, alors
+   que le seul vraiment lourd est « visible quand un recruteur ouvre votre
+   fiche ».
+
+   ⚠️ PRÉFIXE `partage-`, PAS `vivier-`. L'écran recruteur possède déjà
+   `.vivier`, `.vivier-liste`, `.vivier-entete`… et son `.vivier-liste` est
+   une GRILLE de cartes de candidats. Écrite `.vivier-liste`, l'énumération
+   ci-dessous s'affichait sur trois colonnes, sans puces, dans le désordre de
+   lecture — sur la page qui demande à quelqu'un de lire avant d'accepter.
+   Le CSS de cette application est global : deux écrans qui empruntent le même
+   mot finissent par se marcher dessus. */
+.partage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--e3);
+}
+
+.partage-etat {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: 1.6;
+}
+
+.partage-etat--actif strong {
+  color: var(--marque);
+}
+
+.partage-bascule {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--marque);
+  font: inherit;
+  font-size: var(--t-sm);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.partage-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e4);
+  width: 100%;
+  margin-block: var(--e2);
+}
+
+.partage-groupe {
+  border-left: 3px solid var(--bordure);
+  padding-left: var(--e3);
+}
+
+.partage-groupe--attention {
+  border-left-color: var(--attention);
+}
+
+.partage-groupe--rassurant {
+  border-left-color: var(--marque);
+}
+
+.partage-groupe-titre {
+  margin: 0 0 var(--e2);
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.partage-liste {
+  margin: 0;
+  padding-left: var(--e4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--e1);
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  color: var(--texte-doux);
+}
+
+/* La case de lecture est plus visible que les autres bascules du profil :
+   c'est elle qui déverrouille le partage, pas une préférence d'affichage. */
+.partage-case {
+  margin: 0;
+  padding: var(--e3);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon);
+  background: var(--surface-2);
+}
+
+.partage-alerte {
+  width: 100%;
+  padding: var(--e3);
+  border-left: 3px solid var(--attention);
+  border-radius: var(--rayon);
+  background: var(--attention-fond);
+  color: var(--texte);
+  font-size: var(--t-sm);
+  line-height: 1.6;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--e3);
+}
+
+/* Le retrait n'est pas un bouton de danger : retirer sa visibilité est un
+   droit ordinaire, pas un accident qu'il faudrait décourager en rouge. */
+.partage-retrait {
+  align-self: flex-start;
+}
