@@ -1,5 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { accueilDuRole } from "./accueilDuRole";
 
 // Réserve une branche du routeur aux recruteurs et aux administrateurs.
 //
@@ -16,7 +17,7 @@ const RecruteurRoute = () => {
   return ["recruteur", "admin"].includes(userInfo.role) ? (
     <Outlet />
   ) : (
-    <Navigate to="/espace" replace />
+    <Navigate to={accueilDuRole(userInfo)} replace />
   );
 };
 

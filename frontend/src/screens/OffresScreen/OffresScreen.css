@@ -179,12 +179,65 @@
   }
 }
 
+/* ── La carte d'offre ────────────────────────────────────────────────────
+   Le liseré gauche était BLEU sur TOUTES les cartes ouvertes. Une couleur
+   posée partout n'accentue rien : elle devient la bordure de la carte, et le
+   jour où l'on veut signaler quelque chose il ne reste plus de registre.
+   Il est donc neutre par défaut, et ne s'allume qu'à l'approche de
+   l'échéance (`--urgente`) ou pour dire qu'une offre est close.
+
+   Le rythme interne passe par `gap` : les marges par élément se doublaient
+   ou s'effondraient selon les blocs présents (une carte sans extrait et sans
+   familles n'avait pas les mêmes espacements qu'une carte complète). */
 .offre-carte {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e2);
   padding: var(--e4);
   background: var(--surface);
   border: 1px solid var(--bordure);
-  border-left: 3px solid var(--marque);
+  border-left: 3px solid var(--bordure);
   border-radius: var(--rayon-lg);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Le survol porte sur la CARTE, parce que c'est la carte entière qui est
+   cliquable (`.offre-lien::after`). Un survol qui ne réagirait que sur le
+   titre laisserait croire que le reste ne l'est pas. */
+.offre-carte:hover {
+  border-color: var(--bordure-forte);
+  border-left-color: var(--marque);
+  background: var(--surface-2);
+}
+
+/* ⚠️ `:focus-within` autant que `:hover`. Au clavier, le lien du titre reçoit
+   le focus mais son contour est dessiné sur le texte, pas sur la carte : sans
+   ce rappel, rien ne dit quelle carte est sélectionnée dans une grille de
+   trente. */
+.offre-carte:focus-within {
+  border-color: var(--marque);
+  border-left-color: var(--marque);
+}
+
+/* Échéance proche : le liseré s'allume. L'information n'est JAMAIS portée par
+   cette couleur seule — la pastille du pied écrit « Plus que 4 jours ». */
+.offre-carte--urgente {
+  border-left-color: var(--attention);
+}
+
+/* Le lien du titre couvre la carte entière.
+   `::after` plutôt qu'un `<a>` enveloppant : un lien qui contient tout le
+   contenu se fait annoncer en entier par un lecteur d'écran (« Garde
+   champêtre Nouvelle-Calédonie Collectivité publiée le… lien »). Ici il n'y a
+   qu'un lien, il porte l'intitulé, et la surface cliquable est une couche
+   transparente au-dessus. */
+.offre-lien::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
 }
 
 /* L'état « clôturée » est porté par le badge (un texte) autant que par la
@@ -210,6 +263,8 @@
 .offre-voile {
   position: absolute;
   inset: 0;
+  /* Au-dessus du lien étiré du titre (z-index 1), sans quoi le clic sur une
+     offre close passerait « sous » le voile. */
   z-index: 2;
   display: flex;
   flex-direction: column;
@@ -275,7 +330,6 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--e3);
-  margin-bottom: var(--e2);
 }
 
 .offre-titre {
@@ -305,13 +359,13 @@
 }
 
 .offre-meta {
-  margin: 0 0 var(--e3);
+  margin: 0;
   font-size: var(--t-sm);
   color: var(--texte-doux);
 }
 
 .offre-extrait {
-  margin: 0 0 var(--e3);
+  margin: 0;
   font-size: var(--t-sm);
 }
 
@@ -320,7 +374,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--e1);
-  margin: 0 0 var(--e3);
+  margin: var(--e1) 0 0;
   padding: 0;
 }
 
@@ -333,23 +387,42 @@
   font-weight: 600;
 }
 
-.offre-dates {
+/* ── Pied de carte ──────────────────────────────────────────────────────
+   `margin-top: auto` le colle en bas : dans une grille, les échéances de trois
+   cartes voisines s'alignent quelle que soit la longueur des intitulés, et se
+   comparent d'un coup d'œil au lieu de flotter chacune à sa hauteur. */
+.offre-pied {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--e1) var(--e4);
-  margin: 0 0 var(--e4);
+  align-items: baseline;
+  gap: var(--e1) var(--e3);
+  margin-top: auto;
+  padding-top: var(--e3);
+}
+
+/* L'échéance : le seul chiffre de la carte sur lequel on peut agir.
+   `tabular-nums` pour que « 4 jours » et « 19 jours » s'alignent d'une carte
+   à l'autre. */
+.offre-jours {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--texte);
+}
+
+.offre-jours--urgent {
+  padding: 2px var(--e2);
+  border-radius: 999px;
+  background: var(--attention-fond);
+  color: var(--attention);
+  border: 1px solid var(--attention);
+}
+
+/* La date de publication descend d'un cran : elle situe l'annonce, elle
+   n'appelle aucune décision. */
+.offre-publiee {
   font-size: var(--t-xs);
   color: var(--texte-doux);
-}
-
-.offre-echeance {
-  font-weight: 600;
-}
-
-/* Le bouton occupe toute la largeur sur téléphone : c'est l'action de la
-   carte, elle doit être atteignable au pouce sans viser. */
-.offre-carte .btn {
-  width: 100%;
 }
 
 @media (min-width: 560px) {
@@ -372,9 +445,6 @@
     font-size: var(--t-base);
   }
 
-  .offre-carte .btn {
-    width: auto;
-  }
 }
 
 @media (min-width: 700px) {
@@ -469,4 +539,112 @@
 
 .offres-filtre--recherche input {
   width: 100%;
+}
+
+
+/* ── « Voir N offres de plus » ───────────────────────────────────────────
+   Le compte est écrit à côté du bouton : sans lui, on clique sans savoir si
+   l'on est au dixième ou à la fin, et l'on abandonne par prudence. */
+.offres-suite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--e3);
+  margin-block: var(--e5);
+}
+
+.offres-suite-reste {
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ── Squelette de chargement ─────────────────────────────────────────────
+   Il occupe la place exacte de six cartes. Sans lui, la page affichait une
+   ligne de texte sur fond vide avec le pied remonté sous le titre, puis
+   passait d'un coup à 25 000 px : le lecteur perdait sa position et le pied
+   de page lui échappait sous le doigt.
+
+   `aria-hidden` : c'est un décor. L'annonce du chargement passe par le
+   `role="status"` en `.sr-only`, une fois, au lieu de six blocs vides. */
+.offres-liste--squelette {
+  pointer-events: none;
+}
+
+.offre-squelette {
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
+  padding: var(--e4);
+  min-height: 13rem;
+  background: var(--surface);
+  border: 1px solid var(--bordure);
+  border-left: 3px solid var(--bordure);
+  border-radius: var(--rayon-lg);
+}
+
+.sq {
+  display: block;
+  height: 0.75rem;
+  border-radius: 4px;
+  background: var(--surface-2);
+  animation: sq-pulse 1.6s ease-in-out infinite;
+}
+
+.sq--eyebrow { width: 40%; }
+.sq--titre { height: 1.1rem; width: 90%; }
+.sq--court { width: 55%; }
+.sq--ligne { width: 70%; }
+.sq--pied { width: 30%; margin-top: auto; }
+
+/* Le battement est une INDICATION D'ATTENTE, pas une décoration : sans lui
+   la page a l'air figée. Il reste le seul mouvement de l'écran, et il
+   s'arrête pour qui demande moins d'animation. */
+@media (prefers-reduced-motion: reduce) {
+  .sq {
+    animation: none;
+  }
+}
+
+/* ── Barre de contrôle : tout s'aligne sur la même ligne de base ─────────
+   Le compte se centrait verticalement (`align-items: center`) pendant que les
+   champs, surmontés de leur libellé, descendaient plus bas : « 230 offres
+   affichées » flottait à mi-hauteur entre le libellé RECHERCHER et son champ.
+   Rien n'était aligné sur rien.
+
+   `flex-end` cale le compte sur le BAS des champs, c'est-à-dire sur la ligne
+   que l'œil suit déjà — celle des bordures. */
+@media (min-width: 560px) {
+  .offres-barre {
+    align-items: flex-end;
+  }
+}
+
+/* Les largeurs venaient de `min-width: 16rem` sur le select et d'un
+   `flex: 1` sur la recherche : 350 px contre 535 px à l'écran, sans qu'aucune
+   décision ne l'ait voulu. La recherche est le contrôle principal (§ JSX), le
+   filtre employeur l'accompagne : trois pour deux, et c'est dit. */
+@media (min-width: 760px) {
+  .offres-filtre--recherche {
+    flex: 3 1 18rem;
+  }
+
+  .offres-filtre--employeur {
+    flex: 2 1 12rem;
+  }
+
+  .offres-filtre--employeur select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* La case retrouve la ligne de base des champs : `padding-bottom` la
+     décalait d'une valeur choisie à l'œil. */
+  .offres-filtre--case {
+    padding-bottom: 0;
+    min-height: 0;
+    align-self: flex-end;
+    height: 2.75rem;
+  }
 }

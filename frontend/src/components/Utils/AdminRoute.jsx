@@ -1,6 +1,7 @@
 // src/components/Utils/AdminRoute.jsx
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { accueilDuRole } from "./accueilDuRole";
 
 // Garde d'affichage pour les écrans d'administration.
 //
@@ -22,7 +23,7 @@ const AdminRoute = () => {
   // vers la connexion : il est déjà identifié, lui redemander ses identifiants
   // ne réglerait rien et donnerait à croire à une session expirée.
   if (userInfo.role !== "admin") {
-    return <Navigate to="/espace" replace />;
+    return <Navigate to={accueilDuRole(userInfo)} replace />;
   }
 
   return <Outlet />;

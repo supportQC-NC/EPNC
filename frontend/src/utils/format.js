@@ -55,15 +55,40 @@ export const dateIso = (valeur) => {
 };
 
 // Message d'échéance lisible : « Clôturée » ou « Plus que N jours ».
-export const echeance = (dateLimite) => {
+// En deçà, l'échéance cesse d'être une information et devient une urgence.
+//
+// Sept jours parce que c'est le délai en dessous duquel on ne peut plus
+// « y revenir la semaine prochaine » : préparer un dossier demande de relire
+// une lettre et un CV, pas dix minutes.
+export const URGENCE_JOURS = 7;
+
+// Jours restants avant une date limite, ou `null` si la date est absente ou
+// illisible.
+//
+// ⚠️ Comparaison au JOUR, pas à l'heure. Sur une différence brute en
+// millisecondes, une offre qui ferme demain à minuit affiche « 0 jour » dès
+// qu'il est 15 h — et « dernier jour » au lieu de « demain » avance l'échéance
+// d'une journée dans la tête de la personne.
+//
+// Cette fonction vivait aussi, recopiée, dans `EspaceScreen`. Deux calculs
+// d'échéance finissent par ne plus dire la même chose le jour où l'un des deux
+// est ajusté, et l'espace candidat annoncerait alors une autre date que la
+// liste des offres.
+export const joursAvant = (dateLimite) => {
   if (!dateLimite) return null;
   const fin = new Date(dateLimite);
   if (Number.isNaN(fin.getTime())) return null;
 
-  const jours = Math.ceil((fin.getTime() - Date.now()) / 86400000);
+  fin.setHours(23, 59, 59, 999);
+  return Math.ceil((fin.getTime() - Date.now()) / 86400000);
+};
+
+export const echeance = (dateLimite) => {
+  const jours = joursAvant(dateLimite);
+  if (jours === null) return null;
 
   if (jours < 0) return "Candidatures closes";
-  if (jours === 0) return "Dernier jour pour candidater";
-  if (jours === 1) return "Plus qu'un jour pour candidater";
-  return `Plus que ${jours} jours pour candidater`;
+  if (jours === 0) return "Dernier jour";
+  if (jours === 1) return "Plus qu'un jour";
+  return `Plus que ${jours} jours`;
 };

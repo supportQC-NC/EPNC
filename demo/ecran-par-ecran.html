@@ -1,0 +1,1001 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EPNC écran par écran</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+</head>
+<body>
+<style>
+  /* ══════════════════════════════════════════════════════════════════
+     Palette reprise des jetons du produit (frontend/src/index.css) :
+     le bleu institutionnel --marque, l'ambre --attention reserve aux
+     reserves et aux mises en garde, et des neutres legerement bleutes
+     plutot qu'un gris pur. Une page de presentation qui invente sa
+     propre identite ne presenterait plus le meme outil.
+     ══════════════════════════════════════════════════════════════════ */
+  :root {
+    --fond: #eef1f4;
+    --surface: #ffffff;
+    --surface-2: #e3e8ed;
+    --bordure: #ccd4dd;
+    --bordure-forte: #aab6c2;
+
+    --texte: #101922;
+    --texte-doux: #54606d;
+
+    --marque: #14507d;
+    --marque-clair: #1b6499;
+    --marque-doux: #e5edf4;
+
+    --attention: #7a4b00;
+    --succes: #1a5c1f;
+
+    --cadre: #0e141a;   /* le fond des captures : le produit est sombre */
+
+    --lg-page: 1180px;
+    --lg-texte: 62ch;
+
+    --t-micro: 0.72rem;
+    --t-petit: 0.86rem;
+    --t-base: 1.0rem;
+    --t-lead: 1.16rem;
+    --t-h3: 1.35rem;
+    --t-h2: clamp(1.7rem, 1.1rem + 2vw, 2.5rem);
+    --t-h1: clamp(2.4rem, 1.3rem + 4.2vw, 4.1rem);
+
+    --serif: "Newsreader", "Iowan Old Style", Georgia, serif;
+    --sans: "Public Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --fond: #0c1116;
+      --surface: #141b23;
+      --surface-2: #1c242d;
+      --bordure: #29333d;
+      --bordure-forte: #3a4753;
+
+      --texte: #e9eef4;
+      --texte-doux: #9fabb8;
+
+      --marque: #7fbde6;
+      --marque-clair: #a5d3f2;
+      --marque-doux: #11242f;
+
+      --attention: #e0a94a;
+      --succes: #9fd6a3;
+
+      --cadre: #070b0f;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --fond: #0c1116;
+    --surface: #141b23;
+    --surface-2: #1c242d;
+    --bordure: #29333d;
+    --bordure-forte: #3a4753;
+
+    --texte: #e9eef4;
+    --texte-doux: #9fabb8;
+
+    --marque: #7fbde6;
+    --marque-clair: #a5d3f2;
+    --marque-doux: #11242f;
+
+    --attention: #e0a94a;
+    --succes: #9fd6a3;
+
+    --cadre: #070b0f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding-inline: 20px;
+    padding-block: 0 0;
+    background: var(--fond);
+    color: var(--texte);
+    font-family: var(--sans);
+    font-size: var(--t-base);
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  img { max-width: 100%; display: block; }
+
+  a { color: var(--marque); text-underline-offset: 3px; }
+
+  :focus-visible {
+    outline: 2px solid var(--marque);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  .page { max-width: var(--lg-page); margin-inline: auto; }
+
+  /* ── Bandeau d'ouverture ──────────────────────────────────────── */
+  .ouverture {
+    padding-block: clamp(3rem, 8vw, 6rem) clamp(2rem, 5vw, 3.5rem);
+    border-bottom: 1px solid var(--bordure);
+  }
+
+  .surtitre {
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--texte-doux);
+    margin: 0 0 1.4rem;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: var(--t-h1);
+    font-weight: 600;
+    line-height: 1.04;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+    margin: 0 0 1.5rem;
+    max-width: 16ch;
+  }
+
+  .lede {
+    font-size: var(--t-lead);
+    color: var(--texte-doux);
+    max-width: var(--lg-texte);
+    margin: 0 0 2.5rem;
+  }
+
+  .lede strong { color: var(--texte); font-weight: 600; }
+
+  /* Bandeau de chiffres : ce sont des relevés, pas des arguments.
+     D'où le chiffre en mono et la provenance écrite sous chacun. */
+  .releve {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--bordure);
+    border: 1px solid var(--bordure);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .releve div { background: var(--surface); padding: 1.1rem 1.2rem; }
+
+  .releve dt {
+    font-family: var(--mono);
+    font-size: 1.7rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+
+  .releve dd {
+    margin: 0.45rem 0 0;
+    font-size: var(--t-petit);
+    line-height: 1.4;
+    color: var(--texte-doux);
+  }
+
+  .releve .fort { color: var(--attention); }
+
+  /* ── Sommaire ─────────────────────────────────────────────────── */
+  .sommaire {
+    padding-block: 2.2rem;
+    border-bottom: 1px solid var(--bordure);
+  }
+
+  .sommaire h2 {
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--texte-doux);
+    margin: 0 0 1rem;
+  }
+
+  .sommaire ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 0.5rem 2rem;
+    counter-reset: acte;
+  }
+
+  .sommaire li { counter-increment: acte; }
+
+  .sommaire a {
+    display: flex;
+    gap: 0.7rem;
+    align-items: baseline;
+    text-decoration: none;
+    color: var(--texte);
+    padding-block: 0.2rem;
+  }
+
+  .sommaire a::before {
+    content: counter(acte, upper-roman);
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    color: var(--marque);
+    min-width: 2ch;
+  }
+
+  .sommaire a:hover span { text-decoration: underline; }
+
+  /* ── Actes ────────────────────────────────────────────────────── */
+  .acte {
+    padding-block: clamp(3rem, 7vw, 5rem);
+    border-bottom: 1px solid var(--bordure);
+  }
+
+  .acte-entete { max-width: var(--lg-texte); margin-bottom: 2.5rem; }
+
+  .acte-num {
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--marque);
+    margin: 0 0 0.7rem;
+  }
+
+  .acte h2 {
+    font-family: var(--serif);
+    font-size: var(--t-h2);
+    font-weight: 600;
+    line-height: 1.12;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+    margin: 0 0 0.9rem;
+  }
+
+  .acte-intro { margin: 0; color: var(--texte-doux); }
+
+  /* ── Planches ─────────────────────────────────────────────────── */
+  .planches { display: flex; flex-direction: column; gap: 3.5rem; }
+
+  figure { margin: 0; }
+
+  .plaque-texte { max-width: var(--lg-texte); margin-bottom: 1.1rem; }
+
+  .plaque-titre {
+    font-size: var(--t-h3);
+    font-family: var(--serif);
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0 0 0.5rem;
+  }
+
+  .plaque-texte p { margin: 0; color: var(--texte-doux); }
+
+  /* La fenêtre reprend le cadre utilisé par le produit sur sa propre
+     page d'accueil : une capture posée nue flotte, et on ne sait plus
+     où finit la page et où commence l'écran photographié. */
+  .fenetre {
+    border: 1px solid var(--bordure-forte);
+    border-radius: 7px;
+    overflow: hidden;
+    background: var(--cadre);
+    box-shadow: 0 14px 34px -22px rgba(10, 22, 35, 0.55);
+  }
+
+  .fenetre-barre {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.8rem;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--bordure);
+  }
+
+  .fenetre-barre i {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--bordure-forte);
+    flex: none;
+  }
+
+  .fenetre-url {
+    margin-left: 0.5rem;
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    color: var(--texte-doux);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  figcaption {
+    margin-top: 0.9rem;
+    font-size: var(--t-petit);
+    color: var(--texte-doux);
+    max-width: var(--lg-texte);
+  }
+
+  /* Une mesure porte toujours sa provenance. « 74 % » sans « relevé sur
+     la donnée source » n'est pas une mesure, c'est une affiche. */
+  .mesure {
+    display: block;
+    margin-top: 0.7rem;
+    padding-left: 0.85rem;
+    border-left: 2px solid var(--marque);
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    line-height: 1.6;
+    color: var(--texte);
+  }
+
+  .mesure.reserve { border-left-color: var(--attention); }
+
+  /* ── Clôture ──────────────────────────────────────────────────── */
+  .cloture { padding-block: clamp(3rem, 7vw, 5rem) 4rem; }
+
+  .cloture h2 {
+    font-family: var(--serif);
+    font-size: var(--t-h2);
+    font-weight: 600;
+    line-height: 1.12;
+    margin: 0 0 1.2rem;
+    max-width: 20ch;
+  }
+
+  .cloture p { max-width: var(--lg-texte); color: var(--texte-doux); }
+
+  .reserves {
+    margin-top: 2.5rem;
+    padding: 1.4rem 1.6rem;
+    border: 1px solid var(--bordure);
+    border-left: 3px solid var(--attention);
+    border-radius: 3px;
+    background: var(--surface);
+    max-width: var(--lg-texte);
+  }
+
+  .reserves h3 {
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    margin: 0 0 0.8rem;
+    color: var(--attention);
+  }
+
+  .reserves ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    font-size: var(--t-petit);
+    color: var(--texte-doux);
+  }
+
+  .pied {
+    margin-top: 3rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--bordure);
+    font-family: var(--mono);
+    font-size: var(--t-micro);
+    color: var(--texte-doux);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<div class="page">
+
+  <header class="ouverture">
+    <p class="surtitre">HackAVP · Emploi Public NC · relevé du 13 septembre 2026</p>
+    <h1>L'outil, écran par écran</h1>
+    <p class="lede">
+      Une plateforme qui rassemble les avis de vacance de poste de la fonction
+      publique calédonienne, <strong>traduit ce que les annonces disent en
+      jargon</strong>, <strong>justifie chaque rapprochement attendu par
+      attendu</strong> et <strong>produit les pièces d'une candidature</strong>.
+      Ce qui suit est l'application telle qu'elle tourne, capturée sur le corpus
+      réel — pas une maquette.
+    </p>
+
+    <dl class="releve">
+      <div><dt>230</dt><dd>offres en base, dont 189 ouvertes</dd></div>
+      <div><dt>18</dt><dd>employeurs publics distincts</dd></div>
+      <div><dt class="fort">74 %</dt><dd>des offres ouvertes ne décrivent pas le poste</dd></div>
+      <div><dt>0 %</dt><dd>de faux positifs à l'évaluation</dd></div>
+    </dl>
+  </header>
+
+  <nav class="sommaire" aria-labelledby="titre-sommaire">
+    <h2 id="titre-sommaire">Les six moments de la chaîne</h2>
+    <ol>
+      <li><a href="#acte-1"><span>Ce que la page d'accueil promet</span></a></li>
+      <li><a href="#acte-2"><span>Ce que les employeurs publient vraiment</span></a></li>
+      <li><a href="#acte-3"><span>Entrer un parcours sans avoir de CV</span></a></li>
+      <li><a href="#acte-4"><span>Le rapprochement, et ce qu'il refuse de noter</span></a></li>
+      <li><a href="#acte-5"><span>Les pièces, et leur relecture</span></a></li>
+      <li><a href="#acte-6"><span>Ce que la personne accepte de partager</span></a></li>
+    </ol>
+  </nav>
+
+  <!-- ═══════════════════ ACTE I ═══════════════════ -->
+  <section class="acte" id="acte-1" aria-labelledby="titre-acte-1">
+    <div class="acte-entete">
+      <p class="acte-num">Acte I</p>
+      <h2 id="titre-acte-1">Ce que la page d'accueil promet</h2>
+      <p class="acte-intro">
+        Elle ne promet pas un emploi. Elle annonce trois choses vérifiables —
+        traduire, justifier, dire ce qu'on ignore — et elle affiche, dès le
+        deuxième écran, le chiffre qui la dessert le plus.
+      </p>
+    </div>
+
+    <div class="planches">
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">« Les offres publiques, enfin lisibles. »</h3>
+          <p>
+            L'aperçu à droite du titre n'est pas une illustration : c'est
+            l'écran de rapprochement de l'application, avec son score décomposé
+            et ses justifications dépliées.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc</span></div>
+          <img src="captures/01-accueil.jpg" alt="Page d'accueil : titre « Les offres publiques, enfin lisibles », boutons Voir les postes et Créer un compte, et à droite une fenêtre montrant un rapprochement noté 60 sur 100 avec le détail des attendus couverts." width="1524" height="784" loading="eager" decoding="async">
+        </div>
+        <figcaption>
+          La consultation est libre : missions, compétences attendues et
+          qualifications sont réservées aux comptes, mais la liste et l'aperçu
+          des offres ne demandent rien.
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Le constat, avant l'argumentaire</h3>
+          <p>
+            Trois chiffres, calculés en direct sur la base. Celui du milieu est
+            le défaut principal du service — il est en ambre, à la deuxième
+            section, et non enterré dans une note de bas de page.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc</span></div>
+          <img src="captures/02-constat.jpg" alt="Section « Chercher un emploi public, aujourd'hui » : 18 employeurs publics, 74 % des offres ne décrivent pas le poste, 38 corps et grades différents." width="1524" height="784" loading="eager" decoding="async">
+        </div>
+        <figcaption>
+          <span class="mesure reserve">
+            74 % = 139 avis ouverts sur 189 ne publient ni missions ni
+            compétences attendues. Compté sur les documents en base, pas estimé.
+            Tout vit dans le PDF de l'avis officiel : ce n'est pas un défaut de
+            l'adaptateur, c'est la source.
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Des situations, pas des témoignages</h3>
+          <p>
+            À l'endroit où une page de vente met un carrousel de témoignages, il
+            n'y a rien : le service n'a pas encore d'utilisateurs réels, et de
+            fausses citations au-dessus d'une promesse de « rien d'inventé »
+            feraient de cette promesse du décor.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc</span></div>
+          <img src="captures/03-situations.jpg" alt="Section « Ça vous ressemble ? » avec trois situations : vous avez un métier pas un CV ; vous avez postulé sans savoir pourquoi ça n'a pas marché ; vous n'avez pas le temps de réécrire une lettre par offre." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          Trois situations à la deuxième personne, chacune suivie de ce que
+          l'outil fait — au présent, sans conditionnel ni promesse de résultat.
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Vous renseignez. L'outil adapte. Le recruteur comprend.</h3>
+          <p>
+            Une seule décision technique produit les deux bénéfices : le profil
+            est stocké en JSON&nbsp;Resume et le CV est <em>composé</em> à
+            partir de lui, jamais rédigé en texte libre.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc</span></div>
+          <img src="captures/04-deux-cotes.jpg" alt="Deux colonnes à poids égal : pour les candidats, un profil autant de CV que de postes ; pour les recruteurs, des dossiers qui se comparent, pas qui se déchiffrent." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          Les deux publics sont côte à côte et à poids égal : l'outil n'a pas un
+          public principal et un public toléré. Le rapprochement fonctionne dans
+          les deux sens — du profil vers les postes, et du poste vers le vivier.
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ACTE II ═══════════════════ -->
+  <section class="acte" id="acte-2" aria-labelledby="titre-acte-2">
+    <div class="acte-entete">
+      <p class="acte-num">Acte II</p>
+      <h2 id="titre-acte-2">Ce que les employeurs publient vraiment</h2>
+      <p class="acte-intro">
+        Les avis viennent de jeux de données publics, republiés tels quels et
+        normalisés au format <code>schema.org/JobPosting</code>. Aucune saisie
+        manuelle, aucune offre ajoutée, aucun contenu réécrit — et, là où la
+        source est muette, un écran qui le dit.
+      </p>
+    </div>
+
+    <div class="planches">
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">230 offres, 18 employeurs, un seul format</h3>
+          <p>
+            OPT-NC, Nouvelle-Calédonie, provinces, hôpitaux, communes, Congrès,
+            ISEE. Chacun publie de son côté, dans son format ; ils arrivent ici
+            au même.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/offres</span></div>
+          <img src="captures/05-offres.jpg" alt="Liste des offres : 230 offres affichées, 41 clôturées, filtre par employeur (18 employeurs), et une grille de cartes avec l'employeur, le lieu et le délai restant." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          L'employeur est indiqué sur chaque offre, sous son vrai nom. Un
+          employeur absent du registre n'est jamais rangé dans « Autre ».
+          <span class="mesure">
+            Deux sources, un seul schéma : un seul fichier
+            (<code>avpNormaliser.js</code>) connaît la forme d'origine. Le
+            JSON-LD reçu est conservé intact et ressort tel quel sur
+            <code>GET /api/avps/:slug/jobposting</code>.
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Le jargon traduit — et la réserve affichée avec</h3>
+          <p>
+            « ACDP-Grille rémunération 2-Diplôme niveau V » devient « poste
+            contractuel, niveau CAP-BEP ». La traduction est posée
+            <em>à côté</em> du libellé officiel, jamais à sa place.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/offres/23-1353</span></div>
+          <img src="captures/06-langage-clair.jpg" alt="Fiche d'offre Garde champêtre : le corps traduit en langage clair avec la mention « À vérifier : la source emploie ce sigle sans jamais le développer », suivi du bloc « Cet employeur ne publie pas le détail du poste »." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          <span class="mesure reserve">
+            « À vérifier » : la source emploie ce sigle sans jamais le
+            développer. C'est une lecture, pas une certitude, et l'écran le dit
+            — 38 corps et grades sont couverts, chacun marqué comme établi ou
+            partiel.
+          </span>
+          <span class="mesure reserve">
+            « Cet employeur ne publie pas le détail du poste » → conséquence
+            assumée : <strong>aucun score n'est affiché pour cette offre</strong>.
+            Mieux vaut ne rien annoncer que noter un poste sur ce qu'on aurait
+            supposé. L'écran propose alors ce qui reste faisable : s'appuyer sur
+            le corps, appeler le service, préparer quand même un dossier.
+          </span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ACTE III ═══════════════════ -->
+  <section class="acte" id="acte-3" aria-labelledby="titre-acte-3">
+    <div class="acte-entete">
+      <p class="acte-num">Acte III</p>
+      <h2 id="titre-acte-3">Entrer un parcours sans avoir de CV</h2>
+      <p class="acte-intro">
+        Le hackathon insiste sur le candidat <em>sans</em> CV. Trois portes
+        d'entrée existent donc : le formulaire, l'import d'un JSON&nbsp;Resume,
+        et un entretien qui pose les questions à la place du formulaire.
+      </p>
+    </div>
+
+    <div class="planches">
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">« Racontez-le avec vos mots »</h3>
+          <p>
+            Un emploi, mais aussi un stage, du bénévolat, un coup de main dans
+            l'entreprise d'un proche, s'occuper de quelqu'un, encadrer une
+            équipe sportive. « L'orthographe n'a aucune importance ici. »
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/entretien</span></div>
+          <img src="captures/07-entretien-question.jpg" alt="Écran « Construisons votre parcours ensemble » : quatre étapes, une question ouverte, et une zone de texte libre avec l'indication que l'orthographe n'a aucune importance." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          Quatre étapes : ce que vous avez fait, ce que vous avez appris, ce que
+          vous cherchez, récapitulatif. Chaque question peut être passée.
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">« Voici ce que j'ai compris » — à corriger</h3>
+          <p>
+            Le texte brut devient une expérience structurée <em>et</em> une
+            liste de compétences, chacune rapprochée du vocabulaire que les
+            offres emploient réellement. Rien n'est enregistré sans validation.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/entretien</span></div>
+          <img src="captures/08-entretien-competences.jpg" alt="Résultat de la mise en forme : intitulé « Employé de magasin », lieu Koné, description reformulée, et quatre compétences cochées — Encaissement, Réception de marchandises, Gestion des commandes, Formation — avec leur équivalent dans le vocabulaire des offres." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          « Tenir la caisse du magasin de mon oncle » devient
+          <em>Encaissement</em>, <em>Réception de marchandises</em>,
+          <em>Gestion des commandes</em>, <em>Formation</em> — et chacune
+          indique sous quel libellé les annonces la nomment.
+          <span class="mesure">
+            Aucun fait n'est ajouté : ce qui manque (le nom de l'employeur, les
+            dates) est <strong>demandé</strong> dans un encadré « Ce qui
+            aiderait, si vous le savez », jamais deviné. Les cases sont
+            décochables : c'est une proposition, pas un verdict.
+          </span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ACTE IV ═══════════════════ -->
+  <section class="acte" id="acte-4" aria-labelledby="titre-acte-4">
+    <div class="acte-entete">
+      <p class="acte-num">Acte IV</p>
+      <h2 id="titre-acte-4">Le rapprochement, et ce qu'il refuse de noter</h2>
+      <p class="acte-intro">
+        Le score se formule dans un vocabulaire public et opposable — le
+        référentiel métiers de l'OPT-NC — jamais en similarité opaque. Quatre
+        composantes, 100 points, ramenés aux composantes <em>applicables</em>.
+      </p>
+    </div>
+
+    <div class="planches">
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Chaque point pointe vers deux extraits</h3>
+          <p>
+            L'attendu de l'annonce d'un côté, l'élément du parcours qui le
+            couvre de l'autre. Les écarts sont listés aussi, et le nombre
+            d'attendus non couverts est écrit.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/matchs</span></div>
+          <img src="captures/09-rapprochement.jpg" alt="Écran des correspondances : un poste noté 40 sur 100, calculé sur 48 points de barème, avec quatre composantes — référentiel métier neutralisée, attendus de la fiche 11 sur 25, expérience 8 sur 15, projet professionnel 0 sur 8." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          <span class="mesure">
+            « 40/100, calculé sur 48 points de barème » : la fiabilité du score
+            est affichée. Sous 40 points applicables, le poste est marqué
+            <strong>non évaluable</strong> plutôt que noté sur du vide.
+          </span>
+          <span class="mesure">
+            Les contraintes dures <strong>filtrent, elles ne pondèrent pas</strong> :
+            quelqu'un sans le permis exigé ne doit pas apparaître à 62 %, il ne
+            doit pas apparaître — et les écartés sont renvoyés à part, avec leur
+            motif.
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Une composante neutralisée, avec le motif</h3>
+          <p>
+            L'offre annonce « Chargé d'études juridiques », mais son code OP007
+            correspond à « Chargé d'études marketing » au référentiel. Les deux
+            divergent : la composante est neutralisée plutôt que de noter un
+            profil juridique sur des compétences marketing.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/matchs</span></div>
+          <img src="captures/10-neutralisation.jpg" alt="Un rapprochement où le métier déclaré par l'offre ne correspond pas à son code au référentiel : un encadré rouge explique la neutralisation, et la composante affiche le détail de l'incohérence." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          Neutralisée, pas mise à zéro : une donnée manquante ou incohérente
+          <em>côté employeur</em> ne doit pas pénaliser le candidat.
+          <span class="mesure">
+            Évaluation sur vérité terrain étiquetée à la main (8 personas × familles
+            de postes, 89 paires mesurées, 13/09/2026) :
+            <strong>exactitude 45 %, faux positifs 0 %, faux négatifs 88 %</strong>.
+            Le moteur rate des rapprochements justes plutôt que d'en inventer —
+            l'arbitrage est assumé, pas subi.
+          </span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ACTE V ═══════════════════ -->
+  <section class="acte" id="acte-5" aria-labelledby="titre-acte-5">
+    <div class="acte-entete">
+      <p class="acte-num">Acte V</p>
+      <h2 id="titre-acte-5">Les pièces, et leur relecture</h2>
+      <p class="acte-intro">
+        Quatre pièces : la lettre et le CV partent chez l'employeur ; l'analyse
+        du rapprochement et la préparation à l'entretien restent pour le
+        candidat. Un second appel au modèle relit la lettre « en recruteur »
+        avant qu'elle ne soit proposée.
+      </p>
+    </div>
+
+    <div class="planches">
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">La production est annoncée, deux fois</h3>
+          <p>
+            Un bandeau au-dessus du dossier, un second sur chaque pièce. « Rien
+            ne part en votre nom sans que vous l'ayez relu et validé — c'est
+            vous qui signez cette candidature. »
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/candidatures/…</span></div>
+          <img src="captures/11-lettre.jpg" alt="Dossier de candidature : bandeau signalant que les textes sont rédigés automatiquement par gpt-4o-mini, puis la lettre produite, et la mention « Relu comme un recruteur : 4 sur 10, réécrit pour en tenir compte »." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          Les pièces destinées à l'employeur ne portent, elles, <em>aucune</em>
+          mention de la façon dont elles ont été produites : ni titre d'outil,
+          ni pied de page. C'est le règlement.
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Ce que la passe de critique a retiré</h3>
+          <p>
+            La note du relecteur est affichée au candidat, et le détail se
+            déplie : voici les phrases que le modèle avait écrites et que le
+            profil ne soutenait pas.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/candidatures/…</span></div>
+          <img src="captures/12-critique.jpg" alt="Détail de la relecture : « écarté, car le profil ne correspond pas aux compétences techniques requises », puis « Affirmations absentes de votre profil, supprimées » avec deux phrases citées." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          <span class="mesure">
+            Mesuré : la lettre passe de <strong>4/10 à 6/10</strong> à la passe
+            de critique. Sous le seuil, ou dès qu'une invention est signalée,
+            une réécriture est produite, <strong>renotée</strong>, et la
+            meilleure des deux versions est gardée.
+          </span>
+          <span class="mesure reserve">
+            Longueur médiane des lettres : <strong>231 mots</strong> pour une
+            cible de 250-300. Le plan en quatre paragraphes a fait passer la
+            médiane de 175 à 231, puis un plafond du modèle subsiste. Caractérisé,
+            pas résolu.
+          </span>
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ ACTE VI ═══════════════════ -->
+  <section class="acte" id="acte-6" aria-labelledby="titre-acte-6">
+    <div class="acte-entete">
+      <p class="acte-num">Acte VI</p>
+      <h2 id="titre-acte-6">Ce que la personne accepte de partager</h2>
+      <p class="acte-intro">
+        Le vivier met des parcours, des coordonnées et des CV de personnes
+        réelles à disposition d'employeurs. Y figurer est une décision séparée,
+        explicite, datée et réversible — jamais un effet de bord de
+        l'inscription.
+      </p>
+    </div>
+
+    <div class="planches">
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">La liste exacte, dépliée avant la décision</h3>
+          <p>
+            Quatre groupes : ce qu'un recruteur voit dès la liste de recherche,
+            ce qui n'apparaît qu'en ouvrant la fiche, ce qu'il peut en faire, et
+            ce qui ne sort jamais.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/profil</span></div>
+          <img src="captures/13-consentement.jpg" alt="Section Visibilité auprès des recruteurs : « Votre profil n'est visible d'aucun recruteur », puis quatre listes détaillant ce qui serait partagé, dont le CV en PDF et le profil au format JSON Resume." width="1524" height="784" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          Rien n'est replié derrière un « en savoir plus » : cacher ce sur quoi
+          on demande un accord est le contraire d'un consentement éclairé.
+          <span class="mesure">
+            La liste vient du serveur, du même endroit que le code qui
+            l'applique. Elle nomme ce qu'une phrase générale laissait de côté :
+            la <strong>photo dès la liste</strong>, le <strong>CV en PDF</strong>,
+            l'<strong>export JSON Resume</strong>, et le rapprochement du profil
+            avec les postes du recruteur, <strong>écarts compris</strong>.
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">L'accord est daté, et le retrait aussi</h3>
+          <p>
+            « Votre profil est consultable par les recruteurs depuis le
+            13 septembre 2026. » Accepter demande deux gestes ; retirer en
+            demande un seul, sans confirmation et sans justification.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/profil</span></div>
+          <img src="captures/14-consentement-actif.jpg" alt="La même section une fois le consentement donné : la date d'acceptation, un bouton Retirer ma visibilité, et la liste de ce que les recruteurs voient, consultable à nouveau." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          <span class="mesure">
+            La garde est côté serveur : <code>PUT /api/profil</code>
+            <strong>refuse</strong> une activation qui ne porte pas la version
+            du texte accepté. Un import, un script ou un futur écran distrait ne
+            peuvent pas exposer quelqu'un à qui rien n'a été montré.
+          </span>
+          <span class="mesure">
+            Si la liste change, les accords antérieurs sont signalés et il est
+            demandé de relire — mais le profil n'est <strong>pas</strong> masqué
+            d'office : faire disparaître quelqu'un d'un vivier sans qu'il l'ait
+            demandé serait une décision prise à sa place.
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">À l'inscription : ce qui sort, dit avant</h3>
+          <p>
+            La case n'est pas pré-cochée et le bouton reste inactif tant qu'elle
+            ne l'est pas. Le texte dit les deux choses qui comptent : le profil
+            n'est visible d'aucun recruteur par défaut, et la rédaction assistée
+            transmet le profil à un prestataire tiers.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/inscription</span></div>
+          <img src="captures/15-inscription.jpg" alt="Formulaire d'inscription en affichage étroit : un encadré rappelle que le profil n'est visible d'aucun recruteur et que la rédaction transmet le profil à OpenAI, une case à cocher non pré-cochée, et le bouton Créer mon compte désactivé." width="960" height="911" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          Capture prise en affichage étroit : la mise en page est déclinée du
+          mobile vers le bureau, et le menu se replie sous 1100 px — mais jamais
+          l'identité ni « Se connecter ».
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Un service indépendant, et qui le dit en premier</h3>
+          <p>
+            Aucun lien officiel avec l'OPT-NC, la Nouvelle-Calédonie, les
+            provinces ni aucun employeur dont le service republie les avis.
+            Aucune candidature reçue ni transmise pour leur compte.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/mentions-legales</span></div>
+          <img src="captures/16-mentions-legales.jpg" alt="Mentions légales : encadré « Un service indépendant », puis la rubrique Éditeur où responsable de la publication, contact et hébergement sont marqués « à compléter avant mise en ligne »." width="1524" height="784" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          <span class="mesure reserve">
+            Trois champs sont affichés « à compléter avant mise en ligne »
+            plutôt que remplis d'un nom plausible. Un faux responsable de
+            publication dans des mentions légales est pire qu'une mention
+            manquante : il désigne quelqu'un qui n'existe pas.
+          </span>
+        </figcaption>
+      </figure>
+
+      <figure>
+        <div class="plaque-texte">
+          <h3 class="plaque-titre">Le tiers, annoncé en première section</h3>
+          <p>
+            La plupart des outils de cette catégorie enterrent cette
+            information en bas de page. Elle est ici la première chose qu'on
+            lit, parce que c'est la seule qui peut faire changer d'avis
+            quelqu'un <em>avant</em> de saisir son parcours.
+          </p>
+        </div>
+        <div class="fenetre">
+          <div class="fenetre-barre"><i></i><i></i><i></i><span class="fenetre-url">emploi-public.nc/confidentialite</span></div>
+          <img src="captures/17-confidentialite.jpg" alt="Page « Vos données » : la première section, « Ce qui sort de la plateforme », explique que le contenu du profil et de l'offre est transmis à OpenAI au moment de la production d'une pièce, et pas avant." width="1568" height="738" loading="lazy" decoding="async">
+        </div>
+        <figcaption>
+          « Cette transmission n'a lieu qu'au moment où vous demandez la
+          production d'une pièce. » Consulter des offres, remplir son profil ou
+          voir ses correspondances ne déclenche aucun envoi — et le reste de la
+          plateforme fonctionne sans cette fonction.
+        </figcaption>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════ CLÔTURE ═══════════════════ -->
+  <section class="cloture" aria-labelledby="titre-cloture">
+    <h2 id="titre-cloture">Ce que l'outil ne fait pas</h2>
+    <p>
+      Un outil honnête ne peut pas promettre de corriger ce que les employeurs
+      ne publient pas. Il peut traduire ce qui existe, justifier chaque
+      rapprochement, et dire clairement ce qu'il ignore. Les réserves ci-dessous
+      sont les nôtres, mesurées, et elles figurent aussi dans le dépôt.
+    </p>
+
+    <div class="reserves">
+      <h3>Réserves</h3>
+      <ul>
+        <li>
+          <strong>74 % des offres ouvertes ne sont pas notables.</strong> Trois
+          correctifs plausibles ont été essayés et écartés par la mesure :
+          jointure ROME, inférence ROME, rapprochement par libellé. Aucun ne
+          tenait sur la donnée réelle.
+        </li>
+        <li>
+          <strong>Rappel de 12 % à l'évaluation.</strong> Le moteur est prudent
+          par construction : il rate des rapprochements justes plutôt que d'en
+          inventer. Zéro faux positif est le critère qui a été privilégié.
+        </li>
+        <li>
+          <strong>Lettres à 231 mots de médiane</strong> pour une cible de
+          250-300 ; 14 % seulement atteignent la cible. Le levier non essayé est
+          un modèle plus capable que <code>gpt-4o-mini</code>.
+        </li>
+        <li>
+          <strong>Accessibilité : 0 violation axe-core sur 9 écrans</strong>,
+          mais axe ne voit pas tout — la relecture au lecteur d'écran des écrans
+          de rapprochement reste à faire.
+        </li>
+        <li>
+          <strong>Le cadrage juridique des pages légales doit être validé par un
+          juriste</strong> : la Nouvelle-Calédonie n'est pas soumise au RGPD dans
+          les mêmes termes que la métropole.
+        </li>
+      </ul>
+    </div>
+
+    <p class="pied">
+      Captures prises le 13 septembre 2026 sur l'application en fonctionnement,
+      corpus réel (230 offres, 189 ouvertes, 18 employeurs). Les profils
+      utilisés en démonstration sont fictifs. Aucune adresse de recrutement
+      réelle n'est joignable par le code.
+    </p>
+  </section>
+
+</div>
+</body>
+</html>

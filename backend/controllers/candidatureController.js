@@ -40,6 +40,30 @@ const listerMesCandidatures = asyncHandler(async (req, res) => {
     parStatut[c.statut] = (parStatut[c.statut] || 0) + 1;
   });
 
+  // ════════════════════════════════════════════════════════════════════════
+  //  L'ECHEANCE DE L'OFFRE VOYAGE AVEC LE DOSSIER
+  // ════════════════════════════════════════════════════════════════════════
+  // La candidature recopie l'intitule et la direction au moment ou elle est
+  // creee, mais PAS la date limite — et c'est le seul fait reellement urgent
+  // d'une recherche d'emploi. Sans elle, l'espace candidat ne pouvait
+  // qu'afficher des compteurs (« 1 brouillon »), jamais « ce dossier ferme
+  // dans trois jours ». Un compteur ne fait rien faire.
+  //
+  // Une seule requete pour toute la liste, sur les identifiants deja connus :
+  // charger l'offre dossier par dossier ferait N requetes pour une colonne.
+  //
+  // ⚠️ L'echeance est LUE, jamais recopiee dans la candidature. Un employeur
+  // peut prolonger ou avancer une date ; une copie figee annoncerait une
+  // echeance fausse a quelqu'un qui s'organise dessus.
+  const offres = await Avp.find(
+    { _id: { $in: candidatures.map((c) => c.avp).filter(Boolean) } },
+    "dateLimite",
+  ).lean();
+
+  const echeances = new Map(
+    offres.map((o) => [String(o._id), o.dateLimite || null]),
+  );
+
   res.json({
     total: candidatures.length,
     parStatut,
@@ -52,9 +76,15 @@ const listerMesCandidatures = asyncHandler(async (req, res) => {
       envoyeeLe: c.envoyeeLe,
       createdAt: c.createdAt,
       updatedAt: c.updatedAt,
+      // `null` a deux sens differents, et les confondre serait mentir :
+      // l'offre n'a pas de date limite publiee, ou l'offre a disparu de la
+      // base. Dans les deux cas on n'affiche pas d'echeance — mais on ne
+      // fabrique pas non plus une date par defaut.
+      dateLimite: echeances.get(String(c.avp)) || null,
       // On expose l'état d'avancement, pas le contenu : la liste n'a pas
       // besoin de charger quatre textes longs par ligne.
       piecesRemplies: PIECES.filter((p) => Boolean(c.pieces?.[p]?.contenu)).length,
+      piecesTotal: PIECES.length,
     })),
   });
 });

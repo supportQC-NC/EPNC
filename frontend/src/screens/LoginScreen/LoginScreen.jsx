@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { useLoginMutation } from "../../slices/userApiSlice";
 import { setCredentials } from "../../slices/authSlice";
+import { accueilDuRole } from "../../components/Utils/accueilDuRole";
 import "../auth.css";
 import { messageErreur } from "../../utils/erreurApi";
 
@@ -20,7 +21,7 @@ const LoginScreen = () => {
 
   // PrivateRoute mémorise la page demandée avant la redirection : on y revient
   // après connexion plutôt que d'atterrir systématiquement sur l'accueil.
-  const destination = location.state?.from?.pathname || "/espace";
+  const demandee = location.state?.from?.pathname;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +29,11 @@ const LoginScreen = () => {
     try {
       const res = await login({ email, password }).unwrap();
       dispatch(setCredentials(res));
-      navigate(destination, { replace: true });
+      // Le rôle vient de la RÉPONSE, pas du store : `setCredentials` vient
+      // d'être distribué et le sélecteur de ce composant ne sera relu qu'au
+      // rendu suivant. Lire le store ici renverrait un recruteur vers
+      // l'espace candidat une fois sur deux, selon le moment du rendu.
+      navigate(demandee || accueilDuRole(res), { replace: true });
     } catch (err) {
       setError(messageErreur(err, "Connexion impossible. Vérifiez vos identifiants."));
     }

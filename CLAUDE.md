@@ -948,6 +948,291 @@ fichier suffit à l'activer, aucun code à toucher. Voir
 aucun emblème officiel : l'application n'a **aucun lien** avec l'OPT-NC ni les
 collectivités dont elle republie les offres.
 
+## 16 bis. L'espace candidat — une file, pas un tableau de bord
+
+`EspaceScreen` · `/espace` · `components/Utils/accueilDuRole.js`.
+
+Le commentaire de la version précédente annonçait : « il répond à une seule
+question : qu'est-ce que j'ai à faire maintenant ? ». Ce qu'il affichait,
+c'étaient trois cartes de chiffres — **100 %** de complétude, **1** candidature,
+un paragraphe sur les offres — puis « Brouillon : 1 ».
+
+**Aucun de ces éléments n'est une chose à faire.** Un profil complet à 100 %
+n'appelle rien ; un compteur de dossiers non plus. Sur le seul écran par lequel
+tout le monde passe après s'être connecté, l'outil informait la personne de son
+propre état au lieu de la remettre au travail.
+
+### Ce qui le remplace
+
+Une **file d'actions**, ordonnée par ce qui coûte le plus cher à rater :
+
+1. profil sous `COMPLETUDE_MINIMALE` — rien ne peut être produit ;
+2. un dossier dont l'offre **ferme dans 7 jours ou moins** ;
+3. un dossier commencé et laissé en plan ;
+4. profil complétable ;
+5. correspondances jamais consultées ;
+6. visibilité au vivier — proposée **une fois, en dernier, en bouton
+   secondaire**. Ce n'est pas une tâche, c'est un choix : un service public
+   n'a pas à pousser quelqu'un à se rendre visible, il a à s'assurer qu'il
+   sait que c'est possible.
+
+🔴 **Et quand il n'y a rien, on le dit.** La tentation d'un tableau de bord est
+de toujours trouver quelque chose à mettre en avant. Fabriquer une tâche pour
+remplir un écran apprend à l'ignorer — y compris le jour où l'entrée est un
+dossier qui ferme dans deux jours.
+
+⚠️ Le seuil de la file est le **même** que `matchController.COMPLETUDE_MINIMALE`
+(30). Proposer « voir les postes qui correspondent » en dessous enverrait la
+personne sur le 400 que le contrôleur renvoie.
+
+### L'échéance voyage avec le dossier
+
+`listerMesCandidatures` expose désormais `dateLimite` et `piecesTotal`. La
+candidature recopie l'intitulé et la direction à sa création, mais **pas** la
+date limite — or c'est le seul fait réellement urgent d'une recherche d'emploi.
+Sans elle, l'écran ne pouvait qu'afficher « 1 brouillon », jamais « ce dossier
+ferme dans trois jours ». **Un compteur ne fait rien faire.**
+
+⚠️ L'échéance est **lue** sur l'`Avp`, jamais recopiée : un employeur peut
+prolonger ou avancer une date, et une copie figée annoncerait une échéance
+fausse à quelqu'un qui s'organise dessus. Une seule requête pour toute la
+liste, sur les identifiants déjà connus.
+
+### 🔴 Un recruteur atterrissait sur l'espace candidat
+
+`/espace` était écrit **en dur** à cinq endroits (connexion, `PublicOnlyRoute`,
+`AdminRoute`, `RecruteurRoute`, redirection de la racine). Un recruteur qui se
+connectait voyait donc un écran lui proposant de compléter son parcours, de
+consulter « les postes qui correspondent à **votre parcours** », et de se
+rendre visible auprès des recruteurs — c'est-à-dire auprès de lui-même.
+
+Le défaut **existait avant** : il était masqué par trois cartes de chiffres
+assez neutres pour passer inaperçues. Il est devenu criant le jour où l'écran
+s'est mis à s'adresser à la personne.
+
+→ `accueilDuRole(userInfo)`, une seule source, utilisée partout.
+**Un administrateur garde `/espace`** délibérément : il doit pouvoir vérifier
+ce que voient les deux autres rôles (c'est déjà la règle de `Header.COMPTE`).
+
+⚠️ Après `login`, la destination est calculée sur le rôle **de la réponse**, pas
+du store : `setCredentials` vient d'être distribué et le sélecteur du composant
+ne sera relu qu'au rendu suivant. Lire le store là renverrait un recruteur vers
+l'espace candidat une fois sur deux, selon le moment du rendu.
+
+⚠️ Le retour anticipé `<Navigate>` est placé **après tous les hooks**, et les
+deux requêtes sont neutralisées par `skip`. Placé en tête du composant, il
+sauterait `useGetProfilQuery` et `useGetCandidaturesQuery` — React interdit un
+nombre de hooks variable d'un rendu à l'autre.
+
+Accessibilité : **0 violation**, 36 règles passées — après correction d'un
+`heading-order` (`h1` → `h3`) **introduit le jour même** dans cette refonte.
+C'est le cinquième défaut de cette famille (§ 17) : la vigilance ne remplace
+pas la mesure.
+
+## 16 ter. Le poids des listes — mesuré avant d'être corrigé
+
+`MatchsScreen` · `OffresScreen`.
+
+### 🔴 97 écrans pour dire 139 fois « je ne sais pas »
+
+Relevé sur le corpus réel, profil complet à 100 % :
+
+| | avant | après |
+|---|---|---|
+| `/matchs` — hauteur de page | **87 793 px** (97 écrans) | **6 067 px** (7,4) |
+| `/matchs` — nœuds DOM | 8 864 | **899** |
+| `/matchs` — hauteur d'une carte | ~750 px | **469 px** |
+| `/offres` — hauteur de page | 25 383 px (28 écrans) | **3 835 px** (4,2) |
+| `/offres` — nœuds DOM | 3 767 | **631** |
+
+L'écran qui porte **le cœur noté du projet** déroulait 189 fiches complètes —
+quatre composantes, quatre jauges, deux dépliants chacune. **139 d'entre elles
+étaient « non évaluables »** (fiabilité 23 < seuil 40). La démonstration du
+rapprochement expliqué était enterrée sous le bruit qu'elle sert à dénoncer, et
+le meilleur score évaluable (**44/100**) se découvrait après avoir fait défiler
+sept écrans.
+
+### Les trois corrections
+
+1. **Le chiffre est dit en premier** (`.matchs-bilan`) : « 50 postes sur 189
+   peuvent être évalués avec votre profil, et le plus proche est à 44/100 ».
+   Découvrir en descendant que rien n'atteint le seuil, après avoir lu dix
+   fiches, est plus décourageant que de le lire tout de suite — et donne
+   l'impression qu'on le cachait.
+2. **Les évaluables passent devant, par paquets de dix.** Le serveur les trie
+   déjà `fiable` d'abord puis par score (`matchingService`, l. 971) : on ne
+   recalcule rien, on lit `m.fiable`.
+3. **Les non évaluables deviennent une liste compacte, repliée.** Il n'y a
+   RIEN à décomposer sur ces offres : quatre composantes neutralisées répétées
+   139 fois n'informent personne. Un intitulé, un employeur, un lien.
+
+🔴 **Rien n'est masqué pour autant.** Le compte est écrit en toutes lettres, le
+groupe s'ouvre, le motif est rappelé. Supprimer ces 139 offres laisserait
+croire que le catalogue est plus riche qu'il ne l'est — le défaut inverse.
+
+### La composante neutralisée sort de la grille
+
+`composanteReferentiel` pèse **45 des 100 points**, mais n'est applicable que
+sur **2 offres du corpus** (§ 4). Sur toutes les autres, elle occupait un quart
+de chaque carte pour afficher une jauge absente et une phrase. Elle passe en
+**une ligne** sous les composantes qui portent réellement le score.
+
+« Neutralisée, pas à zéro » reste vrai et reste écrit : ce qui change est la
+place qu'elle prend, pas ce qu'elle dit.
+
+⚠️ **Et la grille passe en `auto-fit`.** Premier essai avec `repeat(2, 1fr)`
+conservé : les trois composantes restantes laissaient la troisième seule sur
+une deuxième rangée, et la page mesurait **7 023 px — plus haute APRÈS la
+simplification qu'avant**. Mesurer après chaque correction, pas seulement après
+la dernière.
+
+⚠️ **Pas d'`opacity` pour dire « inactif ».** Sur `.composante--neutre`, un
+`opacity: 0.75` avait fait tomber le contraste à 4,2:1 sur **278 éléments**
+sans qu'aucune couleur ne soit fautive dans la feuille de style (§ 17).
+
+### Pagination : un bouton, jamais un défilement infini
+
+`/matchs` par 10, `/offres` par 30. Dans les deux cas le **reste est écrit à
+côté du bouton** (« 60 sur 230 affichées ») : sans ce nombre, on clique sans
+savoir si l'on est au dixième ou à la fin, et l'on abandonne par prudence.
+
+Le défilement infini est écarté pour une raison précise : **le bas de ces deux
+pages porte du contenu**. Sous `/matchs` vivent les écartés et leurs motifs,
+que le règlement demande d'exposer ; sous `/offres`, le rythme de publication.
+Une page qui se rallonge toute seule les rend inatteignables.
+
+⚠️ **Tout changement de filtre ramène au premier paquet** (`filtrer()` dans
+`OffresScreen`). Sans cela, quelqu'un qui a déplié 120 offres puis tape une
+recherche reçoit 120 résultats d'un coup : le filtre paraît n'avoir rien
+allégé, et le bouton disparaît sans qu'on comprenne pourquoi.
+
+Accessibilité après refonte : **0 violation** sur les deux écrans, dépliants
+ouverts (45 règles sur `/matchs`, 40 sur `/offres`).
+
+## 16 quater. La passe de design des écrans de données
+
+`OffresScreen` · `MatchsScreen`. Ce que le design y règle, écran par écran.
+
+### Le liseré bleu n'accentuait rien
+
+Toutes les cartes d'offre ouvertes portaient un liseré gauche `--marque`. Une
+couleur posée **partout** cesse d'être un accent : elle devient la bordure de
+la carte, et le jour où il faut signaler quelque chose il ne reste plus de
+registre disponible.
+
+Il est donc **neutre par défaut**, et ne s'allume que pour dire quelque chose :
+`--attention` à sept jours ou moins de l'échéance (`URGENCE_JOURS`),
+`--bordure-forte` sur une offre close. Une colonne de repères ambre se descend
+à l'œil sans rien lire.
+
+⚠️ **Jamais la couleur seule** : la pastille du pied écrit « Plus que 3 jours »
+ou « Dernier jour ».
+
+### L'échéance était typographiée comme une date d'archive
+
+`Publiée le 11 septembre 2026` et `Plus que 19 jours pour candidater` étaient
+au **même corps, dans la même couleur**, séparés par un espace. La seule des
+deux sur laquelle on peut encore agir était indiscernable de l'autre.
+
+Le pied de carte les hiérarchise : l'échéance en gras et en `tabular-nums`, la
+publication d'un cran en dessous. `margin-top: auto` colle le pied en bas, donc
+les échéances de trois cartes voisines **s'alignent** et se comparent.
+
+### Trente boutons « En savoir plus »
+
+Une action par carte, répétée trente fois, pesait autant que les titres qu'elle
+accompagnait — pour une destination que le titre portait déjà.
+
+→ Supprimés. Le lien du titre est **étiré** sur toute la carte
+(`.offre-lien::after { inset: 0 }`). La souris clique n'importe où ; le lecteur
+d'écran n'entend **qu'un seul lien par carte**, nommé par l'intitulé du poste,
+au lieu de trente « En savoir plus » indiscernables hors contexte. Vérifié :
+1 lien par carte, clic au centre d'une carte vide → la bonne fiche.
+
+⚠️ `:focus-within` autant que `:hover` sur la carte. Au clavier, le contour de
+focus se dessine sur le texte du titre : sans ce rappel sur la carte, rien ne
+dit laquelle est sélectionnée dans une grille de trente.
+
+⚠️ Le voile de clôture garde `z-index: 2`, **au-dessus** du lien étiré (1).
+
+### Le score se lisait en chiffres seulement
+
+44 et 33 ne se comparent pas d'un coup d'œil : il faut lire, retenir,
+soustraire. Une **barre** sous le chiffre donne la quantité à l'œil pendant que
+le chiffre donne la valeur exacte. Elle prend la teinte du verdict, comme le
+liseré — les deux disent la même chose et ne doivent pas se contredire.
+
+- Largeur **fixe** (`9rem`) : sinon la barre de « 8/100 » serait plus courte que
+  celle de « 44/100 » par sa valeur ET par la largeur de son conteneur, ce qui
+  doublerait l'écart à l'œil.
+- `aria-hidden` : elle ne dit rien de plus que le nombre juste au-dessus.
+- ⚠️ **Contraste** : premier essai avec piste `--surface-2` (#1e2831) sur carte
+  `--surface` (#161e26) et remplissage `--bordure-forte` (#3d4a57) — en thème
+  sombre la piste disparaissait dans la carte et le remplissage s'y confondait.
+  La barre se lisait comme un tiret flottant. Piste passée en `--bordure`.
+
+### Les squelettes de chargement
+
+| Écran | Avant | Pourquoi c'est un défaut |
+|---|---|---|
+| `/offres` | « Chargement des offres… » | page vide, pied remonté sous le titre, puis **900 px → 25 000 px** d'un coup |
+| `/matchs` | « Rapprochement en cours… » | **~4 s** — la plus longue attente de l'application — devant une ligne de texte |
+
+Les squelettes occupent la place **et la forme** de ce qui arrive : six cartes
+d'offre, trois rapprochements avec titre, score et trois composantes. Ce n'est
+pas un décor d'attente générique, c'est l'annonce de ce qui vient.
+
+Sur `/matchs`, le texte **dit ce qui se passe** — « chaque poste ouvert est
+confronté à votre parcours, attendu par attendu » — au lieu de faire patienter
+sans rien expliquer.
+
+⚠️ `aria-hidden` sur les squelettes, et **une seule** annonce en `.sr-only`
+`role="status"`. Six blocs vides annoncés un par un rendraient l'attente pire
+au lecteur d'écran qu'à l'écran.
+
+⚠️ **`@keyframes sq-pulse` vit dans `index.css`**, pas dans un fichier d'écran.
+Les `@keyframes` sont globaux quel que soit le fichier qui les déclare : posée
+dans `OffresScreen.css`, l'animation servait au squelette de `MatchsScreen`
+**uniquement parce que CRA regroupe tout le CSS dans une seule feuille**. Le
+jour où les routes seraient chargées à la demande, le squelette des
+correspondances aurait cessé de battre sans la moindre erreur.
+
+Le battement est une **indication d'attente**, pas une décoration — un
+squelette immobile se lit comme une page figée — et il s'arrête sous
+`prefers-reduced-motion`.
+
+### La barre de filtres n'était alignée sur rien
+
+« 230 offres affichées » se centrait verticalement (`align-items: center`)
+pendant que les champs, surmontés de leur libellé, descendaient plus bas : le
+compte flottait à mi-hauteur entre le libellé RECHERCHER et son champ. Et les
+largeurs — **350 px** de recherche contre **535 px** d'employeur — ne venaient
+d'aucune décision, mais d'un `flex: 1` face à un `min-width: 16rem`.
+
+→ `align-items: flex-end` cale tout sur la ligne des bordures, celle que l'œil
+suit déjà. Et les proportions sont **dites** : `3fr` pour la recherche (le
+contrôle principal de l'écran), `2fr` pour le filtre employeur.
+
+### Le rythme interne des cartes passe par `gap`
+
+Les marges par élément se doublaient ou s'effondraient selon les blocs
+présents : une carte sans extrait et sans familles n'avait pas les mêmes
+espacements qu'une carte complète.
+
+### Une seule source pour l'échéance
+
+`joursAvant()` et `URGENCE_JOURS` vivent dans `utils/format.js`. Le calcul
+existait en double — une copie dans `EspaceScreen` — et deux calculs
+d'échéance finissent par ne plus dire la même chose : l'espace candidat
+annoncerait une autre date que la liste des offres.
+
+⚠️ Comparaison **au jour**, pas à l'heure. Sur une différence brute en
+millisecondes, une offre qui ferme demain à minuit affiche « 0 jour » dès qu'il
+est 15 h — et avance l'échéance d'une journée dans la tête de la personne.
+
+Accessibilité après la passe : **0 violation** sur les deux écrans
+(45 règles sur `/matchs` dépliants ouverts, 40 sur `/offres`).
+
 ## 17. L'accessibilité — mesurée, pas affirmée
 
 4 points au barème, et c'est le **sujet même du hackathon** : l'accès à
@@ -1509,8 +1794,9 @@ API machine sous clé, webhook signé, serveur MCP, import JSON Resume).
 2. **Accessibilité : la part que l'outil ne voit pas** (§ 17) — l'audit axe
    est passé, 0 violation sur 8 écrans. Restent le parcours **au clavier seul**
    et une relecture au lecteur d'écran.
-3. **Passe de design** — il reste l'espace candidat et le tableau de bord
-   recruteur ; accueil, fiche d'offre et liste des offres sont traités.
+3. **Passe de design** — il reste le tableau de bord recruteur ; accueil,
+   fiche d'offre, liste des offres et **espace candidat** sont traités
+   (§ 16 bis).
 4. **Embeddings** (`all_embeddings.parquet`) — optionnel, et à ne faire qu'en
    rappel : le vecteur ne couvre que la description, ni `skills` ni
    `responsibilities`.

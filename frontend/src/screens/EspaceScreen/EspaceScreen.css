@@ -1,51 +1,128 @@
-/* Espace candidat — mobile first. */
+/* Espace candidat — mobile first.
+   ──────────────────────────────────────────────────────────────────────────
+   Les styles de cartes de chiffres (`.espace-cartes`, `.espace-carte`,
+   `.espace-chiffre`, `.espace-statuts`…) ont été SUPPRIMÉS avec les cartes
+   elles-mêmes. Du CSS qui ne s'applique plus à rien est du CSS qu'on croit
+   encore actif : on le relit, on le corrige, on l'adapte — pour un écran qui
+   n'existe plus. Même raison que le `min-height: 100svh` retiré du hero. */
 
 .espace {
   padding-block: var(--e5);
   max-width: 52rem;
 }
 
+.espace-entete {
+  margin-bottom: var(--e5);
+}
+
+/* Le prénom passe AU-DESSUS et en petit, le titre porte l'information.
+   « Bonjour Maéva » en grand occupait la ligne la plus lisible de l'écran
+   pour dire quelque chose que la personne sait déjà. */
+.espace-salut {
+  margin: 0 0 var(--e1);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+}
+
 .espace h1 {
   font-size: var(--t-2xl);
-  margin-bottom: var(--e5);
+  margin: 0;
 }
 
-/* Bloc d'appel à l'action : il n'apparaît que s'il y a effectivement quelque
-   chose à faire, et disparaît une fois le profil suffisamment rempli. Un
-   bandeau permanent devient un décor qu'on ne lit plus. */
-.espace-action {
-  padding: var(--e5);
-  margin-bottom: var(--e5);
-  background: var(--marque-doux);
-  border-left: 3px solid var(--marque);
-  border-radius: 0 var(--rayon-lg) var(--rayon-lg) 0;
+/* ── La file de ce qu'il y a à faire ────────────────────────────────── */
+
+.faire {
+  list-style: none;
+  margin: 0 0 var(--e7);
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--e3);
 }
 
-.espace-action h2 {
-  font-size: var(--t-lg);
-  margin-bottom: var(--e2);
-}
-
-.espace-action p {
-  font-size: var(--t-sm);
-  max-width: var(--largeur-texte);
-  margin-bottom: var(--e4);
-}
-
-.espace-cartes {
-  display: grid;
-  gap: var(--e4);
-  margin-bottom: var(--e5);
-}
-
-.espace-carte {
-  padding: var(--e5);
+.faire-entree {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--e3);
+  padding: var(--e4);
   background: var(--surface);
   border: 1px solid var(--bordure);
+  border-left: 3px solid var(--bordure-forte);
   border-radius: var(--rayon-lg);
 }
 
-.espace-carte h2 {
+/* L'urgence est portée par le liseré ET par le délai écrit en toutes lettres
+   dans le motif (« ferme dans 3 jours »). La couleur ne porte jamais seule
+   une information : elle ne se voit pas au lecteur d'écran, et elle se
+   confond pour une partie des lecteurs. */
+.faire-entree--urgent {
+  border-left-color: var(--attention);
+  background: var(--attention-fond);
+}
+
+.faire-texte {
+  min-width: 0;
+}
+
+.faire-titre {
+  margin: 0 0 var(--e1);
+  font-size: var(--t-md);
+  font-weight: 700;
+  line-height: 1.3;
+  /* Un intitulé d'offre calédonien est parfois très long (« Soigneur au
+     bureau zoologique du parc provincial zoologique et forestier… ») : il
+     revient à la ligne, il n'est jamais coupé. Un titre tronqué oblige à
+     ouvrir la fiche pour savoir de quel dossier on parle. */
+  overflow-wrap: anywhere;
+}
+
+.faire-motif {
+  margin: 0;
+  font-size: var(--t-sm);
+  line-height: 1.55;
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+.faire-entree--urgent .faire-motif {
+  color: var(--texte);
+}
+
+/* ── Rien à faire ───────────────────────────────────────────────────── */
+
+.espace-vide {
+  margin-bottom: var(--e7);
+  padding: var(--e5);
+  background: var(--surface);
+  border: 1px dashed var(--bordure-forte);
+  border-radius: var(--rayon-lg);
+  font-size: var(--t-sm);
+  color: var(--texte-doux);
+  max-width: var(--largeur-texte);
+}
+
+/* Pas de `!important` ici : `.espace-vide p` (0,1,1) battrait
+   `.espace-vide-titre` (0,1,0) sur la marge, et forcer la règle masquerait la
+   collision au lieu de la régler. On cible la marge par la POSITION — le
+   paragraphe qui suit — plutôt que par le poids. */
+.espace-vide p {
+  margin: 0;
+}
+
+.espace-vide p + p {
+  margin-top: var(--e2);
+}
+
+.espace-vide .espace-vide-titre {
+  font-size: var(--t-md);
+  font-weight: 700;
+  color: var(--texte);
+}
+
+/* ── Aller à ────────────────────────────────────────────────────────── */
+
+.espace-acces h2 {
   font-size: var(--t-sm);
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -53,59 +130,30 @@
   margin-bottom: var(--e3);
 }
 
-.espace-chiffre {
-  margin: 0;
-  font-size: var(--t-2xl);
-  font-weight: 750;
-  line-height: 1.1;
-  font-variant-numeric: tabular-nums;
-}
-
-.espace-precision {
-  margin: 0 0 var(--e4);
-  font-size: var(--t-sm);
-  color: var(--texte-doux);
-}
-
-.espace-precision--seule {
-  margin-top: var(--e2);
-}
-
-.espace-statuts {
-  padding: var(--e5);
-  background: var(--surface);
-  border: 1px solid var(--bordure);
-  border-radius: var(--rayon-lg);
-}
-
-.espace-statuts h2 {
-  font-size: var(--t-md);
-  margin-bottom: var(--e3);
-}
-
-.espace-statuts ul {
+.espace-acces ul {
   list-style: none;
   margin: 0;
   padding: 0;
-}
-
-.espace-statuts li {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  display: grid;
   gap: var(--e3);
+}
+
+.espace-acces li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   padding-block: var(--e2);
-  border-bottom: 1px solid var(--bordure);
+  border-top: 1px solid var(--bordure);
+}
+
+.espace-acces a {
+  font-weight: 600;
+  width: fit-content;
+}
+
+.espace-acces span {
   font-size: var(--t-sm);
-}
-
-.espace-statuts li:last-child {
-  border-bottom: 0;
-}
-
-.espace-statut-valeur {
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
+  color: var(--texte-doux);
 }
 
 @media (min-width: 700px) {
@@ -113,7 +161,23 @@
     padding-block: var(--e7);
   }
 
-  .espace-cartes {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* Le bouton passe à droite du texte : l'œil descend la colonne des actions
+     sans relire chaque motif. En dessous de 700 px il repasse sous le texte,
+     où il reste atteignable au pouce. */
+  .faire-entree {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--e5);
+    padding: var(--e5);
+  }
+
+  .faire-entree .btn {
+    flex: none;
+  }
+
+  .espace-acces ul {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--e3) var(--e5);
   }
 }

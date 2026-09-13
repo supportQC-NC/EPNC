@@ -2,7 +2,14 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useGetAvpsQuery } from "../../slices/avpApiSlice";
-import { formaterDate, dateIso, libelleContrat, echeance } from "../../utils/format";
+import {
+  formaterDate,
+  dateIso,
+  libelleContrat,
+  echeance,
+  joursAvant,
+  URGENCE_JOURS,
+} from "../../utils/format";
 import "./OffresScreen.css";
 import { messageErreur } from "../../utils/erreurApi";
 
@@ -71,10 +78,20 @@ const normaliser = (t) =>
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
 
+// Combien d'offres on déroule d'un coup.
+//
+// Les 230 étaient rendues ensemble : 25 383 px de page, 28 écrans, 3 767
+// nœuds. Une grille de trois colonnes n'est pas un catalogue qu'on parcourt
+// jusqu'au bout — on filtre, on regarde le haut, on s'en va. Trente remplit
+// dix rangées : assez pour se faire une idée avant de filtrer, assez court
+// pour atteindre le rythme de publication qui vit sous la liste.
+const PAR_PAQUET = 30;
+
 const OffresScreen = () => {
   const [ouvertesSeules, setOuvertesSeules] = useState(false);
   const [employeur, setEmployeur] = useState("");
   const [recherche, setRecherche] = useState("");
+  const [combien, setCombien] = useState(PAR_PAQUET);
   const { data, isLoading, isError, error } = useGetAvpsQuery({
     ouvertesSeules,
     employeur,
@@ -111,6 +128,19 @@ const OffresScreen = () => {
     });
   })();
 
+  const visibles = filtrees.slice(0, combien);
+  const reste = filtrees.length - visibles.length;
+
+  // Tout changement de filtre ramène au premier paquet.
+  //
+  // Sans cela, quelqu'un qui a déplié 120 offres puis tape une recherche
+  // reçoit 120 résultats d'un coup : le filtre paraît n'avoir rien allégé, et
+  // le bouton « voir de plus » disparaît sans qu'on comprenne pourquoi.
+  const filtrer = (poser) => (valeur) => {
+    poser(valeur);
+    setCombien(PAR_PAQUET);
+  };
+
   return (
     <div className="conteneur conteneur--large offres">
       <header className="offres-entete">
@@ -124,7 +154,32 @@ const OffresScreen = () => {
         </p>
       </header>
 
-      {isLoading && <p role="status">Chargement des offres…</p>}
+      {/* Un SQUELETTE, pas une phrase.
+          « Chargement des offres… » laissait la page vide avec le pied
+          remonté sous le titre, puis 230 cartes tombaient d'un coup : la page
+          passait de 900 px à 25 000 px sous les yeux de la personne. Six
+          blocs à la taille réelle d'une carte tiennent la place, annoncent la
+          forme de ce qui arrive, et suppriment le saut. */}
+      {isLoading && (
+        <>
+          <p className="sr-only" role="status">
+            Chargement des offres…
+          </p>
+          <ul className="offres-liste offres-liste--squelette" aria-hidden="true">
+            {Array.from({ length: 6 }, (_, i) => (
+              <li key={i}>
+                <div className="offre-squelette">
+                  <span className="sq sq--eyebrow" />
+                  <span className="sq sq--titre" />
+                  <span className="sq sq--titre sq--court" />
+                  <span className="sq sq--ligne" />
+                  <span className="sq sq--pied" />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
 
       {isError && (
         <div className="message message-erreur" role="alert">
@@ -161,7 +216,7 @@ const OffresScreen = () => {
                 <input
                   type="search"
                   value={recherche}
-                  onChange={(e) => setRecherche(e.target.value)}
+                  onChange={(e) => filtrer(setRecherche)(e.target.value)}
                   placeholder="Un métier, un lieu, un service…"
                 />
               </label>
@@ -169,11 +224,11 @@ const OffresScreen = () => {
               {/* Filtre par employeur. Ce n'est pas un confort : sans lui,
                   quelqu'un qui vise l'OPT-NC devrait trier à la main parmi
                   230 avis venus de dix-huit organisations. */}
-              <label className="offres-filtre">
+              <label className="offres-filtre offres-filtre--employeur">
                 <span className="offres-filtre-libelle">Employeur</span>
                 <select
                   value={employeur}
-                  onChange={(e) => setEmployeur(e.target.value)}
+                  onChange={(e) => filtrer(setEmployeur)(e.target.value)}
                 >
                   <option value="">
                     Tous ({data.employeurs?.length || 0} employeurs)
@@ -190,7 +245,7 @@ const OffresScreen = () => {
                 <input
                   type="checkbox"
                   checked={ouvertesSeules}
-                  onChange={(e) => setOuvertesSeules(e.target.checked)}
+                  onChange={(e) => filtrer(setOuvertesSeules)(e.target.checked)}
                 />
                 Offres ouvertes seulement
               </label>
@@ -205,10 +260,25 @@ const OffresScreen = () => {
             </p>
           ) : (
             <ul className="offres-liste">
-              {filtrees.map((offre) => (
+              {visibles.map((offre) => (
                 <li key={offre.slug}>
                   <article
-                    className={`offre-carte${offre.ouverte ? "" : " offre-carte--close"}`}
+                    className={[
+                      "offre-carte",
+                      offre.ouverte ? "" : "offre-carte--close",
+                      // L'URGENCE EST PORTÉE PAR LA CARTE, pas seulement par
+                      // une ligne de texte au fond. Elle donne une colonne de
+                      // repères ambre que l'œil descend sans lire : c'est la
+                      // seule information de cette liste qui rende un poste
+                      // définitivement inatteignable si on la manque.
+                      offre.ouverte &&
+                      joursAvant(offre.dateLimite) !== null &&
+                      joursAvant(offre.dateLimite) <= URGENCE_JOURS
+                        ? "offre-carte--urgente"
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                   >
                     {/* Voile de clôture : il recouvre l'annonce pour qu'on ne
                         puisse pas la confondre avec un poste à pourvoir, tout
@@ -237,7 +307,12 @@ const OffresScreen = () => {
                         {/* Le lien porte le titre : c'est lui qu'annonce un
                             lecteur d'écran qui parcourt les liens de la page.
                             Une carte entière cliquable ne dirait rien. */}
-                        <Link to={`/offres/${offre.slug}`}>{offre.intitule}</Link>
+                        <Link
+                          to={`/offres/${offre.slug}`}
+                          className="offre-lien"
+                        >
+                          {offre.intitule}
+                        </Link>
                       </h2>
                       {!offre.ouverte && (
                         <span className="offre-badge">Clôturée</span>
@@ -277,36 +352,69 @@ const OffresScreen = () => {
                       </ul>
                     )}
 
-                    <p className="offre-dates">
+                    {/* Le pied de carte : l'échéance d'abord, la date de
+                        publication ensuite et en retrait.
+                        Auparavant les deux étaient au même corps, dans la même
+                        couleur, séparées par un espace — « Publiée le 11
+                        septembre 2026   Plus que 19 jours pour candidater ».
+                        La seule des deux sur laquelle on peut encore agir
+                        était indiscernable de l'autre. */}
+                    <footer className="offre-pied">
+                      {offre.dateLimite && (
+                        <span
+                          className={`offre-jours${
+                            joursAvant(offre.dateLimite) !== null &&
+                            joursAvant(offre.dateLimite) <= URGENCE_JOURS
+                              ? " offre-jours--urgent"
+                              : ""
+                          }`}
+                        >
+                          <time dateTime={dateIso(offre.dateLimite)}>
+                            {echeance(offre.dateLimite)}
+                          </time>
+                        </span>
+                      )}
                       {offre.datePubliee && (
-                        <>
-                          Publiée le{" "}
+                        <span className="offre-publiee">
+                          publiée le{" "}
                           <time dateTime={dateIso(offre.datePubliee)}>
                             {formaterDate(offre.datePubliee)}
                           </time>
-                        </>
-                      )}
-                      {offre.dateLimite && (
-                        <span className="offre-echeance">
-                          {echeance(offre.dateLimite)}
                         </span>
                       )}
-                    </p>
+                    </footer>
 
-                    <Link
-                      to={`/offres/${offre.slug}`}
-                      className="btn btn-secondaire btn-compact"
-                    >
-                      {offre.ouverte ? "En savoir plus" : "Consulter la fiche"}
-                      {/* Précision réservée aux lecteurs d'écran : hors
-                          contexte, dix liens « En savoir plus » identiques sont
-                          inutilisables. */}
-                      <span className="sr-only"> sur {offre.intitule}</span>
-                    </Link>
+                    {/* Plus de bouton « En savoir plus ».
+                        Trente rectangles gris identiques pesaient autant que
+                        les titres qu'ils accompagnaient, pour une action que
+                        le titre portait déjà. Le lien du titre est ÉTIRÉ sur
+                        toute la carte (`.offre-lien::after`) : la souris
+                        clique n'importe où, et le lecteur d'écran n'entend
+                        qu'un seul lien, nommé par l'intitulé du poste — au
+                        lieu de trente « En savoir plus » indiscernables. */}
                   </article>
                 </li>
               ))}
             </ul>
+          )}
+
+          {/* Un bouton, pas un défilement infini : le rythme de publication
+              vit sous la liste, et une page qui se rallonge toute seule le
+              rend inatteignable. */}
+          {reste > 0 && (
+            <div className="offres-suite">
+              <button
+                type="button"
+                className="btn btn-secondaire"
+                onClick={() => setCombien((n) => n + PAR_PAQUET)}
+              >
+                Voir {Math.min(reste, PAR_PAQUET)} offre
+                {Math.min(reste, PAR_PAQUET) > 1 ? "s" : ""} de plus
+              </button>
+              <span className="offres-suite-reste">
+                {visibles.length} sur {filtrees.length} affichées
+              </span>
+            </div>
           )}
 
           {/* Le rythme de publication APRÈS la liste, et pas avant.

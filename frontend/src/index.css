@@ -577,3 +577,27 @@ textarea:disabled {
   border-top: 1px solid var(--bordure);
   font-size: var(--t-sm);
 }
+
+
+/* ── Battement des squelettes de chargement ──────────────────────────────
+   Ici, et pas dans un fichier d'écran.
+
+   Les `@keyframes` sont GLOBAUX quel que soit le fichier qui les déclare.
+   Posée dans `OffresScreen.css`, cette animation servait déjà au squelette de
+   `MatchsScreen` — mais uniquement parce que CRA regroupe tout le CSS dans une
+   seule feuille. Le jour où les routes seraient chargées à la demande, le
+   squelette des correspondances aurait cessé de battre sans la moindre erreur,
+   et rien n'aurait désigné la cause.
+
+   ⚠️ C'est une INDICATION D'ATTENTE, pas une décoration : sans elle un
+   squelette immobile se lit comme une page figée. Chaque écran qui l'emploie
+   doit la neutraliser sous `prefers-reduced-motion`. */
+@keyframes sq-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
